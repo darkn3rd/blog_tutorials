@@ -1,0 +1,8 @@
+cask 'virtualbox'
+cask 'virtualbox-extension-pack'
+cask 'vagrant'
+tap 'chef/chef'
+cask 'chefdk'
+cask 'docker-toolbox'
+cask 'minikube'
+brew 'kubectl'
