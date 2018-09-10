@@ -15,7 +15,7 @@ pushd part1_ubuntu
 # fetch box, create guest, provision guest
 vaggrant up
 # test guest from host
-curl -i http://127.0.0.1:8086
+curl -i http://127.0.0.1:8085
 # cleanup
 vagrant destroy --force
 popd
@@ -28,7 +28,7 @@ pushd part2_centos
 # fetch box, create guest, provision guest
 vaggrant up
 # test guest from host
-curl -i http://127.0.0.1:8086
+curl -i http://127.0.0.1:8085
 # cleanup
 vagrant destroy --force
 popd
