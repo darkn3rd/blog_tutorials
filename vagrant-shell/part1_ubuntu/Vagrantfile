@@ -1,0 +1,12 @@
+script_path = './scripts'
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/xenial64"
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  
+  ####### Provision #######
+  config.vm.provision "shell" do |script|
+    script.path = "#{script_path}/hello_web.sh"
+    script.args = %w(apache2 apache2 /var/www/html)
+  end
+end
