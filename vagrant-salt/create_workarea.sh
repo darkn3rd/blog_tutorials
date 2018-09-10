@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-WORKAREA=${HOME}/vagrant-salt
+#
+# Purpose: Create structure from $HOME directory, or directory of your choosing
+#
+
+WORKAREA=${WORKAREA:-"${HOME}/vagrant-salt"}
 FORMULAPATH=${WORKAREA}/roots/salt/hello_web
 
 mkdir -p ${WORKAREA}/roots/{pillar,salt/hello_web/files}

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-WORKAREA=${HOME}/vagrant-ansible
+#
+# Purpose: Create structure from $HOME directory, or directory of your choosing
+#
+
+WORKAREA=${WORKAREA:-"${HOME}/vagrant-ansible"}
 ROLEPATH=${WORKAREA}/provision/roles/hello_web
 
 # Create Ansible Role
