@@ -1,0 +1,2 @@
+{% import_yaml 'hello_web/defaults.yaml' as default_settings %}
+{% set hello_web = salt['pillar.get']('hello_web', default=default_settings.get('hello_web'), merge=True) %}

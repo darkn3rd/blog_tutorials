@@ -1,0 +1,3 @@
+base:
+  '*':
+    - hello_web

@@ -1,0 +1,4 @@
+hello_web:
+  docroot: /var/www/html
+  package: apache2
+  service: apache2

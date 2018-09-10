@@ -1,0 +1,20 @@
+Vagrant.configure('2') do |config|
+  config.vm.box = "bento/centos-7.5"
+  config.vm.network 'forwarded_port', guest: 80, host: 8085
+
+  ####### File Share #######
+  config.vm.synced_folder './roots/salt/', '/srv/salt'
+  config.vm.synced_folder './roots/pillar', '/srv/pillar'
+
+  ####### Provision #######
+  config.vm.provision :salt do |salt|
+    salt.masterless = true
+    salt.run_highstate = true
+    salt.verbose = true
+    salt.pillar "hello_web" => {
+      "package" => "httpd",
+      "service" => "httpd",
+      "docroot" => "/var/www/html"
+    }
+  end
+end
