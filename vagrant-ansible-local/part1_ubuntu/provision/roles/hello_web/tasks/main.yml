@@ -1,0 +1,14 @@
+---
+- name: "Install Web Service"
+  package:
+    name: "{{ hello_web.package }}"
+    state: present
+- name: "Start Web Service"
+  service:
+    name: "{{ hello_web.service }}"
+    state: started
+    enabled: yes
+- name: "Copy Web Content"
+  copy:
+    src: "{{ role_path }}/files/index.html"
+    dest: "{{ hello_web.docroot }}/index.html"
