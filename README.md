@@ -4,6 +4,9 @@ These are code related to tutorials created.
 
 ## Sie Blogs
 
+* Docker
+    * Docker Command vs Ansible - https://medium.com/@Joachim8675309/docker-using-shell-or-docker-compose-4ab8ea8ae801
+    * Docker Command vs. Docker Compose - https://medium.com/@Joachim8675309/docker-using-shell-or-ansible-7cdceb646d3
 * Virtual Box
     * Windows
          * Windows 8.1 - https://medium.com/@Joachim8675309/virtualbox-and-friends-on-windows-8-1-3c691460698f

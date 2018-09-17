@@ -1,0 +1,45 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    docker_volume: db_data
+    docker_network: ansible_net
+    db_name: db
+    wp_name: wordpress
+    wp_host_port: 8000
+    wp_container_port: 80
+  tasks:
+    - name: Create docker volume
+      shell: docker volume create -d local --name {{ docker_volume }}
+    - name: Search for docker network
+      shell: docker network ls | grep -q {{ docker_network }}
+      register: test_docker_network
+      ignore_errors: yes
+    - name: Create docker network
+      shell: docker network create {{ docker_network }}
+      when: test_docker_network.rc != 0
+    - name: Launch database container
+      shell: >
+        docker run -d
+        -v {{ docker_volume }}:/var/lib/mysql:rw
+        --network={{ docker_network }}
+        --network-alias {{ db_name }}
+        --restart=always
+        -e MYSQL_ROOT_PASSWORD=wordpress
+        -e MYSQL_PASSWORD=wordpress
+        -e MYSQL_USER=wordpress
+        -e MYSQL_DATABASE=wordpress
+        --name {{ db_name }}
+        mysql:5.7
+    - name: Launch wordpress container
+      shell: >
+        docker run -d
+        --network={{ docker_network }}
+        --network-alias {{ wp_name }}
+        -p "{{ wp_host_port }}:{{ wp_container_port }}"
+        --restart=always
+        -e WORDPRESS_DB_HOST="{{ db_name }}:3306"
+        -e WORDPRESS_DB_PASSWORD=wordpress
+        --name {{ wp_name }}
+        wordpress:latest
