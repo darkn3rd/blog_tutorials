@@ -13,7 +13,6 @@
     - name: "Create a Volume"
       docker_volume:
         name: "{{ docker_volume }}"
-    # ansible 2.2 only
     - name: "Create a network"
       docker_network:
         name: "{{ docker_network }}"
