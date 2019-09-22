@@ -1,22 +1,34 @@
 #####################################################################
-# Output for Webserver
+# Output Network Infrastructure
 #####################################################################
 output "vpc" {
-  value     = "${aws_vpc.w1_main.id}"
+  value     = "${module.network.vpc}"
 }
 
 output "sn_pub1" {
-  value     = "${aws_subnet.w1_public1.id}"
+  value     = "${module.network.sn_pub1}"
 }
 
 output "sn_pub2" {
-  value     = "${aws_subnet.w1_public2.id}"
+  value     = "${module.network.sn_pub2}"
 }
 
 output "sn_priv1" {
-  value     = "${aws_subnet.w1_private1.id}"
+  value     = "${module.network.sn_priv1}"
 }
 
 output "sn_priv2" {
-  value     = "${aws_subnet.w1_private2.id}"
+  value     = "${module.network.sn_priv2}"
+}
+
+
+#####################################################################
+# Output Security Groups
+#####################################################################
+output "sg_web" {
+  value     = "${module.security.sg_web}"
+}
+
+output "sg_db" {
+  value     = "${module.security.sg_db}"
 }

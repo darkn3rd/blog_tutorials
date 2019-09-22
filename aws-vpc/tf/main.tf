@@ -16,19 +16,11 @@ module "core_infra" {
   region   = "${var.region}"
 }
 
-module "security" {
-  source   = "./sec"
-  profile  = "${var.profile}"
-  region   = "${var.region}"
-  vpc_id   = "${module.core_infra.vpc}"
-
-}
-
 module "instances" {
   source   = "./app"
   profile  = "${var.profile}"
   region   = "${var.region}"
-  sg_web   = "${module.security.sg_web}"
+  sg_web   = "${module.core_infra.sg_web}"
   sn_web   = "${module.core_infra.sn_pub1}"
 }
 
@@ -38,7 +30,7 @@ module "db" {
   profile  = "${var.profile}"
   region   = "${var.region}"
 
-  sg_db    = "${module.security.sg_db}"
+  sg_db    = "${module.core_infra.sg_db}"
   sn_db1   = "${module.core_infra.sn_priv1}"
   sn_db2   = "${module.core_infra.sn_priv2}"
 
