@@ -1,7 +1,7 @@
 #####################################################################
 # SECURITY GROUPS
 #####################################################################
-resource "aws_security_group" "w1-webserver" {
+resource "aws_security_group" "my-webserver" {
   name        = "webserver"
   description = "Allow HTTP from Anywhere"
   vpc_id      = "${var.vpc_id}"
@@ -21,12 +21,12 @@ resource "aws_security_group" "w1-webserver" {
   }
 
   tags {
-    "Name" = "w1-webserver"
+    "Name" = "my-webserver"
     "Site" = "web-one"
   }
 }
 
-resource "aws_security_group" "w1-database" {
+resource "aws_security_group" "my-database" {
   name        = "database"
   description = "Allow MySQL/Aurora from WebService"
   vpc_id      = "${var.vpc_id}"
@@ -35,7 +35,7 @@ resource "aws_security_group" "w1-database" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = ["${aws_security_group.w1-webserver.id}"]
+    security_groups = ["${aws_security_group.my-webserver.id}"]
     self            = false
   }
 
@@ -47,7 +47,7 @@ resource "aws_security_group" "w1-database" {
   }
 
   tags {
-    "Name" = "w1-database"
+    "Name" = "my-database"
     "Site" = "web-one"
   }
 }

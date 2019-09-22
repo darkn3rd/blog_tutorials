@@ -25,7 +25,7 @@ data "aws_ami" "amazon-linux-2" {
 #####################################################################
 # Instances
 #####################################################################
-resource "aws_instance" "w1-webserver" {
+resource "aws_instance" "my-webserver" {
   ami           = "${data.aws_ami.amazon-linux-2.id}"
   instance_type = "t2.micro"
   key_name      = "webone"
@@ -39,7 +39,7 @@ resource "aws_instance" "w1-webserver" {
   ]
 
   tags {
-    "Name" = "w1-webserver"
-    "Site" = "web-one"
+    "Name" = "my-webserver"
+    "Site" = "my-web-site"
   }
 }
