@@ -1,11 +1,6 @@
 #####################################################################
-# Modules
+# Output for Webserver
 #####################################################################
-module "network" {
-  source = "./net"
-}
-
-module "security" {
-  source = "./sec"
-  vpc_id = "${module.network.vpc}"
+output "database_endpoint" {
+  value = "${aws_db_instance.w1-db.endpoint}"
 }

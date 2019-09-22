@@ -1,10 +1,10 @@
 #####################################################################
 # Output for Webserver
 #####################################################################
-output "sg_web" {
-  value = "${aws_security_group.w1-webserver.id}"
+output "web_public_dns" {
+  value = "${aws_instance.w1-webserver.public_dns}"
 }
 
-output "sg_db" {
-  value = "${aws_security_group.w1-database.id}"
+output "web_public_ip" {
+  value = "${aws_instance.w1-webserver.public_ip}"
 }
