@@ -1,7 +1,8 @@
 #####################################################################
-# Amazon Web Services
+# Variables
 #####################################################################
-provider "aws" {
-  profile = "${var.profile}"
-  region  = "${var.region}"
-}
+
+# webapp security groups
+variable "sg_web" {}
+# web public subnet
+variable "sn_web" {}
