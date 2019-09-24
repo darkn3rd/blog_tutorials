@@ -8,6 +8,10 @@ variable "database_name" {}
 variable "database_user" {}
 variable "database_password" {}
 
+variable "key_name" {
+  default = "web-app"
+}
+
 #####################################################################
 # Modules
 #####################################################################
@@ -18,9 +22,10 @@ module "core_infra" {
 }
 
 module "webapp" {
-  source  = "./webapp"
-  profile = "${var.profile}"
-  region  = "${var.region}"
+  source   = "./webapp"
+  profile  = "${var.profile}"
+  region   = "${var.region}"
+  key_name = "${var.key_name}"
 
   # pass web security group and public networks
   sg_web = "${module.core_infra.sg_web}"

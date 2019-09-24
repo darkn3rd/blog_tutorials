@@ -28,7 +28,7 @@ data "aws_ami" "amazon-linux-2" {
 resource "aws_instance" "my-webserver" {
   ami           = "${data.aws_ami.amazon-linux-2.id}"
   instance_type = "t2.micro"
-  key_name      = "webone"
+  key_name      = "${var.key_name}"
   user_data     = "${file("${path.module}/user_data.sh")}"
 
   associate_public_ip_address = true

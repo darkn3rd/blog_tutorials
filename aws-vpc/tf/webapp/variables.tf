@@ -13,6 +13,9 @@ variable "database_name" {}
 variable "database_user" {}
 variable "database_password" {}
 
+# instance key pair
+variable "key_name" {}
+
 # web security groups and subnets
 variable "sg_web" {}
 
