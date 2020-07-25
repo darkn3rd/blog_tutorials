@@ -17,4 +17,4 @@ Deploy a Service with Load Balancer
 
 Deploy an Ingress 
 
-* Part 3 [README.md](part2_ingress/README.md)
+* Part 3 [README.md](part3_ingress/README.md)

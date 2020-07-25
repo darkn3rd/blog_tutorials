@@ -1,0 +1,14 @@
+domainFilters:
+  - $MY_DOMAIN
+txtOwnerId: external-dns
+# GKE cluster and CloudDNS must be in same project
+provider: google
+image:
+  registry: registry.opensource.zalan.do
+  repository: teapot/external-dns
+  tag: latest
+rbac:
+  create: true
+  apiVersion: v1
+# Set to 'upsert-only' for updates, 'sync' to alow deletes
+policy: upsert-only
