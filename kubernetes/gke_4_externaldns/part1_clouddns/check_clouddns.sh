@@ -20,3 +20,4 @@ gcloud dns record-sets list \
  --zone $MY_ZONE \
  --filter "type=NS OR type=SOA" \
  --format json
+ 
