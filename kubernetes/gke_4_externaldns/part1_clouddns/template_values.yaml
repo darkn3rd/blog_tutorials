@@ -11,4 +11,4 @@ rbac:
   create: true
   apiVersion: v1
 # Set to 'upsert-only' for updates, 'sync' to alow deletes
-policy: sync
+policy: upsert-only
