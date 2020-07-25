@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-basic-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-basic
+  template:
+    metadata:
+      labels:
+        app: hello-basic
+    spec:
+      containers:
+      - name: hello-kubernetes-basic
+        image: paulbouwer/hello-kubernetes:1.5
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "80m"
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
