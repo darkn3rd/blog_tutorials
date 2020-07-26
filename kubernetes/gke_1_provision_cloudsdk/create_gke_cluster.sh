@@ -19,11 +19,11 @@ MY_SCOPES=$(IFS=,; echo "${SCOPES[*]}")               # scope list (command sepe
 MY_CLUSTER_NAME=${1:-"test-cluster"}                  # gke cluster name
 MY_REGION=${2:-"us-central1"}                         # default region if not set
 MY_PROJECT=${3:-"$(gcloud config get-value project)"} # default project if not set
-GKE_VERSION="1.14.10-gke.36"
+K8S_VERSION="1.16.11-gke.5"
 
 ## Create GKE Cluster
 gcloud container --project $MY_PROJECT clusters create \
-  --cluster-version $GKE_VERSION \
+  --cluster-version $K8S_VERSION \
   --region $MY_REGION \
   --machine-type n1-standard-1 \
   --num-nodes 1 \

@@ -9,6 +9,7 @@ variable "network" { default = "default" }
 variable "subnetwork" { default = "" }
 variable "ip_range_pods" { default = "" }
 variable "ip_range_services" { default = "" }
+variable "kubernetes_version" { default = "1.16.11-gke.5"}
 
 ## GKE Cluster
 module "gke" {
@@ -25,7 +26,7 @@ module "gke" {
   ip_range_services = var.ip_range_services
 
   # optional variables
-  kubernetes_version       = "1.14.10-gke.36"
+  kubernetes_version       = var.kubernetes_version
   regional                 = true
   create_service_account   = false
   remove_default_node_pool = true
@@ -79,4 +80,3 @@ module "gke" {
   }
 
 }
-
