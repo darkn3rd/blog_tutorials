@@ -22,6 +22,9 @@ ZONE_NAME="<your_zone_name_goes_here>" # acme-test
 
 ## Step 3: Install External DNS
 
+**NOTE**: This will use the projects default GSA (Google Service Account),
+thus both Cloud DNS and GKE cluster must be in the same project.
+
 ```bash
 MY_DOMAIN="<set-your-domain-name-here>" # example: test.acme.com
 ./install_external_dns.sh $MY_DOMAIN
