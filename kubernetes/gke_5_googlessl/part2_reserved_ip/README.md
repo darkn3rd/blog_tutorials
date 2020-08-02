@@ -43,7 +43,7 @@ curl https://$MY_DNS_NAME
 
 ### Kubectl
 
-```
+```bash
 kubectl describe \
   managedcertificates.networking.gke.io/hello-k8s-gce-ssl2
 ```

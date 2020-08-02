@@ -20,7 +20,7 @@ kubectl create --filename template_ingress.yaml
 
 ### Kubectl
 
-```
+```bash
 kubectl describe \
   managedcertificates.networking.gke.io/hello-k8s-gce-ssl
 ```
