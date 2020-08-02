@@ -1,0 +1,8 @@
+---
+apiVersion: networking.gke.io/v1beta2
+kind: ManagedCertificate
+metadata:
+  name: hello-k8s-gce-ssl2
+spec:
+  domains:
+    - $MY_DNS_NAME
