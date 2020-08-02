@@ -10,7 +10,7 @@ You may initially encounter such errors:
 
 Deploy ingress with managed SSL certificate for ephemeral IP address.
 
-* Part 2 [README.md](part1_ephemeral_ip/README.md)
+* Part 1 [README.md](part1_ephemeral_ip/README.md)
 
 ## Part 2
 
