@@ -1,0 +1,18 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: hello-k8s-gce-ssl2
+  annotations:
+    kubernetes.io/ingress.class: gce
+    networking.gke.io/managed-certificates: hello-k8s-gce-ssl2
+    kubernetes.io/ingress.global-static-ip-name: $MY_ADDRESS_NAME
+spec:
+  rules:
+  - host: $MY_DNS_NAME
+    http:
+      paths:
+      - backend:
+          serviceName: hello-k8s-gce-ssl2
+          servicePort: 80
+        path: /*
