@@ -1,0 +1,12 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: my-demo-cluster
+  region: us-west-2
+nodeGroups:
+  - name: my-demo-workers
+    instanceType: t3.medium
+    desiredCapacity: 4
+    minSize: 1
+    maxSize: 4

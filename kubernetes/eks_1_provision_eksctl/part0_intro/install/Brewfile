@@ -1,0 +1,3 @@
+tap "weaveworks/tap"
+brew "eksctl"
+brew "kubernetes-cli"
