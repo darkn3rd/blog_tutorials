@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+command -v eksctl > /dev/null || \
+  { echo 'eksctl command not not found' 1>&2; exit 1; }
 
 eksctl create cluster \
   --version 1.14 \

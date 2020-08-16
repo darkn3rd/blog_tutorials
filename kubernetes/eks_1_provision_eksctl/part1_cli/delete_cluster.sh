@@ -5,15 +5,8 @@ command -v eksctl > /dev/null || \
 ## default settings
 MY_CLUSTER_NAME=${1:-"my-demo-cluster"}
 MY_REGION=${2:-"us-west-2"}
-MY_VERSION=${3:-"1.14"}
 
 ## provision eks using eksctl cli
-eksctl create cluster \
-  --version $MY_VERSION \
+eksctl delete cluster \
   --region $MY_REGION \
-  --node-type t3.medium \
-  --nodes 3 \
-  --nodes-min 1 \
-  --nodes-max 4 \
   --name $MY_CLUSTER_NAME \
-  --kubeconfig="demo-cluster-config.yaml"

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+command -v gcloud > /dev/null || \
+  { echo 'gcloud command not not found' 1>&2; exit 1; }
 
 gcloud container clusters create \
   --cluster-version 1.14.10-gke.36 \
