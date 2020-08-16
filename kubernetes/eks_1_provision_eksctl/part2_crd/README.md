@@ -1,5 +1,7 @@
 # EKS Cluster using Config File
 
+This demonstrates how to use eksctl config files to have *Infrastructure as Code*.
+The bash shell scripts create a temp `cluster.yaml` based on environment variables you set or use defaults.
 
 ## Provision
 
@@ -34,7 +36,6 @@ MY_CLUSTER_NAME="my-demo-cluster"
 MY_REGION="us-west-2"
 aws eks --region $MY_REGION update-kubeconfig --name $MY_CLUSTER_NAME
 ```
-
 
 ## Delete
 
