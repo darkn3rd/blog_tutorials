@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-kubernetes
+spec:
+  # use ClusterIP with ingress
+  type: ClusterIP
+  ports:
+  # service listens on http (80)
+  - port: 80
+    # sends to a pod on port 8080
+    targetPort: 8080
+  selector:
+    app: hello-kubernetes

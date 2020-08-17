@@ -1,0 +1,13 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: $MY_CLUSTER_NAME
+  region: $MY_REGION
+  version: "$MY_VERSION"
+nodeGroups:
+  - name: $MY_CLUSTER_NAME-workers
+    instanceType: t3.medium
+    desiredCapacity: 4
+    minSize: 1
+    maxSize: 4
