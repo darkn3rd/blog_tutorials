@@ -5,13 +5,13 @@ command -v helm > /dev/null || \
   { echo 'helm command not not found' 1>&2; exit 1; }
 
 ## required settings
-[[ -z "$MY_ACM_ARN" ]] && { echo 'MY_ACM_ARN not specified. Aborting' 2>&1 ; return 1; }
+[[ -z "$MY_ACM_ARN" ]] && { echo 'MY_ACM_ARN not specified. Aborting' 2>&1 ; exit 1; }
 
 ## namespace
 NAMESPACE=${MY_NAMESPACE:="kube-addons"}
 
 ## create values config from template
-sed -e "s/\$MY_CLUSTER_NAME/$MY_ACM_ARN/" \
+sed -e "s|\$MY_ACM_ARN|$MY_ACM_ARN|" \
     template.nginx-ingress.yaml > values.nginx-ingress.yaml
 
 ## add helm repository

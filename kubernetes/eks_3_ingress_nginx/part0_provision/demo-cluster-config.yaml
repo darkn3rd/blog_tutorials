@@ -1,0 +1,30 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN5RENDQWJDZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJd01EZ3hOakU1TlRZeU9Gb1hEVE13TURneE5ERTVOVFl5T0Zvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTEx2CmZpano4NzYyMnAwWlFBL3dPV0ZEVTkxS2J1NFhtbzd0VWw2NDY5M0RWaU80NDBHSzBJUFMzSjV4dE9OSGtSejQKdGJrMEpoR1RpMTYrTHV1enMrSWdiUU1sUTh3OVJBYllZWU1scWFJU0ZMNElnek1oU1RmdkplQ0YwUVFqY2JGZQpFd2RTbC9lcWZZdS91OXRMNW5sSHhOQm9ueEdDSzluRm4rbFlueU14S0lkV01sOHRqamZyUUNwRTR3UlB1MEJSCm9sYmNBTWtKZndObnJDTHZsR3YyOW9vNkY1TW1ybVo4emJUY1lwR2J3UGI2N1N0UTNhOElTRFRnVDIrVlNDQjUKemRrbGpRZFBrRk9kU1JZUDNuelNsRmJERGdma3pQb0RNblk4R2NGY0JkTE5tQlFJVE5WQmRkUWNocStua2JnRwovNkRHeFJqK21JQ3hFTGpJeS9jQ0F3RUFBYU1qTUNFd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFDNlFSNnFHZ01UTkFWV216SkZMMm9kZDNoSFQKeUxUbEhDQUY5bWVzSXU4UUh5dTJFNmNNRGpiTENLWm1qYVBiQTZqZld0OUc2TE5ZTmdWOER0SWRibGgrNUIzaQprWEdsUWlrR1dxU3lyM2VINHpWbkN1R0pvNkpiSmtXMDBOQTdUOEVDRlFlU3ZXLzZ6OEFCZE0wSEVtVkhPVzFnCjMxZjFEbE01ODE0a3FaSnk0a1BuUkpMblFNRVR5RmxyaWl0U3l4MmZ6a05xUEwzUjYwNlphdlEzTXNncDNTWGgKaG1TQXF2MU1OT3ZDN2lJNURzaFg5QjI5ZmdmZ2lDaW9FbU8wUUZRWitHOW9rM2V4WGx6aWplZUhwcWROeU53cwpXeWlLVnNVMTBXOG11aGdEZUVkTU5mS3FjdG1ZRVd4VDRLQ2twdHAzblRDbThlS0RxMlB1Q0NGTGp1Zz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    server: https://CDFB117F6BC4E2E66F1D2EAD7D532592.gr7.us-west-2.eks.amazonaws.com
+  name: my-ingress-demo-cluster.us-west-2.eksctl.io
+contexts:
+- context:
+    cluster: my-ingress-demo-cluster.us-west-2.eksctl.io
+    user: joaquin@my-ingress-demo-cluster.us-west-2.eksctl.io
+  name: joaquin@my-ingress-demo-cluster.us-west-2.eksctl.io
+current-context: joaquin@my-ingress-demo-cluster.us-west-2.eksctl.io
+kind: Config
+preferences: {}
+users:
+- name: joaquin@my-ingress-demo-cluster.us-west-2.eksctl.io
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1alpha1
+      args:
+      - eks
+      - get-token
+      - --cluster-name
+      - my-ingress-demo-cluster
+      - --region
+      - us-west-2
+      command: aws
+      env:
+      - name: AWS_STS_REGIONAL_ENDPOINTS
+        value: regional

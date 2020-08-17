@@ -5,14 +5,14 @@ command -v helm > /dev/null || \
   { echo 'helm command not not found' 1>&2; exit 1; }
 
 ## required settings
-[[ -z "$MY_DOMAIN" ]] && { echo 'MY_DOMAIN not specified. Aborting' 2>&1 ; return 1; }
+[[ -z "$MY_DOMAIN" ]] && { echo 'MY_DOMAIN not specified. Aborting' 2>&1 ; exit 1; }
 
 ## namespace
 NAMESPACE=${MY_NAMESPACE:="kube-addons"}
 
 ## create values config from template
-sed -e "s/\$MY_CLUSTER_NAME/$MY_DOMAIN/" \
-    template.external-dns.yaml> values.external-dns.yaml
+sed -e "s/\$MY_DOMAIN/$MY_DOMAIN/" \
+    template.external-dns.yaml > values.external-dns.yaml
 
 ## add helm repository
 helm repo add "bitnami" "https://charts.bitnami.com/bitnami"

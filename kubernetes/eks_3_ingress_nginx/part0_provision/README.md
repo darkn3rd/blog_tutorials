@@ -23,5 +23,5 @@ MY_REGION="us-west-2"
 MY_VERSION="1.14"
 
 ## create temp cluster.yaml and provision it
-./create_cluster.sh
+./create_cluster.sh $MY_CLUSTER_NAME $MY_REGION $MY_VERSION
 ```

@@ -11,9 +11,7 @@ MY_VERSION=${3:-"1.14"}
 sed -e "s/\$MY_CLUSTER_NAME/$MY_CLUSTER_NAME/" \
     -e "s/\$MY_REGION/$MY_REGION/" \
     -e "s/\$MY_VERSION/$MY_VERSION/" \
-    template_cluster.yaml > cluster.yaml
+    template_cluster.yaml > cluster_with_dns.yaml
 
 ## provision eks from eksctl config
-eksctl create cluster \
-  --config-file "cluster.yaml" \
-  --kubeconfig="demo-cluster-config.yaml"
+eksctl create cluster --config-file "cluster_with_dns.yaml"

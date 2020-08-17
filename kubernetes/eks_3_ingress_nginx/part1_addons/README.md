@@ -89,13 +89,13 @@ get_acm_arn() {
   )
 }
 
-MY_DOMAIN="<your-domain-goes-here>" # domain registered in Route53, e.g. test.acme.com
+export MY_DOMAIN="<your-domain-goes-here>" # domain registered in Route53, e.g. test.acme.com
 MY_REGION="<region>" # region where cert was created, e.g. us-west-2
-MY_ACM_ARN="$(get_acm_arn $MY_DOMAIN $MY_REGION)"
+export MY_ACM_ARN="$(get_acm_arn $MY_DOMAIN $MY_REGION)"
 
 ## add external-dns and ingress-nginx
 ## add-ons are created in namespace kube-addons.
-MY_NAMESPACE="kube-addons"
+export MY_NAMESPACE="kube-addons"
 ./add-external-dns.sh
 ./add-ingress-nginx.sh
 ```
