@@ -4,7 +4,7 @@ kind: ClusterConfig
 metadata:
   name: $MY_CLUSTER_NAME
   region: $MY_REGION
-  version: $MY_VERSION
+  version: "$MY_VERSION"
 nodeGroups:
   - name: $MY_CLUSTER_NAME-workers
     instanceType: t3.medium

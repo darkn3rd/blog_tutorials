@@ -13,7 +13,5 @@ sed -e "s/\$MY_CLUSTER_NAME/$MY_CLUSTER_NAME/" \
     -e "s/\$MY_VERSION/$MY_VERSION/" \
     template_cluster.yaml > cluster.yaml
 
-## provision eks from eksctl config 
-eksctl create cluster \
-  --config-file "cluster.yaml" \
-  --kubeconfig="demo-cluster-config.yaml"
+## provision eks from eksctl config
+eksctl create cluster --config-file "cluster.yaml"
