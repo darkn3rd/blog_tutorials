@@ -13,7 +13,7 @@ MY_CLUSTER_NAME="my-demo-cluster"
 MY_REGION="us-west-2"
 MY_VERSION="1.14"
 
-./create_cluster.sh
+./create_cluster.sh $MY_CLUSTER_NAME $MY_REGION $MY_VERSION
 ```
 
 ## Kubernetes Configuration
@@ -26,6 +26,8 @@ export KUBECONFIG="${PWD}"/demo-cluster-config.yaml
 
 ### Adding Credentials to ~/.kube/config
 
+The `eksctl` command will already update the existing `KUBECONFIG` on your current system.  
+If either that configuration was absent, or you need to access it on another system, using your AWS credentials (`~/.aws/credentials`), you can update `KUBECONFIG`.
 
 ```bash
 ## settigns used before
@@ -43,5 +45,5 @@ This process could take 20 minutes.
 MY_CLUSTER_NAME="my-demo-cluster"
 MY_REGION="us-west-2"
 
-./delete_cluster.sh
+./delete_cluster.sh $MY_CLUSTER_NAME $MY_REGION
 ```

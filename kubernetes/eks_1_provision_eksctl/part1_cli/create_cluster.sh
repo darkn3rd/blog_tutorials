@@ -15,5 +15,4 @@ eksctl create cluster \
   --nodes 3 \
   --nodes-min 1 \
   --nodes-max 4 \
-  --name $MY_CLUSTER_NAME \
-  --kubeconfig="demo-cluster-config.yaml"
+  --name $MY_CLUSTER_NAME
