@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-minikube-lb
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-minikube-lb
+  template:
+    metadata:
+      labels:
+        app: hello-minikube-lb
+    spec:
+      containers:
+      - name: hello-kubernetes
+        image: paulbouwer/hello-kubernetes:1.5
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "80m"
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-minikube-lb
+spec:
+  # GCE Ingress has to be 'NodePort' or 'LoadBalancer'
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: hello-minikube-lb

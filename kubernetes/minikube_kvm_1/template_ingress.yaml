@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-minikube-ing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-minikube-ing
+  template:
+    metadata:
+      labels:
+        app: hello-minikube-ing
+    spec:
+      containers:
+      - name: hello-kubernetes
+        image: paulbouwer/hello-kubernetes:1.5
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "80m"
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-minikube-ing
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: hello-minikube-ing
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: hello-minikube-ing
+spec:
+  rules:
+  - host: $MY_DNS_NAME
+    http:
+      paths:
+      - backend:
+          serviceName: hello-minikube-ing
+          servicePort: 80
+        path: /
