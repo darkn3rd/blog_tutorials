@@ -1,0 +1,34 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: ${cluster_name}
+  region: ${region}
+  version: "1.17"
+
+vpc:
+  subnets:
+    private:
+  %{ for availability_zone, subnet_id in subnet_private ~}
+    ${availability_zone}: { id: ${subnet_id} }
+  %{ endfor ~}
+  public:
+  %{ for availability_zone, subnet_id in subnet_public ~}
+    ${availability_zone}: { id: ${subnet_id} }
+  %{ endfor ~}
+
+managedNodeGroups:
+  - name: ${cluster_name}-workers
+    minSize: ${min_size}
+    maxSize: ${max_size}
+    desiredCapacity: ${desired_capacity}
+    instanceType: ${instance_type}
+    labels: {role: worker}
+    ssh:
+      publicKeyName: ${public_key_name}
+    tags:
+      nodegroup-role: worker
+    iam:
+      withAddonPolicies:
+        externalDNS: true
+        certManager: true
+        albIngress: true
