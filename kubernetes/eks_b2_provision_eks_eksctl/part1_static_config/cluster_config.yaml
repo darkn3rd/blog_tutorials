@@ -1,0 +1,34 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: acme-test-cluster
+  region: us-east-2
+  version: "1.17"
+
+vpc:
+  subnets:
+    private:
+      us-east-2a: { id: subnet-01234567890abcdef }
+      us-east-2b: { id: subnet-01234567890abcdf0 }
+      us-east-2c: { id: subnet-01234567890abcdf1 }
+    public:
+      us-east-2a: { id: subnet-01234567890abcdf2 }
+      us-east-2b: { id: subnet-01234567890abcdf3 }
+      us-east-2c: { id: subnet-01234567890abcdf4 }
+
+managedNodeGroups:
+  - name: acme-test-cluster
+    minSize: 3
+    maxSize: 6
+    desiredCapacity: 3
+    instanceType: m5.2xlarge
+    labels: {role: worker}
+    ssh:
+      publicKeyName: deploykey
+    tags:
+      nodegroup-role: worker
+    iam:
+      withAddonPolicies:
+        externalDNS: true
+        certManager: true
+        albIngress: true

@@ -22,3 +22,19 @@ mkdir vpc
 touch vpc/{locals,main,output,variables,versions}.tf
 touch {main,provider}.tf terraform.tfvars
 ```
+
+## Usage
+
+```bash
+# fetch modules and providers
+terraform init
+
+# list resources that will be created
+terraform plan
+
+# provision VPC
+terraform apply
+
+# deprovision VPC
+terraform destroy
+```
