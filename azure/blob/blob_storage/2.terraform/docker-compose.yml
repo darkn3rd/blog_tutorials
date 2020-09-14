@@ -1,0 +1,11 @@
+version: "3.5"
+services:
+  minio:
+    image: minio/minio:${MINIO_TAG}
+    command: gateway azure
+    container_name: azure-gateway
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    ports:
+      - 9000:9000
