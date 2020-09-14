@@ -1,0 +1,12 @@
+# Setup endpoint: hostname of the Web App
+host_base = ${minio_host}:9000
+host_bucket = ${minio_host}:9000
+# Leave as default
+bucket_location = us-east-1
+use_https = False
+
+access_key =  ${accessKey}
+secret_key = ${secretKey}
+
+# Use S3 v4 signature APIs
+signature_v2 = False
