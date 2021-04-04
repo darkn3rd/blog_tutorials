@@ -1,0 +1,21 @@
+repositories:
+  - name: aws-ebs-csi-driver
+    url: https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+
+releases:
+  - name: aws-ebs-csi-driver
+    namespace: kube-system
+    chart: aws-ebs-csi-driver/aws-ebs-csi-driver
+    values:
+      - enableVolumeScheduling: true
+        enableVolumeResizing: true
+        enableVolumeSnapshot: true
+        storageClasses:
+          - name: gp3
+            volumeBindingMode: WaitForFirstConsumer
+            parameters:
+              fsType: ext4
+              type: gp3
+            reclaimPolicy: Delete
+            mountOptions:
+              - debug
