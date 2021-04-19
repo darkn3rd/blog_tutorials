@@ -4,7 +4,7 @@ This is an example of using HashiCorp Vault AppRole with from the application Dg
 
 ## Prerequisites
 
-* [`docker`](https://docs.docker.com/engine/reference/commandline/cli/)
+* [`docker`](https://docs.docker.com/engine/reference/commandline/cli/) and
 * [`docker-compose`](https://docs.docker.com/compose/)
 * `curl`
 * [`jq`](https://stedolan.github.io/jq/)
@@ -14,25 +14,25 @@ This is an example of using HashiCorp Vault AppRole with from the application Dg
 
 ### MacOS
 
-You can easily install the tools with [Homebrew](https://brew.sh/). make any desired adjustments to [`Brewfile`](Brewvile), then run `brew bundle --verbose`.
+You can easily install the tools using [Homebrew](https://brew.sh/): make any desired adjustments to [`Brewfile`](Brewfile), then run `brew bundle --verbose`.
 
 For `docker-compose` in particular, I recommend installing this through `pip` and using a virtualenv for this.  This can be setup with [`pyenv`](https://github.com/pyenv/pyenv) (`brew install pyenv pyenv-virtualenv`).
 
-For other bottles or cask, you can get further instructions with `brew info`, e.g. `brew info gnu-sed`.
+For instructions on other *bottles* or the docker *cask*, you can get further instructions with `brew info`, e.g. `brew info gnu-sed`.
 
 ### Windows 10
 
-If you have [Chocolatey](https://chocolatey.org/), you run `choco install -y choco.config` to install [`docker`](https://docs.docker.com/docker-for-windows/install/), [`docker-compose`](https://docs.docker.com/compose/), and [msys2](https://www.msys2.org/) for command line environment (bash, gnu sed, gnu grep, jq, curl).
+You can get the tools using [Chocolatey](https://chocolatey.org/): make any desired changes [`choco.config`](choco.config), and then run `choco install -y choco.config` to install [`docker`](https://docs.docker.com/docker-for-windows/install/), [`docker-compose`](https://docs.docker.com/compose/), and [msys2](https://www.msys2.org/) for command line environment for `bash`, `sed`, `grep`, `jq`, and `curl` commands.  
 
 Once [msys2](https://www.msys2.org/) is installed and setup, you can run the following to get `jq` and `curl`: `pacman -Syu && pacman -S jq curl`
 
 ## Docker Compose using Pyenv
 
-If `pyenv` and `pyenv-virtualenv`, are installed, you can created a virtualenv using this:
+If `pyenv` and `pyenv-virtualenv`, are installed, you can create a virtualenv using this:
 
 
 ```bash
-PYTHON_VERSION="3.9.4" # choose desired python version
+PYTHON_VERSION="3.9.4" # choose the desired python version
 pyenv virtualenv $PYTHON_VERSION docker-compose-$PYTHON_VERSION
 pyenv shell docker-compose-$PYTHON_VERSION
 pip install --upgrade pip
@@ -40,32 +40,33 @@ pip install docker-compose
 ```
 
 
-## Part A: Configure Vault Server
+## Part A: Configure the Vault Server
 
 ```bash
 ## launch vault server
 docker-compose up --detach "vault"
 
-## initialize vault and copy secrets down
+## initialize vault and copy the secrets down
 docker exec -t vault vault operator init
 
-## unseal vault using copied secrets
+## unseal vault using the copied secrets
 docker exec -ti vault vault operator unseal
 docker exec -ti vault vault operator unseal
 docker exec -ti vault vault operator unseal
 
-# export results
+# export the results for use in other steps
 export VAULT_ROOT_TOKEN="<root-token>"
 export VAULT_ADDRESS="127.0.0.1:8200"
 ```
 
 
-## Part B: Setup using Root Token
+## Part B: Setup using the Root Token
 
 ```bash
 ############################################
 ## Enabled Features: AppRole, KV Secrets v2
-############################################curl --silent \
+############################################
+curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   --request POST \
   --data '{"type": "approle"}' \
@@ -137,13 +138,16 @@ VAULT_ADMIN_SECRET_ID=$(curl --silent \
 
 export VAULT_ADMIN_TOKEN=$(curl --silent \
   --request POST \
-  --data "{ \"role_id\": \"$VAULT_ADMIN_ROLE_ID\", \"secret_id\": \"$VAULT_ADMIN_SECRET_ID\" }" \
+  --data "{
+    \"role_id\": \"$VAULT_ADMIN_ROLE_ID\",
+    \"secret_id\": \"$VAULT_ADMIN_SECRET_ID\"
+}" \
   http://$VAULT_ADDRESS/v1/auth/approle/login \
     | jq -r '.auth.client_token'
 )
 ```
 
-## Part C: Setup using Admin Token
+## Part C: Setup using the Admin Token
 
 ```bash
 curl --silent \
@@ -151,8 +155,6 @@ curl --silent \
   --request POST \
   --data @./vault/payload_alpha_secrets.json \
   http://$VAULT_ADDRESS/v1/secret/data/dgraph/alpha | jq
-
-
 
 ############################################
 ## Dgraph Policy
@@ -257,7 +259,6 @@ DGRAPH_ADMIN_USER="groot"
 DGRAPH_ADMIN_PSWD="password"
 export DGRAPH_ALPHA_ADDRESS="localhost:8080"
 
-
 ############################################
 ## ACL Feature
 ############################################
@@ -272,7 +273,6 @@ export DGRAPH_ACCESS_TOKEN=$(curl --silent \
     | grep -oP '(?<=accessJWT":")[^"]*'
 )
 
-
 ############################################
 ## Export Feature w/ Encryption + ACL Login
 ############################################
@@ -286,7 +286,6 @@ curl --silent \
 ## Verify
 ## NOTE: results should be 'data', not 'gzip compressed data'
 find ./dgraph/export/ -name '*.gz' | xargs -n 1 file
-
 
 ############################################
 ## Backup Feature w/ Encryption + ACL Login
