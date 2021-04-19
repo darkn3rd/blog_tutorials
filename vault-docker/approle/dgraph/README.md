@@ -265,7 +265,7 @@ export DGRAPH_ACCESS_TOKEN=$(curl --silent \
   --request POST \
   --data "{
     \"userid\": \"$DGRAPH_ADMIN_USER\",
-    \"$DGRAPH_ADMIN_PSWD\": \"password\",
+    \"password\": \"$DGRAPH_ADMIN_PSWD\",
     \"namespace\": 0
 }" \
   http://$DGRAPH_ALPHA_ADDRESS/login \
