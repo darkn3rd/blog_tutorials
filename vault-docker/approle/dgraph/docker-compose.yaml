@@ -1,0 +1,38 @@
+version: "3.5"
+services:
+  zero1:
+    image: dgraph/dgraph:${DGRAPH_VERSION}
+    command: dgraph zero --my=zero1:5080 --replicas 1 --raft idx=1
+    ports:
+      - 6080:6080
+    container_name: zero1
+
+  alpha1:
+    image: dgraph/dgraph:${DGRAPH_VERSION}
+    ports:
+      - 8080:8080
+      - 9080:9080
+    environment:
+      DGRAPH_ALPHA_CONFIG: /dgraph/config/config.yaml
+    volumes:
+      - ./dgraph/alpha.yaml:/dgraph/config/config.yaml
+      - ./dgraph/vault_secret_id:/dgraph/vault/secret_id
+      - ./dgraph/vault_role_id:/dgraph/vault/role_id
+      - ./dgraph/backups:/dgraph/backups
+      - ./dgraph/export:/dgraph/export
+    command: dgraph alpha --my=alpha1:7080 --zero=zero1:5080
+    container_name: alpha1
+
+  vault:
+    image: vault:${VAULT_VERSION}
+    container_name: vault
+    ports:
+      - 8200:8200
+    volumes:
+      - ./vault/config.hcl:/vault/config/config.hcl
+      - ./vault/data:/vault/data
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    entrypoint: vault server -config=/vault/config/config.hcl
+    cap_add:
+      - IPC_LOCK

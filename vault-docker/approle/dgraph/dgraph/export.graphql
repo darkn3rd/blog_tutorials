@@ -1,0 +1,8 @@
+mutation {
+  export(input: { format: "json" }) {
+    response {
+      message
+      code
+    }
+  }
+}
