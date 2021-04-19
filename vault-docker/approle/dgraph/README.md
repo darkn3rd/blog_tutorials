@@ -247,6 +247,9 @@ docker-compose up --detach
 ## check logs for "Server is ready"
 docker logs alpha1
 
+## highlight
+docker logs alpha1 2>&1 | grep --color -E 'ACL secret key|Encryption feature|$'
+
 # print a list of features enabled
 export DGRAPH_ALPHA_ADDRESS="localhost:8080"
 curl --silent http://$DGRAPH_ALPHA_ADDRESS/health \
