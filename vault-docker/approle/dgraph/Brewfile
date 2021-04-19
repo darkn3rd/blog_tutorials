@@ -1,0 +1,7 @@
+brew "bash"
+brew "curl"
+brew "gnu-sed"
+brew "grep"
+brew "jq"
+brew "docker-compose"
+cask "docker"
