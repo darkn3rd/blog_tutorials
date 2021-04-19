@@ -12,7 +12,9 @@ This is an example of using HashiCorp Vault AppRole with from the application Dg
 * GNU `grep`
 * GNU `sed`
 
-### MacOS
+### Install Notes
+
+#### MacOS
 
 You can easily install the tools using [Homebrew](https://brew.sh/): make any desired adjustments to [`Brewfile`](Brewfile), then run `brew bundle --verbose`.
 
@@ -20,13 +22,13 @@ For `docker-compose` in particular, I recommend installing this through `pip` an
 
 For instructions on other *bottles* or the docker *cask*, you can get further instructions with `brew info`, e.g. `brew info gnu-sed`.
 
-### Windows 10
+#### Windows 10
 
 You can get the tools using [Chocolatey](https://chocolatey.org/): make any desired changes [`choco.config`](choco.config), and then run `choco install -y choco.config` to install [`docker`](https://docs.docker.com/docker-for-windows/install/), [`docker-compose`](https://docs.docker.com/compose/), and [msys2](https://www.msys2.org/) for command line environment for `bash`, `sed`, `grep`, `jq`, and `curl` commands.  
 
 Once [msys2](https://www.msys2.org/) is installed and setup, you can run the following to get `jq` and `curl`: `pacman -Syu && pacman -S jq curl`
 
-## Docker Compose using Pyenv
+#### Docker Compose using Pyenv
 
 If `pyenv` and `pyenv-virtualenv`, are installed, you can create a virtualenv using this:
 
