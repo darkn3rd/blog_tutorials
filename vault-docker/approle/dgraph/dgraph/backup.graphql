@@ -1,0 +1,11 @@
+mutation {
+  backup(input: {
+    destination: "/dgraph/backups"
+    forceFull: true
+  }) {
+    response {
+      message
+      code
+    }
+  }
+}
