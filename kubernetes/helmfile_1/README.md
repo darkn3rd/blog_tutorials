@@ -5,6 +5,7 @@ This is an example on how to use `helmfile` to coordinate installation of Promet
 ## Instructions
 
 ```bash
+. env.sh
 export GRAFANA_ADMIN_PASSWORD="password123"  # demo password only
 helmfile apply
 ```

@@ -1,0 +1,2 @@
+export MINIO_ACCESS_KEY=backups
+export MINIO_SECRET_KEY=password123

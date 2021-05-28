@@ -1,0 +1,11 @@
+image:
+  repository: minio/minio
+  tag: RELEASE.2021-05-27T22-06-31Z
+mcImage:
+  repository: minio/mc
+  tag: RELEASE.2021-05-26T19-19-26Z
+accessKey: {{ requiredEnv "MINIO_ACCESS_KEY" }}
+secretKey: {{ requiredEnv "MINIO_SECRET_KEY" }}
+defaultBucket:
+  enabled: true
+  name: dgraph
