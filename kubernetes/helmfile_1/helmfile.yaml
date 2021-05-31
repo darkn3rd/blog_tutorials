@@ -1,0 +1,20 @@
+repositories:
+  - name: minio
+    url: https://helm.min.io/
+  - name: dgraph
+    url: https://charts.dgraph.io
+
+releases:
+  - name: minio
+    namespace: {{ env "MINIO_NAMESPACE" | default "minio" }}
+    chart: minio/minio
+    version: 8.0.10
+    values:
+      - ./values/minio.yaml.gotmpl
+
+  - name: dgraph
+    namespace: {{ env "DGRAPH_NAMESPACE" | default "dgraph" }}
+    chart: dgraph/dgraph
+    version: 0.0.17
+    values:
+      - ./values/dgraph.yaml.gotmpl
