@@ -1,9 +1,10 @@
-
 backups:
   full:
     enabled: true
     debug: true
     schedule: "*/15 * * * *"
+  destination: minio://minio.{{ env "MINIO_NAMESPACE" | default "minio" }}.svc:9000/dgraph
+  minioSecure: false
   keys:
     minio:
       access: {{ requiredEnv "MINIO_ACCESS_KEY" }}
