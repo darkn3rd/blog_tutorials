@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-
+set -x
 ## Check for gcloud command
 command -v az > /dev/null || \
   { echo "'az' command not not found" 1>&2; exit 1; }
 
 ## Defaults
-AZ_LOCATION=${AZ_LOCATION}
-AZ_RESOURCE_GROUP=${AZ_RESOURCE_GROUP}
-AZ_CLUSTER_NAME=${AZ_CLUSTER_NAME}
 AZ_VM_SIZE=${AZ_VM_SIZE:-Standard_DS2_v2}
+KUBECONFIG=${KUBECONFIG:-$HOME/.kube/config}
 
 ## Verify these variables are set
 [[ -z "$AZ_LOCATION" ]] && { echo 'AZ_LOCATION not specified. Aborting' 2>&1 ; exit 1; }
@@ -35,10 +33,10 @@ if az group list | jq '.[].name' -r | grep -q ${AZ_RESOURCE_GROUP}; then
     fi
 
   if az aks list | jq '.[].name' -r | grep -q ${AZ_CLUSTER_NAME}; then
+    ## Azure ignores KUBECONFIG, but we can specify with --file flag
     az aks get-credentials \
       --resource-group ${AZ_RESOURCE_GROUP} \
-      --name ${AZ_CLUSTER_NAME}
+      --name ${AZ_CLUSTER_NAME} \
+      --file ${KUBECONFIG}
   fi
-
 fi
-
