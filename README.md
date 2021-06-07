@@ -73,7 +73,6 @@ These are code related to tutorials created.
   * General
       * Helmfile (`helmfile`) - https://joachim8675309.medium.com/devops-tools-introducing-helmfile-f7c0197f3aea
       * Helm3 + Helm2 on macOS (`helm`) - https://joachim8675309.medium.com/install-helm3-helm2-on-macos-d65f61509799
-
   * EKS
       * VPC + EKS (`eksctl`) - https://joachim8675309.medium.com/building-eks-with-eksctl-799eeb3b0efd
       * VPC for future EKS (`terraform`) - https://joachim8675309.medium.com/create-an-amazon-vpc-for-eks-597481514bcc
