@@ -1,14 +1,3 @@
-resource "azurerm_virtual_network" "default" {
-  name                = "appVnet"
-  address_space       = ["10.0.0.0/16"]
-  location            = var.location
-  resource_group_name = var.resource_group_name
-
-  tags = {
-    environment = "dev"
-  }
-}
-
 resource "azurerm_public_ip" "default" {
   name                = "appPublicIP"
   location            = var.location
@@ -18,13 +7,6 @@ resource "azurerm_public_ip" "default" {
   tags = {
     environment = "dev"
   }
-}
-
-resource "azurerm_subnet" "default" {
-  name                 = "appSubnet"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.default.name
-  address_prefixes     = ["10.0.2.0/24"]
 }
 
 resource "azurerm_network_security_group" "default" {
@@ -56,7 +38,7 @@ resource "azurerm_network_interface" "default" {
 
   ip_configuration {
     name                          = "appNicConfiguration"
-    subnet_id                     = azurerm_subnet.default.id
+    subnet_id                     = var.subnet_id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.default.id
   }

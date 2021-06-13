@@ -10,11 +10,17 @@ This section demonstrates three things:
 
 * [Getting Started on Azure VM and Infrastructure](https://joachim8675309.medium.com/azure-linux-vm-with-infra-99af44039253)
 
-
 ## Instructions
 
 ```bash
 # create resource group
 az group create --location westus --resource-group devapp
 terraform apply
+```
+
+## Cleanup
+
+```bash
+terraform destroy
+az group delete devapp
 ```
