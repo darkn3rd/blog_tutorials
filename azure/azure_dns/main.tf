@@ -15,3 +15,10 @@ module "azure_vm" {
   computer_name       = var.computer_name
   admin_username      = var.admin_username
 }
+
+module "dns_domain_record" {
+  source     = "./dns_godaddy"
+  domain     = var.domain
+  name       = var.computer_name
+  ip_address = module.azure_vm.public_ip
+}
