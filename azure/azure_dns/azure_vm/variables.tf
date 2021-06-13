@@ -8,3 +8,5 @@ variable "image_version" { default = "latest" }
 
 variable "computer_name" {}
 variable "admin_username" {}
+
+variable "subnet_id" {}
