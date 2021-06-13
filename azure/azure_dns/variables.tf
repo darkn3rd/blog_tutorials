@@ -7,3 +7,4 @@ variable "computer_name" {}
 variable "admin_username" {}
 
 variable "domain" { default = "" }
+variable "subdomain_prefix" { default = "dev" }
