@@ -1,4 +1,3 @@
 .terraform*
 terraform.tfstate*
 azure_vm.pem
-env.sh
