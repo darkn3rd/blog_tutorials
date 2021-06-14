@@ -13,5 +13,4 @@ resource "godaddy_domain_record" "default" {
     data = var.ip_address
     ttl  = 3600
   }
-
 }

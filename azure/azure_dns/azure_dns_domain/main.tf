@@ -18,3 +18,7 @@ resource "azurerm_dns_zone" "default" {
 output "dns_zone_name" {
   value = azurerm_dns_zone.default.name
 }
+
+output "name_servers" {
+  value = azurerm_dns_zone.default.name_servers
+}
