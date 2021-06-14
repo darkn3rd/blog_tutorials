@@ -55,9 +55,9 @@ module "azure_dns_domain" {
 }
 
 module "godaddy_dns_nameservers" {
-  source           = "./godaddy_dns_nameservers"
-  domain           = var.domain
-  name_servers     = module.azure_dns_managed_domain.name_servers
+  source       = "./godaddy_dns_nameservers"
+  domain       = var.domain
+  name_servers = module.azure_dns_managed_domain.name_servers
 }
 
 module "azure_dns_domain_record" {

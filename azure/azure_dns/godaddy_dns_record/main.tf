@@ -5,7 +5,7 @@ variable "ip_address" {}
 
 ### resources
 resource "godaddy_domain_record" "default" {
-  domain   = var.domain
+  domain = var.domain
 
   record {
     name = var.name
