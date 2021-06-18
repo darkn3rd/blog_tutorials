@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+# [[ "$DEBUG" == 1 ]] && set -x
 ## Check for gcloud command
 command -v az > /dev/null || \
   { echo "'az' command not not found" 1>&2; exit 1; }

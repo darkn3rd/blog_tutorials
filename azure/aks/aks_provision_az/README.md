@@ -1,3 +1,11 @@
+# AKS Provision with `az` command
+
+## Published Blogs
+
+* https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
+
+
+## Instructions
 
 
 ```bash
@@ -8,5 +16,4 @@ export AZ_LOCATION=westus2
 EOF
 
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
-
 ```
