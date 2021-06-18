@@ -65,11 +65,14 @@ These are code related to tutorials created.
 
 ### Cloud Native Infrastructure
 
+* Azure
+  * Azure VM + PublicIP (`terraform`) - https://joachim8675309.medium.com/azure-linux-vm-with-infra-99af44039253
+  * Azure VM + DNS (`terraform`) - https://joachim8675309.medium.com/azure-linux-vm-with-dns-e54076bab296
 * AWS
   * AWS Infrastructure 1 (`terraform`) - https://joachim8675309.medium.com/building-aws-infra-with-terraform-96387481b9d7
   * AWS Infrastructure 2 (`terraform`) - https://joachim8675309.medium.com/building-aws-infra-with-terraform-2-ca60146666f8
 
-* Kubernetes
+* K8S or Kubernetes
   * General
       * Helmfile (`helmfile`) - https://joachim8675309.medium.com/devops-tools-introducing-helmfile-f7c0197f3aea
       * Helm3 + Helm2 on macOS (`helm`) - https://joachim8675309.medium.com/install-helm3-helm2-on-macos-d65f61509799
@@ -89,7 +92,7 @@ These are code related to tutorials created.
       * Terraform with K8S Provider - https://joachim8675309.medium.com/deploy-kubernetes-apps-with-terraform-5b74e5891958
       * Terraform with Helm Provider - https://medium.com/swlh/deploying-helm-charts-w-terraform-58bd3a690e55
 
-* Observability
+* O11Y or Observability (Visualization, Alerting, Metrics, Logs, Traces)
     * Logs
         * Log Shipping: FileBeat (`docker-compose`) - https://joachim8675309.medium.com/devops-journey-log-shipping-a2cbc8e20206
 

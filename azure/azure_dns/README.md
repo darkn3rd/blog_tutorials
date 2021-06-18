@@ -9,6 +9,7 @@ This section demonstrates three things:
 ## Blog Sources
 
 * [Getting Started on Azure VM and Infrastructure](https://joachim8675309.medium.com/azure-linux-vm-with-infra-99af44039253)
+* [Managing DNS Records with Azure DNS](https://joachim8675309.medium.com/azure-linux-vm-with-dns-e54076bab296)
 
 ## Instructions: Linux VM + Public IP
 
