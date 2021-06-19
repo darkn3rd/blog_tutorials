@@ -17,7 +17,6 @@ If you used anoterh source to provision an AKS Kubernetes clusgter, make sure th
 
 ```bash
 az aks update -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME --enable-managed-identity
-az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME  --query "identity"
 ```
 
 ## Domain Registration
@@ -29,8 +28,8 @@ export GODADDY_API_KEY="<secret_goes_here>"
 export GODADDY_API_SECRET="<secret_goes_here>"
 export TF_VAR_domain="<your-domain-name-goes-here>"
 export TF_VAR_resource_group_name="blog-test"
+export TF_VAR_location="westus"
 
-export TF_VAR_location="westus2"
 pushd ../../azure/azure_dns/
 terraform init
 terraform apply --target module.azure_dns_domain
@@ -38,21 +37,70 @@ terraform apply --target module.godaddy_dns_nameservers
 popd
 ```
 
-##
+### Add Access to Azure DNS Zone
+
+```bash
+export AZ_RESOURCE_GROUP="blog-test"
+export AZ_CLUSTER_NAME="blog-test"
+export AZ_PRINCIPAL_ID=$(az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME  --query "identityProfile.kubeletidentity.objectId" | tr -d '"')
+# apparently this grants ALL access to EVERYTHING in the RG NOT SAFE
+# NOTE: FIX THIS
+az role assignment create \
+  --assignee "$AZ_PRINCIPAL_ID" \
+  --role "DNS Zone Contributor" \
+  --resource-group "$AZ_RESOURCE_GROUP"
+```
+
+### Deploy
 
 ```bash
 export AZ_TENANT_ID=$(az account show --query "tenantId" | tr -d '"')
 export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
 export AZ_RESOURCE_GROUP="blog-test"
+export TF_VAR_domain="<your-domain-name-goes-here>"
 
-aadClientId
-aadClientSecret
+# Deploy External DNS
+helmfile apply
+
+# Fetch Pord Name and Verify Logs
+EXTERNAL_DNS_POD_NAME=$(
+  kubectl \
+    --namespace kube-addons get pods \
+    --selector "app.kubernetes.io/name=external-dns,app.kubernetes.io/instance=external-dns" \
+    --output name
+)
+kubectl logs --namespace kube-addons $EXTERNAL_DNS_POD_NAME
 ```
 
+### Example
 
+```bash
+export TF_VAR_domain="<your-domain-name-goes-here>"
+kubectl create namespace hello
+envsubst < hello_k8s.yaml.shtmpl | kubectl apply --namespace hello -f -
+```
+
+## Cleanup
+
+```bash
+# cleanup example
+envsubst < hello_k8s.yaml.shtmpl | kubectl --namespace hello delete -f -
+kubectl delete namespace hello
+
+# external dns
+helmfile delete
+kubectl delete namespace kube-addons
+
+# delete kubernetes cluster
+pushd ../../azure/aks/aks_provision_az/; ./delete_cluster.sh; popd
+```
 
 ## References
 
+* Azure DNS
+  * [How to protect DNS zones and records](https://docs.microsoft.com/en-us/azure/dns/dns-protect-zones-recordsets)
+
+https://docs.microsoft.com/en-us/cli/azure/role/assignment?view=azure-cli-latest
 
 * AKS
   * Private Cluster: https://docs.microsoft.com/en-us/azure/aks/private-clusters
