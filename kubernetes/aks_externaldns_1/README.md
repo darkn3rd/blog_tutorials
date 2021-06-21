@@ -43,6 +43,7 @@ popd
 export AZ_RESOURCE_GROUP="blog-test"
 export AZ_CLUSTER_NAME="blog-test"
 export AZ_PRINCIPAL_ID=$(az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME  --query "identityProfile.kubeletidentity.objectId" | tr -d '"')
+export AZ_DNS_SCOPE=$(az network dns zone list | jq -r ".[] | select(.name == \"$AZ_DNS_DOMAIN\").id")
 # apparently this grants ALL access to EVERYTHING in the RG NOT SAFE
 # NOTE: FIX THIS
 az role assignment create \
