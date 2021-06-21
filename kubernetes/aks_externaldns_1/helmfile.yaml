@@ -16,5 +16,5 @@ releases:
           useManagedIdentityExtension: true
         logLevel: {{ env "EXTERNALDNS_LOG_LEVEL" | default "debug" }}
         domainFilters:
-          - {{ requiredEnv "TF_VAR_domain" }}
+          - {{ requiredEnv "AZ_DNS_DOMAIN" }}
         txtOwnerId: external-dns
