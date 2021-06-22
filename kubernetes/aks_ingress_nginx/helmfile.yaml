@@ -24,11 +24,18 @@ releases:
   - name: ingress-nginx
     namespace: kube-addons
     chart: ingress-nginx/ingress-nginx
-    version: 0.47.0
+    version: 3.34.0
     values:
       - controller:
           replicaCount: 2
-          nodeSelector: beta.kubernetes.io/os=linux
-          admissionWebhooks.patch.nodeSelector: beta.kubernetes.io/os=linux
+          nodeSelector:
+            kubernetes.io/os: linux
+          admissionWebhooks:
+            patch:
+              nodeSelector:
+                kubernetes.io/os: linux
+          service:
+            externalTrafficPolicy: Local
         defaultBackend:
-          nodeSelector: beta.kubernetes.io/os=linux
+          nodeSelector:
+            kubernetes.io/os: linux
