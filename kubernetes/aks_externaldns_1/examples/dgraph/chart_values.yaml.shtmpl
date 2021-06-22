@@ -1,0 +1,18 @@
+alpha:
+  service:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: alpha.${AZ_DNS_DOMAIN}
+    ## set to Local for whitelist to work with service LoadBalancer
+    externalTrafficPolicy: Local
+  configFile:
+    ## accept list should include local AKS IPs and home office IPs (whatismyip)
+    config.yaml: |
+      security:
+        whitelist: ${DG_ACCEPT_LIST}
+ratel:
+  enabled: true
+  service:
+    type: LoadBalancer
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: ratel.${AZ_DNS_DOMAIN}

@@ -39,7 +39,7 @@ module "azure_dns_subdomain" {
 module "azure_dns_subdomain_record" {
   source              = "./azure_dns_record"
   resource_group_name = var.resource_group_name
-  dns_zone_name       = module.azure_dns_domain.dns_zone_name
+  dns_zone_name       = module.azure_dns_subdomain.dns_zone_name
   name                = var.computer_name
   ip_address          = module.azure_vm.public_ip
 }
@@ -57,13 +57,13 @@ module "azure_dns_domain" {
 module "godaddy_dns_nameservers" {
   source       = "./godaddy_dns_nameservers"
   domain       = var.domain
-  name_servers = module.azure_dns_managed_domain.name_servers
+  name_servers = module.azure_dns_domain.name_servers
 }
 
 module "azure_dns_domain_record" {
   source              = "./azure_dns_record"
   resource_group_name = var.resource_group_name
-  dns_zone_name       = module.azure_dns_managed_domain.dns_zone_name
+  dns_zone_name       = module.azure_dns_domain.dns_zone_name
   name                = var.computer_name
   ip_address          = module.azure_vm.public_ip
 }

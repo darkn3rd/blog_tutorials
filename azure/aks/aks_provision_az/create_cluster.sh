@@ -28,6 +28,7 @@ if az group list | jq '.[].name' -r | grep -q ${AZ_RESOURCE_GROUP}; then
         --vm-set-type VirtualMachineScaleSets \
         --node-vm-size $AZ_VM_SIZE \
         --load-balancer-sku standard \
+        --enable-managed-identity \
         --node-count 3 \
         --zones 1 2 3
     fi

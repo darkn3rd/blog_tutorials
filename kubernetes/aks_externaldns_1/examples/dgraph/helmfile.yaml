@@ -1,0 +1,28 @@
+repositories:
+  - name: dgraph
+    url: https://charts.dgraph.io
+
+releases:
+  - name: demo
+    namespace: dgraph
+    chart: dgraph/dgraph
+    version: 0.0.17
+    values:
+      - alpha:
+          service:
+            type: LoadBalancer
+            annotations:
+              external-dns.alpha.kubernetes.io/hostname: alpha.{{ requiredEnv "AZ_DNS_DOMAIN" }}
+            ## set to Local for whitelist to work with service LoadBalancer
+            externalTrafficPolicy: {{ env "DG_ALPHA_SVC_EXTERNAL_TRAFFIC_POLICY" | default "Local" }}
+          configFile:
+            ## accept list should include local AKS IPs and home office IPs (whatismyip)
+            config.yaml: |
+              security:
+                whitelist: {{ env "DG_ACCEPT_LIST" | default "0.0.0.0/0" | quote }}
+        ratel:
+          enabled: true
+          service:
+            type: LoadBalancer
+            annotations:
+              external-dns.alpha.kubernetes.io/hostname: ratel.{{ requiredEnv "AZ_DNS_DOMAIN" }}
