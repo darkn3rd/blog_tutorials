@@ -14,11 +14,6 @@ export AZ_DNS_DOMAIN="example.com"
 ## GoDaddy API credentials (if GoDaddy is used)
 export GODADDY_API_KEY="<secret_goes_here>"
 export GODADDY_API_SECRET="<secret_goes_here>"
-
-## Terraform variable definitions (if Terraform is used)
-export TF_VAR_resource_group_name=$AZ_RESOURCE_GROUP
-export TF_VAR_location=$AZ_LOCATION
-export TF_VAR_domain=$AZ_DNS_DOMAIN
 ```
 
 ## AKS
@@ -45,7 +40,7 @@ az aks get-credentials \
 
 ## Deploy
 
-```
+```bash
 export AZ_TENANT_ID=$(az account show --query "tenantId" | tr -d '"')
 export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
 ```
@@ -63,3 +58,4 @@ export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
   * https://azure.github.io/aad-pod-identity/
 * ACME
   * https://cert-manager.io/docs/configuration/acme/
+  * https://azure.github.io/application-gateway-kubernetes-ingress/how-tos/lets-encrypt/
