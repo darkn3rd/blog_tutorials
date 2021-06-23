@@ -43,12 +43,23 @@ az aks get-credentials \
   --file ${KUBECONFIG:-$HOME/.kube/config}
 ```
 
+## Deploy
+
+```
+export AZ_TENANT_ID=$(az account show --query "tenantId" | tr -d '"')
+export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
+```
+
+
 ## Reseach
 
 * Azure Guides
   * private certs: https://docs.microsoft.com/en-us/azure/aks/ingress-tls
   * public-cert + podIdentity + AzureDNS: https://cert-manager.io/docs/configuration/acme/dns01/azuredns/
 * Helm Chart
-  * https://artifacthub.io/packages/helm/cert-manager/cert-manager
+  * chart ReadMe: https://artifacthub.io/packages/helm/cert-manager/cert-manager
+  * values.yaml: https://github.com/jetstack/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
 * PodIdentity
   * https://azure.github.io/aad-pod-identity/
+* ACME
+  * https://cert-manager.io/docs/configuration/acme/
