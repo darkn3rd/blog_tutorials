@@ -10,8 +10,9 @@
   * ExternalDNS (`external-dns`) configured
   * environment variable: `AZ_DNS_DOMAIN`
 
+## Deploy
 
-## Deploy using kubectl + envsubst
+## Using kubectl + envsubst
 
 ```bash
 export AZ_DNS_DOMAIN='example.com'
@@ -19,7 +20,7 @@ kubectl create namespace hello
 envsubst < hello_k8s.yaml.shtmpl | kubectl apply --namespace hello -f -
 ```
 
-## Deploy using helmfile
+## Using helmfile
 
 This requires `helm` and `helm-diff` installed in additon to `helmfile`
 
