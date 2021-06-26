@@ -19,7 +19,7 @@ releases:
             ## accept list should include local AKS IPs and home office IPs (whatismyip)
             config.yaml: |
               security:
-                whitelist: {{ env "DG_ACCEPT_LIST" | default "0.0.0.0/0" | quote }}
+                whitelist: {{ env "DG_ALLOW_LIST" | default "0.0.0.0/0" | quote }}
         ratel:
           enabled: true
           service:

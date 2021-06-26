@@ -9,7 +9,7 @@ alpha:
     ## accept list should include local AKS IPs and home office IPs (whatismyip)
     config.yaml: |
       security:
-        whitelist: ${DG_ACCEPT_LIST}
+        whitelist: ${DG_ALLOW_LIST}
 ratel:
   enabled: true
   service:

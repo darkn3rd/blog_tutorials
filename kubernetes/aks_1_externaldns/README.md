@@ -10,12 +10,10 @@ Create a global env.sh to hold  all the values  we'll will use.
 ```bash
 export AZ_RESOURCE_GROUP="external-dns"
 export AZ_LOCATION="westus2"
-
 export AZ_CLUSTER_NAME="demo-external-dns"
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
 
-export AZ_DNS_DOMAIN="example.com"
-
+export AZ_DNS_DOMAIN="<replace-with-your-domain>" # example.com
 ## GoDaddy API credentials (if GoDaddy is used)
 export GODADDY_API_KEY="<secret_goes_here>"
 export GODADDY_API_SECRET="<secret_goes_here>"
@@ -197,73 +195,12 @@ kubectl logs --namespace kube-addons $EXTERNAL_DNS_POD_NAME
 
 ## Hello Kubernetes
 
-```bash
-. env.sh
-pushd examples/hello
-kubectl create namespace hello
-envsubst < hello_k8s.yaml.shtmpl | kubectl apply --namespace hello -f -
-popd
-```
+See [README.MD](examples/hello/README.md) for further information.
+
 
 ## Dgraph
 
-### Dgraph with Helmfile
-
-```bash
-. env.sh
-pushd examples/dgraph
-
-## Build Accept List
-DG_ACCEPT_LIST=$(az aks show \
-  --name $AZ_CLUSTER_NAME \
-  --resource-group $AZ_RESOURCE_GROUP | \
-  jq -r '.networkProfile.podCidr,.networkProfile.serviceCidr' | \
-  tr '\n' ','
-)
-# append home office IP address
-MY_IP_ADDRESS=$(curl --silent ifconfig.me)
-DG_ACCEPT_LIST="${DG_ACCEPT_LIST}${MY_IP_ADDRESS}/32"export DG_ACCEPT_LIST
-export DG_ACCEPT_LIST
-
-# Deploy
-helmfile apply
-popd
-```
-
-### Dgraph using just Helm
-
-```bash
-. env.sh
-pushd examples/dgraph
-
-## Build Accept List
-DG_ACCEPT_LIST=$(az aks show \
-  --name $AZ_CLUSTER_NAME \
-  --resource-group $AZ_RESOURCE_GROUP | \
-  jq -r '.networkProfile.podCidr,.networkProfile.serviceCidr' | \
-  tr '\n' ','
-)# append home office IP address
-MY_IP_ADDRESS=$(curl --silent ifconfig.me)
-DG_ACCEPT_LIST="${DG_ACCEPT_LIST}${MY_IP_ADDRESS}/32"export DG_ACCEPT_LIST
-export DG_ACCEPT_LIST
-
-## Deploy
-envsubst < chart-values.yaml.shtmpl > chart-values.yaml
-kubectl create namespace dgraph
-helm repo add dgraph https://charts.dgraph.io
-helm install demo dgraph/dgraph \
-  --namespace dgraph \
-  --values chart-values.yaml \
-  --version 0.0.17
-
-popd
-```
-
-### Verify Dgraph
-
-```bash
-curl --silent http://alpha.${AZ_DNS_DOMAIN}:8080/health | jq
-```
+See [README.MD](examples/dgraph/README.md) for further information.
 
 # Cleanup
 
