@@ -14,7 +14,8 @@
 
 ## Security (Dgraph Service)
 
-You can limit access with an *allow list*:
+You can limit access with an *allow list*
+
 
 ```bash
 source ../../env.sh # fetch AZ_RESOURCE_GROUP and AZ_CLUSTER_NAME
@@ -28,7 +29,7 @@ DG_ALLOW_LIST=$(az aks show \
 )
 # append home office IP address
 MY_IP_ADDRESS=$(curl --silent ifconfig.me)
-DG_ALLOW_LIST="${DG_ALLOW_LIST}${MY_IP_ADDRESS}/32"
+DG_ALLOW_LIST="${DG_ALLOW_LIST}${MY_IP_ADDRESS}/32"export DG_ALLOW_LIST
 export DG_ALLOW_LIST
 ```
 
@@ -55,18 +56,16 @@ helm install demo dgraph/dgraph \
 ### Verify Dgraph
 
 ```bash
-curl --silent http://alpha.${AZ_DNS_DOMAIN}/health | jq
+curl --silent http://alpha.${AZ_DNS_DOMAIN}:8080/health | jq
 ```
 
 ### Populate Data
 
 ```bash
-pushd data
 bash getting_started_data.sh
-popd
 ```
 
-# Cleanup
+## Cleanup
 
 ### Delete Dgraph Example
 
