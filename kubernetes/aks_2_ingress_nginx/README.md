@@ -1,4 +1,4 @@
-# Deploy ingress-nginx on  AKS
+# Deploy ingress-nginx on AKS
 
 ## Setup Environment Vars
 
@@ -9,7 +9,7 @@ export AZ_RESOURCE_GROUP="ingress-demo"
 export AZ_LOCATION="westus2"
 export AZ_CLUSTER_NAME="ingress-demo"
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
-export AZ_DNS_DOMAIN="<replace-with-your-domain" # example.com
+export AZ_DNS_DOMAIN="<replace-with-your-domain>" # example.com
 export AZ_TENANT_ID=$(az account show --query "tenantId" | tr -d '"')
 export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
 ```
@@ -30,7 +30,7 @@ bash ./scripts/config_azure_dns_access.sh
 
 ## Deploy Addons
 
-```
+```bash
 . env.sh
 helmfile apply
 ```

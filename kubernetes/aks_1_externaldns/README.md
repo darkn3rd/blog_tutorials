@@ -10,12 +10,10 @@ Create a global env.sh to hold  all the values  we'll will use.
 ```bash
 export AZ_RESOURCE_GROUP="external-dns"
 export AZ_LOCATION="westus2"
-
 export AZ_CLUSTER_NAME="demo-external-dns"
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
 
-export AZ_DNS_DOMAIN="example.com"
-
+export AZ_DNS_DOMAIN="<replace-with-your-domain>" # example.com
 ## GoDaddy API credentials (if GoDaddy is used)
 export GODADDY_API_KEY="<secret_goes_here>"
 export GODADDY_API_SECRET="<secret_goes_here>"
