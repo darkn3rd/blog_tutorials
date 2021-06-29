@@ -37,14 +37,14 @@ export DG_ALLOW_LIST
 ### Using Helmfile
 
 ```bash
-export AZ_DNS_DOMAIN='example.com'
+export AZ_DNS_DOMAIN='<your-domain-goes-here>'
 helmfile apply
 ```
 
 ### Using vanilla Helm
 
 ```bash
-export AZ_DNS_DOMAIN='example.com'
+export AZ_DNS_DOMAIN='<your-domain-goes-here>'
 envsubst < chart-values.yaml.shtmpl > chart-values.yaml
 kubectl create namespace dgraph
 helm repo add dgraph https://charts.dgraph.io
