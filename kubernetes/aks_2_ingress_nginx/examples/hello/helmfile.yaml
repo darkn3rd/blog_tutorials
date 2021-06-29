@@ -1,6 +1,7 @@
 repositories:
   - name: itscontained
     url: https://charts.itscontained.io
+
 releases:
   - name: hello-kubernetes
     namespace: hello
