@@ -3,14 +3,20 @@
 ## Requirements
 
 * General
-  * Tools: `helm` or `helmfile`
-  * Kubernetes (AKS)
+  * Tools: `helm` and `helmfile`
+  * Kubernetes (AKS) with managed identity
+    * Access to Azure DNS zone by addons `external-dns` and `ingress-nginx`
 * Securing Dgraph (*allow list*)
   * evironment variables: `AZ_CLUSTER_NAME`, `AZ_RESOURCE_GROUP`
 * DNS configuraiton autoamtion
   * Tools: `helm` or `helmfile`
-  * ExternalDNS (`external-dns`) configured
+  * Addons: ExternalDNS (`external-dns`) configured
   * environment variable: `AZ_DNS_DOMAIN`
+* TLS certificate autoamtion
+  * Tools: `helm` and `helmfile`
+  * Addons: `cert-manager` and `ingress-nginx` configured
+  * environment variable: `AZ_DNS_DOMAIN` and `ACME_ISSUER`
+    * referenced issuer is configured and installed
 
 ## Security (Dgraph Service)
 
@@ -38,26 +44,16 @@ export DG_ALLOW_LIST
 
 ```bash
 export AZ_DNS_DOMAIN='<your-domain-goes-here>'
+export ACME_ISSUER='<issuer-name-goes-here>' # letsencrypt-prod or letsencrypt-straging
 helmfile apply
 ```
 
-### Using vanilla Helm
-
-```bash
-export AZ_DNS_DOMAIN='<your-domain-goes-here>'
-envsubst < chart-values.yaml.shtmpl > chart-values.yaml
-kubectl create namespace dgraph
-helm repo add dgraph https://charts.dgraph.io
-helm install demo dgraph/dgraph \
-  --namespace dgraph \
-  --values chart-values.yaml \
-  --version 0.0.17
-```
 
 ## Verify Dgraph
 
 ```bash
-curl --silent http://alpha.${AZ_DNS_DOMAIN}/health | jq
+[[ "$ACME_ISSUER" == "letsencrypt-staging" ]] && CURL_K_OPT="--insecure"
+curl --silent $CURL_K_OPT https://alpha.${AZ_DNS_DOMAIN}/health | jq
 ```
 
 ## Populate Data

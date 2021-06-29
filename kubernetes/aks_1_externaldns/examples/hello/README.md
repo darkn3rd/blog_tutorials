@@ -26,5 +26,5 @@ This requires `helm` and `helm-diff` installed in additon to `helmfile`
 
 ```bash
 export AZ_DNS_DOMAIN='example.com'
-helmfile apploy
+helmfile apply
 ```
