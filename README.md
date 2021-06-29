@@ -78,6 +78,9 @@ These are code related to tutorials created.
       * Helm3 + Helm2 on macOS (`helm`) - https://joachim8675309.medium.com/install-helm3-helm2-on-macos-d65f61509799
   * AKS
       * Basic AKS (`az`) - https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
+      * AKS + external-dns - https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
+      * AKS + ingress-nginx - https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
+      * AKS + cert-manager - https://joachim8675309.medium.com/aks-with-cert-manager-f24786e87b20
   * EKS
       * VPC + EKS (`eksctl`) - https://joachim8675309.medium.com/building-eks-with-eksctl-799eeb3b0efd
       * VPC for future EKS (`terraform`) - https://joachim8675309.medium.com/create-an-amazon-vpc-for-eks-597481514bcc
