@@ -14,13 +14,20 @@ releases:
             config.yaml: |
               security:
                 whitelist: {{ env "DG_ACCEPT_LIST" | default "0.0.0.0/0" | quote }}
+
         ratel:
           enabled: true
 
         global:
           ingress:
             enabled: true
+            tls:
+              - hosts:
+                  - alpha.{{ requiredEnv "AZ_DNS_DOMAIN" }}
+                  - ratel.{{ requiredEnv "AZ_DNS_DOMAIN" }}
+                secretName: tls-secret
             annotations:
               kubernetes.io/ingress.class: nginx
+              cert-manager.io/cluster-issuer: {{ requiredEnv "ACME_ISSUER" }}
             ratel_hostname: ratel.{{ requiredEnv "AZ_DNS_DOMAIN" }}
             alpha_hostname: alpha.{{ requiredEnv "AZ_DNS_DOMAIN" }}
