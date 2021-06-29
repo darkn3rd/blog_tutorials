@@ -46,6 +46,11 @@ export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
 ```
 
 
+```bash
+kubectl describe ingress --namespace hello
+kubectl describe certificate --namespace hello
+``
+
 ## Reseach
 
 * Azure Guides
