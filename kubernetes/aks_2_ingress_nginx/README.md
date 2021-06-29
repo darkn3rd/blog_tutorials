@@ -1,5 +1,9 @@
 # Deploy ingress-nginx on AKS
 
+## Published Articles
+
+* https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
+
 ## Setup Environment Vars
 
 Create an `env.sh` and filling out the appropriate values.
