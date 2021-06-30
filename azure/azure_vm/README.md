@@ -13,9 +13,12 @@ This section demonstrates three things:
 
 ```bash
 # create resource group
-az group create --location westus --resource-group devapp
+export TF_VAR_resource_group_name="devapp"
+az group create --location westus --resource-group $TF_VAR_resource_group_name
 terraform apply
 ```
+
+**NOTE**: Because Terraform puts lowest precedence on environment variables, `resource_group_name` is not in the variable definitions, so that it can be easily overridden.
 
 ## Testing
 

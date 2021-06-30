@@ -1,4 +1,3 @@
-resource_group_name = "devapp"
 location            = "westus"
 image_publisher     = "Canonical"
 image_offer         = "0001-com-ubuntu-server-focal"
