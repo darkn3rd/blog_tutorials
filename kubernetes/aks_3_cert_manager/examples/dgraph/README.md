@@ -12,7 +12,7 @@
   * Tools: `helm` or `helmfile`
   * Addons: ExternalDNS (`external-dns`) configured
   * environment variable: `AZ_DNS_DOMAIN`
-* TLS certificate autoamtion
+* TLS certificate automation
   * Tools: `helm` and `helmfile`
   * Addons: `cert-manager` and `ingress-nginx` configured
   * environment variable: `AZ_DNS_DOMAIN` and `ACME_ISSUER`
