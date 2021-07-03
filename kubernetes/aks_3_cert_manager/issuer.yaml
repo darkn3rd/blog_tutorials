@@ -3,12 +3,12 @@ repositories:
     url: https://charts.itscontained.io
 
 releases:
- - name: cert-manager-issuers
+  - name: cert-manager-issuers
     chart: itscontained/raw
     namespace: kube-addons
     version:  0.2.5
-    needs:
-      - kube-addons/cert-manager
+    # needs:
+    #   - kube-addons/cert-manager
     disableValidation: true
     values:
       - resources:
