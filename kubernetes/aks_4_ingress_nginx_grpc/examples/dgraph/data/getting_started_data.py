@@ -11,38 +11,29 @@ import certifi
 
 DGRAPH_ALPHA_SERVER = os.getenv('DGRAPH_ALPHA_SERVER') or 'localhost:9080'
 
-# Create a client stub.
-def create_client_stub():
-    print(f"DGRAPH_ALPHA_SERVER={DGRAPH_ALPHA_SERVER}")
+def create_client_stub(addr=localhost:9080):
+    "Create a client stub."
+    ## use public trusted root CAs
     with open(certifi.where(), "rb") as f:
         root_ca_cert = f.read()
-    # cert = ssl.get_server_certificate(DGRAPH_ALPHA_SERVER.split(':'), ssl_version=2)
-    #https://grpc.github.io/grpc/python/grpc.html
     creds = grpc.ssl_channel_credentials(root_certificates=root_ca_cert)
 
-    # import certifi # pip install certifi
+    ## use grpc secure channel by passing in creds
+    return pydgraph.DgraphClientStub(addr=addr, credentials=creds)
 
 
-    #credentials = grpc.ssl_channel_credentials(root_certs)
-
-
-    return pydgraph.DgraphClientStub(addr=DGRAPH_ALPHA_SERVER, credentials=creds)
-    # return pydgraph.DgraphClientStub(addr=DGRAPH_ALPHA_SERVER)
-
-
-
-# Create a client.
 def create_client(client_stub):
+    "Create a client."
     return pydgraph.DgraphClient(client_stub)
 
 
-# Drop All - discard all data and start from a clean slate.
 def drop_all(client):
+    "Drop All - discard all data and start from a clean slate."
     return client.alter(pydgraph.Operation(drop_all=True))
 
 
-# Set schema.
 def set_schema(client):
+    "Set schema."
     fname = "sw.schema"
 
     try:
@@ -61,8 +52,8 @@ def set_schema(client):
     return client.alter(pydgraph.Operation(schema=schema))
 
 
-# Create data using JSON.
 def create_data(client):
+    "Create data using RDF n-quads."
     fname = "sw.nquads.rdf"
 
     try:
@@ -99,7 +90,7 @@ def create_data(client):
 
 
 def main():
-    client_stub = create_client_stub()
+    client_stub = create_client_stub(addr=DGRAPH_ALPHA_SERVER)
     client = create_client(client_stub)
     set_schema(client)
     create_data(client)
