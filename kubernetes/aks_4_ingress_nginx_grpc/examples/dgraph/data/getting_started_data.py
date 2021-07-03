@@ -2,13 +2,35 @@
 import datetime
 import json
 import sys
+import os
+import grpc
+import ssl
 
 import pydgraph
+import certifi
 
+DGRAPH_ALPHA_SERVER = os.getenv('DGRAPH_ALPHA_SERVER') or 'localhost:9080'
+
+# https://chaobin.github.io/2015/07/22/a-working-understanding-on-SSL-and-HTTPS-using-python/
 
 # Create a client stub.
 def create_client_stub():
-    return pydgraph.DgraphClientStub('localhost:9080')
+    print(f"DGRAPH_ALPHA_SERVER={DGRAPH_ALPHA_SERVER}")
+    with open(certifi.where(), "rb") as f:
+        root_ca_cert = f.read()
+    # cert = ssl.get_server_certificate(DGRAPH_ALPHA_SERVER.split(':'), ssl_version=2)
+    #https://grpc.github.io/grpc/python/grpc.html
+    creds = grpc.ssl_channel_credentials(root_certificates=root_ca_cert)
+
+    # import certifi # pip install certifi
+
+
+    #credentials = grpc.ssl_channel_credentials(root_certs)
+
+
+    return pydgraph.DgraphClientStub(addr=DGRAPH_ALPHA_SERVER, credentials=creds)
+    # return pydgraph.DgraphClientStub(addr=DGRAPH_ALPHA_SERVER)
+
 
 
 # Create a client.
@@ -37,6 +59,7 @@ def set_schema(client):
         schema = file.read()
         file.close()
 
+    print(f"schema={schema}")
     return client.alter(pydgraph.Operation(schema=schema))
 
 
@@ -59,6 +82,8 @@ def create_data(client):
     # Create a new transaction.
     txn = client.txn()
     try:
+        print(f"p={p}")
+
         # Run mutation.
         response = txn.mutate(set_nquads=p)
 
@@ -78,8 +103,8 @@ def create_data(client):
 def main():
     client_stub = create_client_stub()
     client = create_client(client_stub)
-    # set_schema(client)
-    # create_data(client)
+    set_schema(client)
+    create_data(client)
 
     # Close the client stub.
     client_stub.close()

@@ -28,7 +28,6 @@ releases:
       - dgraph/demo
     disableValidation: true
     values:
-
       - resources:
           - apiVersion: networking.k8s.io/v1
             kind: Ingress
@@ -47,6 +46,7 @@ releases:
                 - hosts:
                     - "alpha.{{ requiredEnv "AZ_DNS_DOMAIN" }}"
                     - "ratel.{{ requiredEnv "AZ_DNS_DOMAIN" }}"
+                    - "dgraph.{{ requiredEnv "AZ_DNS_DOMAIN" }}"
                   secretName: tls-secret
               rules:
                 - host: alpha.{{ requiredEnv "AZ_DNS_DOMAIN" }}
@@ -85,6 +85,8 @@ releases:
             spec:
               tls:
                 - hosts:
+                    - "alpha.{{ requiredEnv "AZ_DNS_DOMAIN" }}"
+                    - "ratel.{{ requiredEnv "AZ_DNS_DOMAIN" }}"
                     - "dgraph.{{ requiredEnv "AZ_DNS_DOMAIN" }}"
                   secretName: tls-secret
               rules:

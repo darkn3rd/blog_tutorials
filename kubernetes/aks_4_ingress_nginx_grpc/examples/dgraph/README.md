@@ -12,7 +12,7 @@
   * Tools: `helm` or `helmfile`
   * Addons: ExternalDNS (`external-dns`) configured
   * environment variable: `AZ_DNS_DOMAIN`
-* TLS certificate autoamtion
+* TLS certificate automation
   * Tools: `helm` and `helmfile`
   * Addons: `cert-manager` and `ingress-nginx` configured
   * environment variable: `AZ_DNS_DOMAIN` and `ACME_ISSUER`
@@ -56,18 +56,20 @@ helmfile apply
 curl --silent $CURL_K_OPT https://alpha.${AZ_DNS_DOMAIN}/health | jq
 ```
 
-## Verify GRPC
+## Verify GRPC Works
 
 ```bash
 [[ "$ACME_ISSUER" == "letsencrypt-staging" ]] && CURL_K_OPT="--insecure"
+curl -sOL https://raw.githubusercontent.com/dgraph-io/pydgraph/master/pydgraph/proto/api.proto
 grpcurl $CURL_K_OPT -proto api.proto dgraph.${AZ_DNS_DOMAIN}:443 api.Dgraph/CheckVersion
 ```
 
-## Populate Data
+## Populate Data using GRPC
 
 ```bash
 pushd data
-bash getting_started_data.sh
+export DGRAPH_ALPHA_SERVER=dgraph.${AZ_DNS_DOMAIN}:443
+python3 getting_started_data.py
 popd
 ```
 
