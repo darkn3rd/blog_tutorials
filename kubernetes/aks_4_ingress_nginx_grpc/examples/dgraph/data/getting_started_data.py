@@ -11,8 +11,6 @@ import certifi
 
 DGRAPH_ALPHA_SERVER = os.getenv('DGRAPH_ALPHA_SERVER') or 'localhost:9080'
 
-# https://chaobin.github.io/2015/07/22/a-working-understanding-on-SSL-and-HTTPS-using-python/
-
 # Create a client stub.
 def create_client_stub():
     print(f"DGRAPH_ALPHA_SERVER={DGRAPH_ALPHA_SERVER}")
@@ -65,7 +63,7 @@ def set_schema(client):
 
 # Create data using JSON.
 def create_data(client):
-    fname = "sw.rdf"
+    fname = "sw.nquads.rdf"
 
     try:
         file = open(fname, mode='r')
