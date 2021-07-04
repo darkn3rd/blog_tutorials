@@ -17,6 +17,9 @@
   * Addons: `cert-manager` and `ingress-nginx` configured
   * environment variable: `AZ_DNS_DOMAIN` and `ACME_ISSUER`
     * referenced issuer is configured and installed
+* uploading schema and data
+  * Tools: `python3` and `pip`
+  * Modules: `pydgraph` and `certifi`
 
 ## Security (Dgraph Service)
 
@@ -48,7 +51,6 @@ export ACME_ISSUER='<issuer-name-goes-here>' # letsencrypt-prod or letsencrypt-s
 helmfile apply
 ```
 
-
 ## Verify Dgraph (HTTPS)
 
 ```bash
@@ -66,12 +68,7 @@ grpcurl $CURL_K_OPT -proto api.proto dgraph.${AZ_DNS_DOMAIN}:443 api.Dgraph/Chec
 
 ## Populate Data using GRPC
 
-```bash
-pushd data
-export DGRAPH_ALPHA_SERVER=dgraph.${AZ_DNS_DOMAIN}:443
-python3 getting_started_data.py
-popd
-```
+See [README.md](data/README.md) for further information.
 
 ## Cleanup
 
