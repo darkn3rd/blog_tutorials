@@ -15,7 +15,9 @@ This section demonstrates three things:
 
 ```bash
 # create resource group
-az group create --location westus --resource-group devapp
+export TF_VAR_resource_group_name="devapp"
+export TF_VAR_location="westus"
+az group create --location $TF_VAR_location --resource-group $TF_VAR_resource_group_name
 terraform apply --target module.azure_net -target module.azure_vm
 ```
 
@@ -45,6 +47,8 @@ cat <<-EOF > env.sh
 export GODADDY_API_KEY="<your_api_key>"
 export GODADDY_API_SECRET="<your_api_secret>"
 export TF_VAR_domain="<your_domain>"
+export TF_VAR_resource_group_name="devapp"
+export TF_VAR_location="westus"
 EOF
 
 source env.sh
@@ -98,7 +102,7 @@ terraform destroy --target module.azure_dns_domain_record
 terraform destroy --target module.azure_dns_domain
 terraform destroy --target module.azure_net -target module.azure_vm
 chmod +w azure_vm.pem && rm azure_vm.pem
-az group delete devapp
+az group delete --name devapp
 ```
 
 In [GoDaddy DNS Manager UI](https://dcc.godaddy.com/manage/dns), the namesevers will have to be reset back to GoDaddy's nameservers
@@ -112,7 +116,7 @@ terraform destroy --target module.azure_dns_domain
 terraform destroy --target module.azure_dns_record
 terraform destroy --target module.azure_net -target module.azure_vm
 chmod +w azure_vm.pem && rm azure_vm.pem
-az group delete devapp
+az group delete --name devapp
 ```
 
 ### Scenario A: GoDaddy DNS Server
@@ -122,5 +126,5 @@ Any records created with Terraform will have to be removed through [GoDaddy DNS 
 ```bash
 terraform destroy --target module.azure_net -target module.azure_vm
 chmod +w azure_vm.pem && rm azure_vm.pem
-az group delete devapp
+az group delete --name devapp
 ```

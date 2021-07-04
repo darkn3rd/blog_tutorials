@@ -1,0 +1,82 @@
+repositories:
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: yages
+    namespace: yages
+    chart: itscontained/raw
+    version: 0.2.5
+    values:
+      - resources:
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              labels:
+                app: yages
+              name: yages
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: yages
+              template:
+                metadata:
+                  labels:
+                    app: yages
+                spec:
+                  containers:
+                    - name: grpcsrv
+                      image: quay.io/mhausenblas/yages:0.1.0
+                      ports:
+                      - containerPort: 9000
+                        protocol: TCP
+                      resources:
+                        requests:
+                          memory: "64Mi"
+                          cpu: "80m"
+                        limits:
+                          memory: "128Mi"
+                          cpu: "250m"
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              labels:
+                app: yages
+              name: yages
+            spec:
+              type: ClusterIP
+              ports:
+              - name: http
+                port: 9000
+                protocol: TCP
+                targetPort: 9000
+              selector:
+                app: yages
+
+          - apiVersion: networking.k8s.io/v1
+            kind: Ingress
+            metadata:
+              name: yages
+              annotations:
+                kubernetes.io/ingress.class: nginx
+                cert-manager.io/cluster-issuer: {{ requiredEnv "ACME_ISSUER" }}
+                nginx.ingress.kubernetes.io/ssl-redirect: "true"
+                nginx.ingress.kubernetes.io/backend-protocol: GRPC
+            spec:
+              tls:
+                - hosts:
+                    - yages.{{ requiredEnv "AZ_DNS_DOMAIN" }}
+                  secretName: tls-secret
+              rules:
+              - host: yages.{{ requiredEnv "AZ_DNS_DOMAIN" }}
+                http:
+                  paths:
+                  - backend:
+                      service:
+                        name: yages
+                        port:
+                          number: 9000
+                    path: /
+                    pathType: ImplementationSpecific

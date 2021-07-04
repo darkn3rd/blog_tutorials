@@ -1,0 +1,49 @@
+repositories:
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: cert-manager-issuers
+    chart: itscontained/raw
+    namespace: kube-addons
+    version:  0.2.5
+    # needs:
+    #   - kube-addons/cert-manager
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: cert-manager.io/v1
+            kind: ClusterIssuer
+            metadata:
+              name: letsencrypt-staging
+            spec:
+              acme:
+                server: https://acme-staging-v02.api.letsencrypt.org/directory
+                email: {{ requiredEnv "ACME_ISSUER_EMAIL" }}
+                privateKeySecretRef:
+                  name: letsencrypt-staging
+                solvers:
+                  - dns01:
+                      azureDNS:
+                        subscriptionID: {{ requiredEnv "AZ_SUBSCRIPTION_ID" }}
+                        resourceGroupName: {{ requiredEnv "AZ_RESOURCE_GROUP" }}
+                        hostedZoneName: {{ requiredEnv "AZ_DNS_DOMAIN" }}
+                        environment: AzurePublicCloud
+
+          - apiVersion: cert-manager.io/v1
+            kind: ClusterIssuer
+            metadata:
+              name: letsencrypt-prod
+            spec:
+              acme:
+                server: https://acme-v02.api.letsencrypt.org/directory
+                email: {{ requiredEnv "ACME_ISSUER_EMAIL" }}
+                privateKeySecretRef:
+                  name: letsencrypt-prod
+                solvers:
+                  - dns01:
+                      azureDNS:
+                        subscriptionID: {{ requiredEnv "AZ_SUBSCRIPTION_ID" }}
+                        resourceGroupName: {{ requiredEnv "AZ_RESOURCE_GROUP" }}
+                        hostedZoneName: {{ requiredEnv "AZ_DNS_DOMAIN" }}
+                        environment: AzurePublicCloud
