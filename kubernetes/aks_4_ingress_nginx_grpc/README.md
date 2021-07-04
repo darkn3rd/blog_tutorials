@@ -2,7 +2,7 @@
 
 ## Published Articles
 
-* https://joachim8675309.medium.com/aks-with-cert-manager-f24786e87b20
+* https://joachim8675309.medium.com/aks-with-grpc-and-ingress-nginx-32481a792a1
 
 ## Setup Environment Vars
 
@@ -14,10 +14,13 @@ export AZ_LOCATION="westus2"
 export AZ_CLUSTER_NAME="ingress-demo"
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
 export AZ_DNS_DOMAIN="<replace-with-your-domain>" # example.com
+export ACME_ISSUER_EMAIL="<your-email-goes-here>"
+export ACME_ISSUER='<issuer-name-goes-here>' # letsencrypt-prod or letsencrypt-straging
+export DGRAPH_ALPHA_SERVER="dgraph.$AZ_DNS_DOMAIN:443"
+
 export AZ_TENANT_ID=$(az account show --query "tenantId" | tr -d '"')
 export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
 ```
-
 
 ## Azure resources (AKS + Azure DNS zone)
 
@@ -76,18 +79,18 @@ az role assignment create \
 helmfile apply
 
 export ACME_ISSUER_EMAIL="<your-email-goes-here>"
-helmfile --file issuers.yaml apply
+helmfile --file issuer.yaml apply
 ```
 
 ## Deploy Example Applications
 
-### Hello Kubernetes
+### Yages
 
-See [README.MD](examples/hello/README.md) for further information.
+See [README.md](examples/yages/README.md) for further information.
 
 ### Dgraph
 
-See [README.MD](examples/dgraph/README.md) for further information.
+See [README.md](examples/dgraph/README.md) for further information.
 
 ## Cleanup
 

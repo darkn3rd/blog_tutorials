@@ -32,6 +32,30 @@ bash ./scripts/create_azure_resources.sh
 bash ./scripts/config_azure_dns_access.sh
 ```
 
+### Authorize access to Azure DNS
+
+```bash
+source env.sh
+
+## get principal id from VMSS using JMESPath
+export AZ_PRINCIPAL_ID=$(
+  az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME \
+    --query "identityProfile.kubeletidentity.objectId" | tr -d '"'
+)
+
+## using JMESPath
+export AZ_DNS_SCOPE=$(
+  az network dns zone list \
+    --query "[?name=='$AZ_DNS_DOMAIN'].id" \
+    --output table | tail -1
+)
+
+az role assignment create \
+  --assignee "$AZ_PRINCIPAL_ID" \
+  --role "DNS Zone Contributor" \
+  --scope  "$AZ_DNS_SCOPE"
+```
+
 ## Deploy Addons
 
 ```bash
