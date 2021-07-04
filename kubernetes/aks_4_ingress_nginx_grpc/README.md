@@ -1,4 +1,4 @@
-# cert-manager on AKS
+# ingress-nginx with GRPC on AKS
 
 ## Published Articles
 
