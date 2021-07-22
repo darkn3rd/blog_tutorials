@@ -75,7 +75,7 @@ linkerd jaeger check
 
 ```bash
 kubectl create namespace "dgraph"
-helm template "demo" dgraph/dgraph | \
+helm template "demo" dgraph/dgraph --version 0.0.17 | \
  linkerd inject --skip-inbound-ports 5080,7080 --skip-outbound-ports 5080,7080 - | \
  kubectl apply --namespace "dgraph" --filename -
 kubectl get all --namespace "dgraph"
@@ -89,3 +89,11 @@ curl -sOL https://raw.githubusercontent.com/dgraph-io/dgraph/master/protos/pb.pr
 linkerd profile --proto pb.proto --namespace dgraph dgraph-svc | \
   kubectl apply --namespace "dgraph" --filename -
 ```
+
+
+## Cleanup
+
+```bash
+
+helm template "demo" dgraph/dgraph | kubectl delete --namespace "dgraph" --filename -
+kubectl delete pvc --namespace "dgraph" --selector release="demo"
