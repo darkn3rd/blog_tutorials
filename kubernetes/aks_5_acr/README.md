@@ -1,9 +1,6 @@
+# AKS with ACR registry integration
 
-
-* https://docs.microsoft.com/azure/aks/tutorial-kubernetes-prepare-acr
-* https://docs.microsoft.com/azure/aks/cluster-container-registry-integration
-
-
+## Create an container registry
 
 ```bash
 . env
@@ -26,7 +23,16 @@ export AZ_ACR_LOGIN_SERVER=$(az acr list \
 )
 ```
 
+## Build and push an image
+
 ```bash
-docker tag mcr.microsoft.com/azuredocs/azure-vote-front:v1 $AZ_ACR_LOGIN_SERVER/azure-vote-front:v1
+az acr login --name ${AZ_ACR_NAME}
+make build
+make push
 az acr repository list --name $AZ_ACR_NAME --output table
 ```
+
+## Links
+
+* [Tutorial: Deploy and use Azure Container Registry](https://docs.microsoft.com/azure/aks/tutorial-kubernetes-prepare-acr)
+* [Authenticate with Azure Container Registry from Azure Kubernetes Service](https://docs.microsoft.com/azure/aks/cluster-container-registry-integration)
