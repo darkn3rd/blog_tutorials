@@ -3,6 +3,7 @@
 ## Verify these variables are set
 [[ -z "$AZ_RESOURCE_GROUP" ]] && { echo 'AZ_RESOURCE_GROUP not specified. Aborting' 2>&1 ; exit 1; }
 [[ -z "$AZ_CLUSTER_NAME" ]] && { echo 'AZ_CLUSTER_NAME not specified. Aborting' 2>&1 ; exit 1; }
+[[ -z "$AZ_ACR_NAME" ]] && { echo 'AZ_ACR_NAME not specified. Aborting' 2>&1 ; exit 1; }
 
 ############
 # create Azure Kubernetes Service cluster

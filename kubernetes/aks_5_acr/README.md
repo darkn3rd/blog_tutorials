@@ -21,6 +21,21 @@ export AZ_ACR_LOGIN_SERVER=$(az acr list \
   --query "[?name == \`${AZ_ACR_NAME}\`].loginServer | [0]" \
   --output tsv
 )
+
+cat <<-'EOF' >> env.sh
+export AZ_ACR_LOGIN_SERVER=$(az acr list \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --query "[?name == \`${AZ_ACR_NAME}\`].loginServer | [0]" \
+  --output tsv
+)
+EOF
+```
+
+## Provision AKS Cluster
+
+```bash
+source env.sh
+bash scripts/create_aks_.sh
 ```
 
 ## Build and push an image

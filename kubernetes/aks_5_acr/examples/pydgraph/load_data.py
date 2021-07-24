@@ -7,11 +7,11 @@ import pydgraph
 import certifi
 
 
-def create_client_stub(alpha: str = "localhost:9080", insecure: str = False, ca_cert_path: str = None,
+def create_client_stub(alpha: str = "localhost:9080", plaintext: bool = False, ca_cert_path: str = None,
                        client_key_path: str = None, client_cert_path: str = None) -> object:
     """Create a client stub."""
 
-    if not insecure:
+    if not plaintext:
         if ca_cert_path:
             # use private root CA
             with open(ca_cert_path, 'rb') as f:
@@ -88,9 +88,9 @@ def create_data(client, fname="sw.nquads.rdf"):
 
 def parse_args():
     """Parse command line arguments."""
-    parser: ArgumentParser = argparse.ArgumentParser(description="An example PyDgraph client script")
+    parser: ArgumentParser = ArgumentParser(description="An example PyDgraph client script")
 
-    parser.add_argument('--insecure', action='store_true', default=False, help='Use cleartext for communication')
+    parser.add_argument('--plaintext', action='store_true', default=False, help='Use plain-text HTTP/2 when connecting to server (no TLS).')
     parser.add_argument('--tls-cacert', default=None, help='The CA Cert file used to verify server certificates')
     parser.add_argument('--tls-cert', default=None,
                         help='(optional) The Cert file provided by the client to the server.')
@@ -106,7 +106,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    client_stub = create_client_stub(alpha=args.alpha, insecure=args.insecure, ca_cert_path=args.tls_cacert,
+    client_stub = create_client_stub(alpha=args.alpha, plaintext=args.plaintext, ca_cert_path=args.tls_cacert,
                                      client_key_path=args.tls_key, client_cert_path=args.tls_cert)
     client = create_client(client_stub)
     drop_all(client)
