@@ -22,25 +22,13 @@ export LINKERD_EXP
 ### Generate Certificates
 
 ```bash
-step certificate create root.linkerd.cluster.local \
- certs/ca.crt certs/ca.key \
- --profile root-ca --no-password --insecure
-
-step certificate create identity.linkerd.cluster.local \
- certs/issuer.crt certs/issuer.key \
- --profile intermediate-ca --not-after 8760h \
- --no-password --insecure \
- --ca certs/ca.crt --ca-key certs/ca.key
+./scripts/create_cets.sh
 ```
 
 ### Deploy Linkerd
 
 ```bash
-linkerd install \
-  --identity-trust-anchors-file certs/ca.crt \
-  --identity-issuer-certificate-file certs/issuer.crt \
-  --identity-issuer-key-file certs/issuer.key \
-  | kubectl apply -f -
+./scripts/deploy_linkerd.sh
 ```
 
 

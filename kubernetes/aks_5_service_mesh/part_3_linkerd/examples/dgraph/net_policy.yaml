@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-linkerd
+spec:
+  # deny all traffic from outside cluster
+  podSelector: {}
+  ingress:
+    # allow any pod in same namespace
+    - from:
+        - podSelector: {}
+    # allow pydgraph-client from any namespace
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app: pydgraph-client
+      ports:
+        - port: 4143
+        - port: 4190
+        - port: 4140
+        - port: 8080
+        - port: 9080

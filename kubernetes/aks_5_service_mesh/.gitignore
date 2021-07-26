@@ -2,3 +2,6 @@
 hello-k8s.yaml
 logs
 .idea
+*.key
+*.crt
+api.proto
