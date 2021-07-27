@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-awesome-app-pod
+  namespace: awesomeapps
+spec:
+  containers:
+    - name: main-app-container
+      image: myregistry.azurecr.io/my-awesome-app:v1
+      imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: acr-secret

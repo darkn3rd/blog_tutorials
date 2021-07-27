@@ -5,11 +5,11 @@
 ```bash
 cat <<-EOF > env.sh
 # resource group
-export AZ_RESOURCE_GROUP=acr-test
+export AZ_RESOURCE_GROUP=netpolmesh-test
 export AZ_LOCATION=westus2
 
 # container registry
-export AZ_ACR_NAME=acrtest
+export AZ_ACR_NAME=netpolmeshtest
 EOF
 ```
 
