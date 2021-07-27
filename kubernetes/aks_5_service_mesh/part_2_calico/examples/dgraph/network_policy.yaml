@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dgraph-allow-client
+  namespace: dgraph
+spec:
+  podSelector:
+    matchLabels:
+      app: dgraph
+      component: alpha
+  ingress:
+    # allow any access to any pod in same namespace
+    - from:
+        - podSelector: {}
+    # allow only pods w/ app=dgraph-client, env=test labels
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app: dgraph-client
+              # env: test
+          podSelector: {}
+      ports:
+        - port: 9080
+        - port: 8080

@@ -1,17 +1,12 @@
 repositories:
-  - name: dgraph
-    url: https://charts.dgraph.io
   - name: itscontained
     url: https://charts.itscontained.io
 
 releases:
-  - name: demo-ingress
+  - name: pydgraph-client
     chart: itscontained/raw
-    namespace: dgraph
+    namespace: pydgraph-client
     version:  0.2.5
-    needs:
-      - dgraph/demo
-    disableValidation: true
     values:
       - resources:
           - apiVersion: apps/v1
@@ -30,7 +25,10 @@ releases:
                 spec:
                   containers:
                   - name: pydgraph-client
-                    image: darknerd/pydgraph-client:latest
+                    image: {{ requiredEnv "AZ_ACR_LOGIN_SERVER" }}/pydgraph-client:latest
+                    env:
+                    - name: DGRAPH_ALPHA_SERVER
+                      value: {{ env "DGRAPH_RELEASE" | default "demo" }}-dgraph-alpha-headless.dgraph.svc.cluster.local         
                     resources:
                       requests:
                         memory: "64Mi"
