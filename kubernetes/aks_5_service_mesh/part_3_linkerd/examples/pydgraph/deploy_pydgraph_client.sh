@@ -11,9 +11,10 @@ command -v linkerd > /dev/null || \
 
 HELMFILE=${HELMFILE:-"$(dirname $0)/helmfile.yaml"}
 
-kubectl get namespace "pydgraph-client" 2>&1  > /dev/null || \
-  kubectl create namespace "pydgraph-client"
+kubectl get namespace "pydgraph-client" > /dev/null 2> /dev/null || \
+ kubectl create namespace "pydgraph-client" && \
+ kubectl label namespaces "pydgraph-client" name="pydgraph-client"
 
 helmfile --file $HELMFILE template | \
-  linkerd inject - | \
+  linkerd inject --registry $LINKERD_REGISTRY - | \
   kubectl apply --namespace "pydgraph-client" --filename -

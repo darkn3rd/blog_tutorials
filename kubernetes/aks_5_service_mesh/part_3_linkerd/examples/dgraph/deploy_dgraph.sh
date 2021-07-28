@@ -11,11 +11,13 @@ command -v linkerd > /dev/null || \
 
 HELMFILE=${HELMFILE:-"$(dirname $0)/helmfile.yaml"}
 
-kubectl get namespace "dgraph" 2>&1  > /dev/null || \
- kubectl create namespace "dgraph"
+kubectl get namespace "dgraph" > /dev/null 2> /dev/null || \
+ kubectl create namespace "dgraph" && \
+ kubectl label namespaces "dgraph" name="dgraph"
 
 helmfile --file $HELMFILE template | \
   linkerd inject \
+    --registry $LINKERD_REGISTRY \
     --skip-inbound-ports 5080,7080 \
     --skip-outbound-ports 5080,7080 - | \
   kubectl apply --namespace "dgraph" --filename -

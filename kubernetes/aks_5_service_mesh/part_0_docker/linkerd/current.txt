@@ -1,0 +1,9 @@
+cr.l5d.io/linkerd/controller:stable-2.10.2
+cr.l5d.io/linkerd/debug:stable-2.10.2
+cr.l5d.io/linkerd/grafana:stable-2.10.2
+cr.l5d.io/linkerd/jaeger-webhook:stable-2.10.2
+cr.l5d.io/linkerd/metrics-api:stable-2.10.2
+cr.l5d.io/linkerd/proxy-init:v1.3.11
+cr.l5d.io/linkerd/proxy:stable-2.10.2
+cr.l5d.io/linkerd/tap:stable-2.10.2
+cr.l5d.io/linkerd/web:stable-2.10.2
