@@ -10,6 +10,7 @@ CERT_PATH=${CERT_PATH:-"$(dirname $0)/../certs"}
 
 # NOTE: namespace is embedded
 linkerd install \
+  --registry $LINKERD_REGISTRY \
   --identity-trust-anchors-file $CERT_PATH/ca.crt \
   --identity-issuer-certificate-file $CERT_PATH/issuer.crt \
   --identity-issuer-key-file $CERT_PATH/issuer.key \

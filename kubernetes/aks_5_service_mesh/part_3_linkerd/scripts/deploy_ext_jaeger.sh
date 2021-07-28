@@ -5,4 +5,4 @@ command -v linkerd > /dev/null || \
   { echo "[ERROR]: 'linkerd' command not not found" 1>&2; exit 1; }
 
 # NOTE: namespace is embedded
-linkerd jaeger install | kubectl apply -f -
+linkerd jaeger install --set defaultRegistry="$LINKERD_REGISTRY" | kubectl apply -f -

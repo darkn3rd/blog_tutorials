@@ -5,4 +5,4 @@ command -v linkerd > /dev/null || \
   { echo "[ERROR]: 'linkerd' command not not found" 1>&2; exit 1; }
 
 # NOTE: namespace is embedded
-linkerd viz install | kubectl apply -f -
+linkerd viz install --set defaultRegistry="$LINKERD_REGISTRY" | kubectl apply -f -
