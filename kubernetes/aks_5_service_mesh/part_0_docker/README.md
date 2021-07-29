@@ -1,5 +1,13 @@
 # Build-Push Container Image to ACR
 
+These are instructions for building and pushing container images to ACR that can be used with service mesh projects.
+
+Container Projects:
+
+* [AKS SSH](./aks_ssh/README.md) - ssh utility to access AKS nodes
+* [Pydgraph Client](./pydgraph/README.md) - build/push `pydgraph-client` images
+* [Linkerd Images](./linkerd/README.md) - republish `linkerd` images to ACR
+
 ## Create env.sh file
 
 ```bash
@@ -28,7 +36,9 @@ az acr create \
 
 az acr login --name ${AZ_ACR_NAME}
 
-# Add docker registry name so that this can be used later
+############
+# reference ACR server for pushing images or deploys using those images
+############################################
 cat <<-'EOF' >> env.sh
 export AZ_ACR_LOGIN_SERVER=$(az acr list \
   --resource-group ${AZ_RESOURCE_GROUP} \
@@ -38,10 +48,6 @@ export AZ_ACR_LOGIN_SERVER=$(az acr list \
 EOF
 ```
 
-## Build and push the image
-
-See [pydgraph/README.md](pydgraph/README.md)
-
-## Links
+# Links
 
 * [Tutorial: Deploy and use Azure Container Registry](https://docs.microsoft.com/azure/aks/tutorial-kubernetes-prepare-acr)

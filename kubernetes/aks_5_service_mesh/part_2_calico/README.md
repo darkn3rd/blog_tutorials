@@ -1,5 +1,13 @@
 # AKS with Azure CNI and Calico Network Policies
 
+This tutorial covers using Calico for Kubernetes network policies.
+
+This is the source code for this article:
+
+* [AKS with Calico Network Policies](https://joachim8675309.medium.com/aks-with-calico-network-policies-8cdfa996e6bb)
+
+# Instructions
+
 ## Create env.sh file
 
 ```bash
@@ -28,11 +36,18 @@ EOF
 
 The container registry should have been created in a previous step. See [part_0_docker/README.md](../part_0_docker/README.md)
 
+You can use the script below to create the ACR:
+
+```bash
+source env.sh
+bash scripts/create_acr.sh
+```
+
 ## Provision AKS Cluster
 
 ```bash
 source env.sh
-bash scripts/create_aks_with_calico.sh
+bash scripts/create_aks_with_acr.sh
 ```
 
 You can view the components with:
@@ -74,7 +89,15 @@ As an example, to allow the pydrgraph-client to access Dgraph, run this:
 kubectl label namespaces "pydgraph-client" env=test app=dgraph-client
 ```
 
-##Links, References, and other Resources
+# Cleanup
+
+```bash
+source env.sh
+bash scripts/delete_aks.sh.sh
+rm -rf ${KUBECONFIG}
+```
+
+# Links, References, and other Resources
 
 * [Guide to Kubernetes Ingress Network Policies](https://www.openshift.com/blog/guide-to-kubernetes-ingress-network-policies)
   * [Examples from the Network Policies guide](https://github.com/stackrox/network-policy-examples)

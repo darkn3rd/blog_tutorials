@@ -8,10 +8,9 @@ Linkerd uses [GitHub Container Registry](https://docs.github.com/en/packages/wor
 
 This script uses [GNU grep](https://www.gnu.org/software/grep/), specifically for the [Perl Regular expressions](https://www.pcre.org/) features.
 
-
 If you are on macOS and [Homebrew](https://brew.sh/), you can get this with the following command:
 
-```
+```bash
 brew install grep
 export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
 ```
@@ -21,7 +20,6 @@ export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
 ```bash
 REGISTRY=${AZ_ACR_LOGIN_SERVER}
 az acr login --name ${AZ_ACR_NAME}
-
 ./republish_linkerd_images.sh
 ```
 
@@ -32,7 +30,6 @@ Linkerd has to be installed into the `linkerd` namespace before running this scr
 ```bash
 REGISTRY=${AZ_ACR_LOGIN_SERVER}
 az acr login --name ${AZ_ACR_NAME}
-
 ./republish_extension_images.sh
 ```
 
@@ -49,5 +46,5 @@ az acr repository list --name ${AZ_ACR_NAME} --output table | grep linkerd
 If you wish to publish to another registry, then just set the `AZ_ACR_LOGIN_SERVER` value. For example:
 
 ```bash
-export AZ_ACR_LOGIN_SERVER=docker.io
+export AZ_ACR_LOGIN_SERVER="docker.io"
 ```

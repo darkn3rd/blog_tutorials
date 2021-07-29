@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
-TEMP_FILE=$(mktemp)
+IMAGE_LIST=$(mktemp)
 
 ############
 # STEP 1: build list of Linkerd Images
 #  Requirements: GNU grep is required
 ############################################
-linkerd viz install | grep -F 'cr.l5d.io' | grep -oP '(?<=image: ).*$' | sort | uniq > $TEMP_FILE
-linkerd jaeger install | grep -F 'cr.l5d.io' | grep -oP '(?<=image: ).*$' | sort | uniq >> $TEMP_FILE
+linkerd viz install | grep -F 'cr.l5d.io' | grep -oP '(?<=image: ).*$' | \
+  tr -d ' ' | sort | uniq > $IMAGE_LIST
+linkerd jaeger install | grep -F 'cr.l5d.io' | grep -oP '(?<=image: ).*$' | \
+  tr -d ' ' | sort | uniq >> $IMAGE_LIST
 
 ############
 # STEP 2: pull linkerd images to the local system
 ############################################
-cat $TEMP_FILE | xargs -n 1 docker pull
+cat $IMAGE_LIST | xargs -n 1 docker pull
 
 ############
 # STEP 3: republish (tag, push) to ACR
 ############################################
-for IMAGE in $(cat $TEMP_FILE); do
+for IMAGE in $(cat $IMAGE_LIST); do
   docker tag $IMAGE ${REGISTRY}/${IMAGE#*/}
   docker push ${REGISTRY}/${IMAGE#*/}
 done
