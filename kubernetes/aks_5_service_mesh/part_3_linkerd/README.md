@@ -40,6 +40,27 @@ export LINKERD_EXP
 EOF
 ```
 
+## Provision AKS Cluster
+
+```bash
+source env.sh
+bash scripts/create_aks_with_acr.sh
+```
+
+You can view the components with:
+
+```bash
+source env.sh
+kubectl get all --all-namespaces
+```
+
+To view the IP addresses of the nodes, run:
+
+```bash
+JSONPATH='{range .items[*]}{@.metadata.name}{"\t"}{@.status.addresses[?(@.type == "InternalIP")].address}{"\n"}{end}'
+kubectl get nodes --output jsonpath="$JSONPATH"
+```
+
 ## Republish Linkerd Images
 
 If you wish to republish images to ACR, you can following these instructions:
