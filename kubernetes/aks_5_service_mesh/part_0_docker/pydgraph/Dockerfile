@@ -1,6 +1,6 @@
 FROM python:3.9.6-buster
 
-RUN mkdir -p /usr/src/app
+RUN mkdir -p /usr/src/app/data
 WORKDIR /usr/src/app
 
 # application package manifest
@@ -26,5 +26,11 @@ ADD https://github.com/dgraph-io/dgraph/releases/download/v21.03.0/dgraph-linux-
 RUN tar -xzf dgraph-linux-amd64.tar.gz \
   && rm dgraph-linux-amd64.tar.gz \
   && mv badger dgraph /usr/local/bin
+
+# datasets
+ADD https://raw.githubusercontent.com/dgraph-io/benchmarks/master/data/1million.schema /usr/src/app/data/1million.schema
+ADD https://github.com/dgraph-io/benchmarks/raw/master/data/1million.rdf.gz /usr/src/app/data/1million.rdf.gz
+ADD https://raw.githubusercontent.com/dgraph-io/benchmarks/master/data/21million.schema /usr/src/app/data/21million.schema
+ADD https://github.com/dgraph-io/benchmarks/raw/master/data/21million.rdf.gz /usr/src/app/data/21million.rdf.gz
 
 CMD exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"

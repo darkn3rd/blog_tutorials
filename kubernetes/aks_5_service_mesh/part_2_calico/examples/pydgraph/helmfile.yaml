@@ -28,7 +28,7 @@ releases:
                     image: {{ requiredEnv "AZ_ACR_LOGIN_SERVER" }}/pydgraph-client:latest
                     env:
                     - name: DGRAPH_ALPHA_SERVER
-                      value: {{ env "DGRAPH_RELEASE" | default "demo" }}-dgraph-alpha-headless.dgraph.svc.cluster.local         
+                      value: value: {{ env "DGRAPH_RELEASE" | default "demo" }}-dgraph-alpha.dgraph.svc.cluster.local
                     resources:
                       requests:
                         memory: "64Mi"
