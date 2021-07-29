@@ -82,6 +82,9 @@ These are code related to tutorials created.
       * AKS + ingress-nginx - https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
       * AKS + cert-manager - https://joachim8675309.medium.com/aks-with-cert-manager-f24786e87b20
       * AKS + ingress-nginx w/ gRPC - https://joachim8675309.medium.com/aks-with-grpc-and-ingress-nginx-32481a792a1
+      * AKS + ACR - https://joachim8675309.medium.com/aks-with-azure-container-registry-b7ff8a45a8a
+      * AKS + ACR + Calico - https://joachim8675309.medium.com/aks-with-calico-network-policies-8cdfa996e6bb
+      * AKS + ACR + Calico + Linkerd - https://joachim8675309.medium.com/linkerd-service-mesh-on-aks-a75d60ef4f5a
   * EKS
       * VPC + EKS (`eksctl`) - https://joachim8675309.medium.com/building-eks-with-eksctl-799eeb3b0efd
       * VPC for future EKS (`terraform`) - https://joachim8675309.medium.com/create-an-amazon-vpc-for-eks-597481514bcc

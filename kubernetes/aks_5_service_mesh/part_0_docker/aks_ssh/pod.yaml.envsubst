@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: aks-ssh
+spec:
+  containers:
+    - name: aks-ssh
+      image: ${AZ_ACR_LOGIN_SERVER}/aks-ssh:latest
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "80m"
+        limits:
+          memory: "128Mi"
+          cpu: "250m"

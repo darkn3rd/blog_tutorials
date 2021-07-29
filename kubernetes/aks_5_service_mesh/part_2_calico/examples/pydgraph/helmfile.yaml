@@ -1,0 +1,38 @@
+repositories:
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: pydgraph-client
+    chart: itscontained/raw
+    namespace: pydgraph-client
+    version:  0.2.5
+    values:
+      - resources:
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: pydgraph-client
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: pydgraph-client
+              template:
+                metadata:
+                  labels:
+                    app: pydgraph-client
+                spec:
+                  containers:
+                  - name: pydgraph-client
+                    image: {{ requiredEnv "AZ_ACR_LOGIN_SERVER" }}/pydgraph-client:latest
+                    env:
+                    - name: DGRAPH_ALPHA_SERVER
+                      value: value: {{ env "DGRAPH_RELEASE" | default "demo" }}-dgraph-alpha.dgraph.svc.cluster.local
+                    resources:
+                      requests:
+                        memory: "64Mi"
+                        cpu: "80m"
+                      limits:
+                        memory: "128Mi"
+                        cpu: "250m"
