@@ -8,6 +8,14 @@ This is the source code for this article:
 
 # Instructions
 
+## Requirements
+
+* [docker](https://docs.docker.com/get-docker/) - build/push images to ACR
+* [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
+* [helm](https://helm.sh/docs/intro/install/), [helm-diff](https://github.com/databus23/helm-diff), [helmfile](https://github.com/roboll/helmfile)
+* [linkerd](https://linkerd.io/2.10/getting-started/)
+
+
 ## Environment
 
 ```bash
