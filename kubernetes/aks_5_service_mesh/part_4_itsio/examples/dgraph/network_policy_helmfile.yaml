@@ -1,0 +1,33 @@
+repositories:
+  - name: dgraph
+    url: https://charts.dgraph.io
+    
+releases:
+  - name: dgraph-allow-istio
+    chart: itscontained/raw
+    namespace: dgraph
+    version:  0.2.5
+    values:
+      - resources:
+          - apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: dgraph-allow-istio
+            spec:
+              podSelector:
+                matchLabels:
+                  app: dgraph
+                  component: alpha
+              ingress:
+                # allow access to any pod in the same namespace
+                - from:
+                    - podSelector: {}
+                # allow only pods from any namespace that are part of service mesh
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          istio-injection: enabled
+                      podSelector: {}
+                  ports:
+                    - port: 9080
+                    - port: 8080

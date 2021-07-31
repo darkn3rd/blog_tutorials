@@ -14,10 +14,10 @@ spec:
         - podSelector: {}
     # allow only pods from any namespace that are part of service mesh
     - from:
-        - namespaceSelector: {}
-          podSelector:
+        - namespaceSelector:
             matchLabels:
-              linkerd.io/control-plane-ns: linkerd
+              istio-injection: enabled
+          podSelector: {}
       ports:
         - port: 9080
         - port: 8080

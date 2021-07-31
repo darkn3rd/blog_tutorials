@@ -11,8 +11,8 @@ command -v linkerd > /dev/null || \
 
 HELMFILE=${HELMFILE:-"$(dirname $0)/helmfile.yaml"}
 
-kubectl get namespace "dgraph" > /dev/null 2> /dev/null || \
- kubectl create namespace "dgraph" && \
- kubectl label namespaces "dgraph" name="dgraph"
-kubectl label namespace "dgraph" istio-injection="enabled"
-helmfile --file $HELMFILE apply
+kubectl get namespace "pydgraph-allow" > /dev/null 2> /dev/null || \
+ kubectl create namespace "pydgraph-allow" && \
+ kubectl label namespaces "pydgraph-allow" name="pydgraph-allow"
+kubectl label namespace "pydgraph-allow" istio-injection="enabled"
+helmfile --namespace "pydgraph-allow" --file $HELMFILE apply

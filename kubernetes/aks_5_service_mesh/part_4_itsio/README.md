@@ -1,6 +1,5 @@
 # AKS with Itsio Service Mesh
 
-
 ## Requirements
 
 * [docker](https://docs.docker.com/get-docker/) - build/push images to ACR
@@ -67,3 +66,33 @@ kubectl apply -f ./addons
 ```bash
 istioctl dashboard kiali
 ```
+
+### Deploy Dgraph graph database
+
+Deploy dgraph services along with network policy to block pods from namespaces that are not configured to use Itsio service mesh.
+
+See [examples/dgraph/README.md](examples/dgraph/README.md)
+
+### Deploy Pydgraph graph database
+
+This will deploy two clients: `pydgraph-allow` (has itsio) and `pydgraph-deny`.
+
+See [examples/pydgraph/README.md](examples/pydgraph/README.md)
+
+## The Tests
+
+### Baseline
+
+Both HTTP and gRPC traffic should work from pods in both `pydgraph-deny` (no-proxy) and `pydgraph-deny` (envoy-proxy sidecar) namespaces.
+
+### Test 1: Test Network Policy Denies Traffic
+
+Both HTTP and gRPC will time out from pods in the `pydgraph-deny` (no-proxy) namespace.
+
+### Test 2: Test Service Mesh
+
+Both HTTP and gRPC will work from pods in the `pydgraph-allow` (no-proxy) namespace.
+
+# TODOs
+
+* add version tag for blue/green
