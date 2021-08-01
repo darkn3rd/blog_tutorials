@@ -1,4 +1,4 @@
-# AKS with Itsio Service Mesh
+# AKS with Istio Service Mesh
 
 ## Requirements
 
@@ -31,7 +31,7 @@ export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}.yaml
 EOF
 ```
 
-### Itsio CLI
+### Istio CLI
 
 #### macOS
 
@@ -69,13 +69,13 @@ istioctl dashboard kiali
 
 ### Deploy Dgraph graph database
 
-Deploy dgraph services along with network policy to block pods from namespaces that are not configured to use Itsio service mesh.
+Deploy dgraph services along with network policy to block pods from namespaces that are not configured to use Istio service mesh.
 
 See [examples/dgraph/README.md](examples/dgraph/README.md)
 
 ### Deploy Pydgraph graph database
 
-This will deploy two clients: `pydgraph-allow` (has itsio) and `pydgraph-deny`.
+This will deploy two clients: `pydgraph-allow` (has istio) and `pydgraph-deny`.
 
 See [examples/pydgraph/README.md](examples/pydgraph/README.md)
 

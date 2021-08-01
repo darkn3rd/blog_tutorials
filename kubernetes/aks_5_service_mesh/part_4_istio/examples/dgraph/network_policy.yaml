@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: dgraph-allow-itsio
+  name: dgraph-allow-istio
   namespace: dgraph
 spec:
   podSelector:

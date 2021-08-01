@@ -8,7 +8,7 @@ This will cover the following topics:
 * Network Plugins with Network Policy
 * Service Mesh
   * Linkerd
-  * Itsio
+  * Istio
 * Traffic Observability
 * Traffic Access
 
