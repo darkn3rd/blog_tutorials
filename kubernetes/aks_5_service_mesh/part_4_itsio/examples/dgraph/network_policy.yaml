@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: dgraph-allow-linkerd
+  name: dgraph-allow-itsio
   namespace: dgraph
 spec:
   podSelector:
