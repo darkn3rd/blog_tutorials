@@ -77,14 +77,18 @@ These are code related to tutorials created.
       * Helmfile (`helmfile`) - https://joachim8675309.medium.com/devops-tools-introducing-helmfile-f7c0197f3aea
       * Helm3 + Helm2 on macOS (`helm`) - https://joachim8675309.medium.com/install-helm3-helm2-on-macos-d65f61509799
   * AKS
-      * Basic AKS (`az`) - https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
-      * AKS + external-dns - https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
-      * AKS + ingress-nginx - https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
-      * AKS + cert-manager - https://joachim8675309.medium.com/aks-with-cert-manager-f24786e87b20
-      * AKS + ingress-nginx w/ gRPC - https://joachim8675309.medium.com/aks-with-grpc-and-ingress-nginx-32481a792a1
-      * AKS + ACR - https://joachim8675309.medium.com/aks-with-azure-container-registry-b7ff8a45a8a
-      * AKS + ACR + Calico - https://joachim8675309.medium.com/aks-with-calico-network-policies-8cdfa996e6bb
-      * AKS + ACR + Calico + Linkerd - https://joachim8675309.medium.com/linkerd-service-mesh-on-aks-a75d60ef4f5a
+      * Provisioning
+          * Basic AKS (`az`) - https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
+      * Managing Endpoints: service and ingress
+          * external-dns - https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
+          * ingress-nginx - https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
+          * cert-manager - https://joachim8675309.medium.com/aks-with-cert-manager-f24786e87b20
+          * ingress-nginx w/ gRPC - https://joachim8675309.medium.com/aks-with-grpc-and-ingress-nginx-32481a792a1
+      * Service Meshes and Network Policies
+          * Container Registry w/ ACR - https://joachim8675309.medium.com/aks-with-azure-container-registry-b7ff8a45a8a
+          * Network Policies w/ Calico - https://joachim8675309.medium.com/aks-with-calico-network-policies-8cdfa996e6bb
+          * Linkerd service mesh - https://joachim8675309.medium.com/linkerd-service-mesh-on-aks-a75d60ef4f5a
+          * Istio service mesh - https://joachim8675309.medium.com/istio-service-mesh-on-aks-1b6ed16f6890
   * EKS
       * VPC + EKS (`eksctl`) - https://joachim8675309.medium.com/building-eks-with-eksctl-799eeb3b0efd
       * VPC for future EKS (`terraform`) - https://joachim8675309.medium.com/create-an-amazon-vpc-for-eks-597481514bcc
