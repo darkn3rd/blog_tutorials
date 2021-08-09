@@ -4,7 +4,7 @@ This area of projects explores managing network traffic for mixed gRPC (HTTP/2) 
 
 This will cover the following topics:
 
-* Build and Push applications on container registry
+* Build and Push applications on container registry (ACR)
 * Network Plugins with Network Policy
 * Service Mesh
   * Linkerd
