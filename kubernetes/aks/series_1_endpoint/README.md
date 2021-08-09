@@ -10,7 +10,7 @@ This will cover the following topics:
 
 ## Sections
 
-* [Part 1: external-dns](./1_externaldns/README.md) - automating upserts on Azure DNS zone for the `service` resource.
-* [Part 2: HTTP ingress (ingress-nginx)](./2_ingress_nginx/README.md) - adding an ingress controller to route L7 (HTTP) traffic to backend services
-* [Part 2: cert-manager](./3_cert_manager/README.md) - automatically issuing certificates for an ingress with `DNS01` validation to an Azure DNS zone.
-* [Part 3: gRPC ingress (ingress-nginx)](./4_ingress_nginx_grpc/README.md) - using ingress controller to route mixed gRPC (HTTP/2) and HTTP.  
+* [Part 1: external-dns](./part_1_externaldns/README.md) - automating upserts on Azure DNS zone for the `service` resource.
+* [Part 2: HTTP ingress (ingress-nginx)](./part_2_ingress_nginx/README.md) - adding an ingress controller to route L7 (HTTP) traffic to backend services
+* [Part 2: cert-manager](./part_3_cert_manager/README.md) - automatically issuing certificates for an ingress with `DNS01` validation to an Azure DNS zone.
+* [Part 3: gRPC ingress (ingress-nginx)](./part_4_ingress_nginx_grpc/README.md) - using ingress controller to route mixed gRPC (HTTP/2) and HTTP.  
