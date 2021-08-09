@@ -1,7 +1,8 @@
 # Deploy ExternalDNS (AzureDNS) with AKS
 
-* Blog Article:
-    * https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
+## Published Blogs
+
+  * https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
 
 # Create Global env.sh
 

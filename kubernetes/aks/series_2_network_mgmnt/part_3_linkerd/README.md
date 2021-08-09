@@ -1,10 +1,10 @@
 # AKS with Linkerd Service Mesh
 
-This tutorial covers using Linkerd servcie mesh.
+This tutorial covers using Linkerd service mesh.
 
-This is the source code for this article:
+## Published Blogs
 
-* [Linkerd Service Mesh on AKS](https://joachim8675309.medium.com/linkerd-service-mesh-on-aks-a75d60ef4f5a)
+* https://joachim8675309.medium.com/linkerd-service-mesh-on-aks-a75d60ef4f5a
 
 # Instructions
 

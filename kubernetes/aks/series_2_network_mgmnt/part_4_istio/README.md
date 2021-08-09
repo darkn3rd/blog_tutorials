@@ -1,5 +1,9 @@
 # AKS with Istio Service Mesh
 
+## Published Blogs
+
+* https://joachim8675309.medium.com/istio-service-mesh-on-aks-1b6ed16f6890
+
 ## Requirements
 
 * [docker](https://docs.docker.com/get-docker/) - build/push images to ACR

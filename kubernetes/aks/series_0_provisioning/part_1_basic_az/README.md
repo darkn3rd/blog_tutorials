@@ -4,9 +4,7 @@
 
 * https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
 
-
 ## Instructions
-
 
 ```bash
 cat <<-EOF > env.sh

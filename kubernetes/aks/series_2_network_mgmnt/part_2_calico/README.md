@@ -2,9 +2,9 @@
 
 This tutorial covers using Calico for Kubernetes network policies.
 
-This is the source code for this article:
+## Published Blogs
 
-* [AKS with Calico Network Policies](https://joachim8675309.medium.com/aks-with-calico-network-policies-8cdfa996e6bb)
+* https://joachim8675309.medium.com/aks-with-calico-network-policies-8cdfa996e6bb
 
 # Instructions
 

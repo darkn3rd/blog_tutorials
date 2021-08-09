@@ -2,9 +2,9 @@
 
 This tutorial covers using a private container registry with your Kubernetes deployments.
 
-This is the source code for this article:
+## Published Blogs
 
-* [AKS with Azure Container Registry](https://joachim8675309.medium.com/aks-with-azure-container-registry-b7ff8a45a8a)
+* https://joachim8675309.medium.com/aks-with-azure-container-registry-b7ff8a45a8a
 
 # Instructions
 
