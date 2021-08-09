@@ -93,6 +93,21 @@ Both HTTP and gRPC will time out from pods in the `pydgraph-deny` (no-proxy) nam
 
 Both HTTP and gRPC will work from pods in the `pydgraph-allow` (no-proxy) namespace.
 
-# TODOs
 
-* add version tag for blue/green
+# Cleanup
+
+To delete all Azure cloud resources, including cloud resources allocated from Kubernetes resoruces, such as persistent volumes.
+
+```bash
+az aks delete --resource-group ${AZ_RESOURCE_GROUP} --name ${AZ_CLUSTER_NAME}
+az acr delete --resource-group ${AZ_RESOURCE_GROUP} --name ${AZ_ACR_NAME}
+```
+
+## Cleanup Dgraph
+
+When using a non-AKS Kubernetes cluster, or if you only want to delete existing resources, you can delete Dgraph along with persistent volumes.
+
+```bash
+helm delete "demo" --namespace "dgraph"
+kubectl delete pvc --namespace "dgraph" --selector release="demo"
+```

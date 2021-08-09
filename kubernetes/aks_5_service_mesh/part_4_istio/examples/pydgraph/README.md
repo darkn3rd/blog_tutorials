@@ -44,6 +44,10 @@ kubectl exec -ti --namespace "pydgraph-deny" ${PYDGRAPH_DENY_POD} -- bash
 ```
 
 
+## Generating Traffic
+
+From within a container, you can run the following to generate traffic:
+
 ```bash
 for i in {1..1000}; do
   curl "${DGRAPH_ALPHA_SERVER}:8080/query" --silent --request POST \

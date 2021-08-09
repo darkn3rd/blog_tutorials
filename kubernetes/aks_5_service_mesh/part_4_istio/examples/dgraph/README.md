@@ -14,3 +14,9 @@ kubectl get namespace "dgraph" > /dev/null 2> /dev/null || \
 # deploy Dgraph cluster
 helmfile --file $HELMFILE apply
 ```
+
+#### Adding Network Policy
+
+```bash
+kubectl apply -f network_policy.yaml
+```

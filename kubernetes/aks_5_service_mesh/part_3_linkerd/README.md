@@ -178,6 +178,17 @@ After this is applied, any services that do not have the labels to show they are
 
 # Cleanup
 
+To delete all Azure cloud resources, including cloud resources allocated from Kubernetes resoruces, such as persistent volumes.
+
+```bash
+az aks delete --resource-group ${AZ_RESOURCE_GROUP} --name ${AZ_CLUSTER_NAME}
+az acr delete --resource-group ${AZ_RESOURCE_GROUP} --name ${AZ_ACR_NAME}
+```
+
+## Cleanup Dgraph
+
+When using a non-AKS Kubernetes cluster, or if you only want to delete existing resources, you can delete Dgraph along with persistent volumes.
+
 ```bash
 helm template "demo" dgraph/dgraph | kubectl delete --namespace "dgraph" --filename -
 kubectl delete pvc --namespace "dgraph" --selector release="demo"
