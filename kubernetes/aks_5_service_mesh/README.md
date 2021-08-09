@@ -8,7 +8,7 @@ This will cover the following topics:
 * Network Plugins with Network Policy
 * Service Mesh
   * Linkerd
-  * Itsio
+  * Istio
 * Traffic Observability
 * Traffic Access
 
@@ -18,3 +18,4 @@ This will cover the following topics:
 * [Part 1: Azure](./part_1_acr/README.md) Container Registry - integrating AKS with ACR
 * [Part 2: Calico](./part_2_calico/README.md) - using network policies with Azure CNI and Calico
 * [Part 3: Linkerd](./part_3_linkerd/README.md) - using Linkerd service mesh
+* [Part 4: Istio](./part_4_istio/README.md) - using Linkerd service mesh

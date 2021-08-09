@@ -8,6 +8,14 @@ This is the source code for this article:
 
 # Instructions
 
+## Requirements
+
+* [docker](https://docs.docker.com/get-docker/) - build/push images to ACR
+* [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
+* [helm](https://helm.sh/docs/intro/install/), [helm-diff](https://github.com/databus23/helm-diff), [helmfile](https://github.com/roboll/helmfile)
+* [linkerd](https://linkerd.io/2.10/getting-started/)
+
+
 ## Environment
 
 ```bash
@@ -169,6 +177,17 @@ kubectl apply --filename examples/dgraph/network_policy.yaml
 After this is applied, any services that do not have the labels to show they are apart of the service mesh.  This can be further restricted by selecting pod labels that match pygraph-client for example.
 
 # Cleanup
+
+To delete all Azure cloud resources, including cloud resources allocated from Kubernetes resoruces, such as persistent volumes.
+
+```bash
+az aks delete --resource-group ${AZ_RESOURCE_GROUP} --name ${AZ_CLUSTER_NAME}
+az acr delete --resource-group ${AZ_RESOURCE_GROUP} --name ${AZ_ACR_NAME}
+```
+
+## Cleanup Dgraph
+
+When using a non-AKS Kubernetes cluster, or if you only want to delete existing resources, you can delete Dgraph along with persistent volumes.
 
 ```bash
 helm template "demo" dgraph/dgraph | kubectl delete --namespace "dgraph" --filename -
