@@ -4,6 +4,12 @@
 
   * https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
 
+## Requirements
+
+  * [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
+  * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
+  * [helm](https://helm.sh/docs/intro/install/), [helm-diff](https://github.com/databus23/helm-diff), [helmfile](https://github.com/roboll/helmfile)
+
 # Create Global env.sh
 
 Create a global env.sh to hold  all the values  we'll will use.

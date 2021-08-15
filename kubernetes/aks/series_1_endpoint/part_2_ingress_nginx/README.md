@@ -4,6 +4,12 @@
 
 * https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
 
+## Requirements
+
+  * [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
+  * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
+  * [helm](https://helm.sh/docs/intro/install/), [helm-diff](https://github.com/databus23/helm-diff), [helmfile](https://github.com/roboll/helmfile)
+
 ## Setup Environment Vars
 
 Create an `env.sh` and filling out the appropriate values.

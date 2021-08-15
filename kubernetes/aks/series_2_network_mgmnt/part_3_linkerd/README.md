@@ -10,11 +10,12 @@ This tutorial covers using Linkerd service mesh.
 
 ## Requirements
 
+* [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
 * [docker](https://docs.docker.com/get-docker/) - build/push images to ACR
 * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
 * [helm](https://helm.sh/docs/intro/install/), [helm-diff](https://github.com/databus23/helm-diff), [helmfile](https://github.com/roboll/helmfile)
+* [step](https://smallstep.com/cli/) - create X.509 certs/keys for TLS (and mTLS)
 * [linkerd](https://linkerd.io/2.10/getting-started/)
-
 
 ## Environment
 

@@ -6,6 +6,7 @@
 
 ## Requirements
 
+* [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
 * [docker](https://docs.docker.com/get-docker/) - build/push images to ACR
 * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
 * [helm](https://helm.sh/docs/intro/install/), [helm-diff](https://github.com/databus23/helm-diff), [helmfile](https://github.com/roboll/helmfile)
@@ -57,7 +58,8 @@ istioctl install --set profile=demo -y
 # Fetch Files
 VER="1.10"
 PREFIX="raw.githubusercontent.com/istio/istio/release-${VER}/samples/addons/"
-MANIFESTS=("grafana" "jaeger" "kiali" "prometheus" "prometheus_vm" "prometheus_vm_tls")
+MANIFESTS=(grafana jaeger kiali prometheus{,_vm,_vm_tls})
+
 for MANIFEST in ${MANIFESTS[*]}; do
   curl --silent --location "https://$PREFIX/$MANIFEST.yaml" --output ./addons/$MANIFEST.yaml
 done
@@ -115,3 +117,53 @@ When using a non-AKS Kubernetes cluster, or if you only want to delete existing 
 helm delete "demo" --namespace "dgraph"
 kubectl delete pvc --namespace "dgraph" --selector release="demo"
 ```
+
+# Links
+
+## JsonPath Template Language
+
+* https://kubernetes.io/docs/reference/kubectl/jsonpath/
+* https://jsonpath.com/
+  * https://github.com/ashphy/jsonpath-online-evaluator
+* https://goessner.net/articles/JsonPath/
+* https://pkg.go.dev/k8s.io/client-go/util/jsonpath
+
+## Integrations
+
+* ExternalDNS
+  * [Configuring ExternalDNS to use the Istio Gateway and/or Istio Virtual Service Source](https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/istio.md), Accessed 2 Aug 2021.
+* CertManager
+  * [cert-manager](https://istio.io/latest/docs/ops/integrations/certmanager/), Istio Documentation, Accessed 2 Aug 2021.
+
+## AKS Documentaiton
+
+* [Install and use Istio in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/servicemesh-istio-install?pivots=client-operating-system-linux), Azure Documentation, 2 Oct 2019.
+* [Azure](https://istio.io/latest/docs/setup/platform-setup/azure/), Istio Documentation,12 Sep 2019.
+
+## Istio Documention
+
+* [Getting Started](https://istio.io/latest/docs/setup/getting-started/), Istio Documention, Accessed 1 Aug 2021.
+* [Request Routing](https://istio.io/latest/docs/tasks/traffic-management/request-routing/), Istio Documentation, Accessed 1 Aug 2021.
+* [Gateway](https://istio.io/latest/docs/reference/config/networking/gateway/), Istio Documentation, Accessed 2 Aug 2021.
+* [VirtualService](https://istio.io/latest/docs/reference/config/networking/virtual-service/), Istio Documentation, Accessed 2 Aug 2021.
+* [AuthorizationPolicy](https://istio.io/latest/docs/reference/config/security/authorization-policy/), Istio Documentation, Accessed 2 Aug 2021.
+
+
+## Microservice Example Applications
+
+These are applications that have multiple moving parts that can be useful in testing example applications.
+
+* https://github.com/istio/istio/tree/master/samples/bookinfo
+* https://github.com/spikecurtis/yaobank
+* https://github.com/BuoyantIO/emojivoto
+* https://github.com/BuoyantIO/booksapp
+* https://github.com/argoproj/argocd-example-apps/tree/master/helm-guestbook
+* https://github.com/dockersamples/example-voting-app
+* https://github.com/GoogleCloudPlatform/istio-samples/tree/master/sample-apps/grpc-greeter-go
+* https://github.com/GoogleCloudPlatform/istio-samples/tree/master/sample-apps/helloserver
+
+The application used in this example is Dgraph, which is a distributed graph database with a web interface: gRPC (HTTP/2) and HTTP with both REST and GraphQL interfaces.
+
+
+* Dgraph Server: https://github.com/dgraph-io/dgraph
+* Python Client: https://github.com/dgraph-io/pydgraph

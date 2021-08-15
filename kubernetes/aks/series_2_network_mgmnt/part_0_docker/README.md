@@ -8,6 +8,11 @@ Container Projects:
 * [Pydgraph Client](./pydgraph/README.md) - build/push `pydgraph-client` images
 * [Linkerd Images](./linkerd/README.md) - republish `linkerd` images to ACR
 
+## Requirements
+
+* [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
+* [docker](https://docs.docker.com/get-docker/) - build/push images to ACR
+
 ## Create env.sh file
 
 ```bash

@@ -1,12 +1,29 @@
 repositories:
   - name: dgraph
     url: https://charts.dgraph.io
+  - name: itscontained
+    url: https://charts.itscontained.io
 
 releases:
+  - name: dgraph-namespace
+    chart: itscontained/raw
+    version:  0.2.5
+    values:
+      - resources:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            labels:
+              istio-injection: enabled
+              name: dgraph
+            name: dgraph
+
   - name: demo
     namespace: dgraph
     chart: dgraph/dgraph
     version: 0.0.17
+    needs:
+      - dgraph-namespace
     values:
       - alpha:
           configFile:

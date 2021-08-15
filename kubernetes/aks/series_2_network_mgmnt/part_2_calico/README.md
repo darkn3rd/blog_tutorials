@@ -6,6 +6,13 @@ This tutorial covers using Calico for Kubernetes network policies.
 
 * https://joachim8675309.medium.com/aks-with-calico-network-policies-8cdfa996e6bb
 
+## Requirements
+
+* [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
+* [docker](https://docs.docker.com/get-docker/) - build/push images to ACR
+* [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
+* [helm](https://helm.sh/docs/intro/install/), [helm-diff](https://github.com/databus23/helm-diff), [helmfile](https://github.com/roboll/helmfile)
+
 # Instructions
 
 ## Create env.sh file
@@ -60,8 +67,7 @@ kubectl get all --all-namespaces
 To view the IP addresses of the nodes, run:
 
 ```bash
-JSONPATH='{range .items[*]}{@.metadata.name}{"\t"}{@.status.addresses[?(@.type == "InternalIP")].address}{"\n"}{end}'
-kubectl get nodes --output jsonpath="$JSONPATH"
+./scripts/print_ip_addr.sh
 ```
 
 ## Deploy Dgraph database
