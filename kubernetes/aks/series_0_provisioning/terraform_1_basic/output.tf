@@ -15,13 +15,23 @@ output "cluster_username" {
 }
 
 output "cluster_password" {
+  sensitive = true
   value = azurerm_kubernetes_cluster.k8s.kube_config.0.password
 }
 
 output "kube_config" {
+  sensitive = true
   value = azurerm_kubernetes_cluster.k8s.kube_config_raw
 }
 
 output "host" {
   value = azurerm_kubernetes_cluster.k8s.kube_config.0.host
+}
+
+output "resource_group_name" {
+  value = azurerm_resource_group.rg.name
+}
+
+output "kubernetes_cluster_name" {
+  value = azurerm_kubernetes_cluster.k8s.name
 }

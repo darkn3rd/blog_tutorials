@@ -41,6 +41,19 @@ dns_prefix          = "basic-test"
 EOF
 ```
 
+## Credentials
+
+```bash
+export AZ_CLUSTER_NAME="$(terraform output -raw kubernetes_cluster_name)"
+export AZ_RESOURCE_GROUP="$(terraform output -raw resource_group_name)"
+export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}.yaml
+
+az aks get-credentials \
+  --resource-group $AZ_RESOURCE_GROUP \
+  --name $AZ_CLUSTER_NAME \
+  --file $KUBECONFIG
+```
+
 # Links
 
 
