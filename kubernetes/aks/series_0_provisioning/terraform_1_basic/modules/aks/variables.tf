@@ -1,10 +1,9 @@
+# required inputs
 variable "resource_group_name" {}
-variable "location" {}
-
-
 variable "dns_prefix" {}
-variable "cluster_name" {}
+variable "name" {}
 
+# default inputs
 variable "network_plugin" { default = "kubenet" }
 variable "network_policy" { default = "" }
 variable "vm_size" { default = "Standard_D2_v2" }

@@ -1,41 +1,26 @@
-resource "random_pet" "prefix" {}
+variable "resource_group_name" {}
+variable "location" {}
+variable "dns_prefix" {}
+variable "cluster_name" {}
 
-resource "azurerm_resource_group" "rg" {
+module "rg" {
+  source   = "./modules/group"
   name     = var.resource_group_name
   location = var.location
 }
 
-resource "azurerm_kubernetes_cluster" "k8s" {
+module "aks" {
+  source              = "./modules/aks"
   name                = var.cluster_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
   dns_prefix          = var.dns_prefix
+  resource_group_name = var.resource_group_name
 
-  linux_profile {
-    admin_username = "ubuntu"
+}
 
-    ssh_key {
-      key_data = file(var.ssh_public_key)
-    }
-  }
+output "resource_group_name" {
+  value = module.aks.resource_group_name
+}
 
-  default_node_pool {
-    name       = "agentpool"
-    node_count = var.agent_count
-    vm_size    = var.vm_size
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  network_profile {
-    load_balancer_sku = "Standard"
-    network_plugin    = var.network_plugin
-    # network_policy    = var.network_policy
-  }
-
-  tags = {
-    Environment = "Development"
-  }
+output "kubernetes_cluster_name" {
+  value = module.aks.kubernetes_cluster_name
 }
