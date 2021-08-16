@@ -1,10 +1,10 @@
-
+# Basic AKS with Terraform
 
 # Requirements
 
   * [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
   * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
-  * [Terraform](https://www.terraform.io/)
+  * [Terraform](https://www.terraform.io/) - provisioning tool to create cloud resources
 
 ## Azure Subscription
 
@@ -15,7 +15,6 @@ az login
 ```
 
 # Steps
-
 
 ## Create tf vars defaults
 
@@ -31,7 +30,7 @@ EOF
 ## Provision AKS Cluster
 
 ```bash
-tf apply --target module.rg
+tf apply --target module.rg  # or create outside of terraform
 tf apply --target module.aks
 ```
 
@@ -62,9 +61,3 @@ kubectl get all --all-namespaces
   * Source Code: https://github.com/hashicorp/learn-terraform-provision-aks-cluster
 * [Getting started with Terraform and Kubernetes on Azure AKS](https://learnk8s.io/terraform-aks)
 * [Create a Kubernetes cluster with Azure Kubernetes Service using Terraform](https://docs.microsoft.com/azure/developer/terraform/create-k8s-cluster-with-tf-and-aks) on Aug 07, 2021 - this article covers using Azure storage for maintaining state, and using Container Insights as well as basic Azure.
-
-
-# TODO
-
-* modularize: AKS, Group
-* AKS not dependent on group, uses data source
