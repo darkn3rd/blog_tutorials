@@ -1,0 +1,7 @@
+terraform.tfvars
+env.sh
+secrets.json
+.terraform
+*tfstate*
+*terraform.lock.hcl
+logs
