@@ -7,6 +7,7 @@ module "rg" {
   source   = "./modules/group"
   name     = var.resource_group_name
   location = var.location
+  create_group = true
 }
 
 module "aks" {
