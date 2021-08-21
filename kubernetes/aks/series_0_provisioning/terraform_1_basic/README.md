@@ -4,7 +4,7 @@
 
   * [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
   * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
-  * [terraform](https://www.terraform.io/) - provisioning tool to create cloud resources
+  * [Terraform](https://www.terraform.io/) - provisioning tool to create cloud resources
 
 ## Azure Subscription
 
@@ -56,7 +56,6 @@ kubectl get all --all-namespaces
 # Links
 
 * [Creating a Kubernetes Cluster with AKS and Terraform](https://www.hashicorp.com/blog/kubernetes-cluster-with-aks-and-terraform) on May 23 2018 by Nic Jackson - this article has not been updated and example code is Terraform v0.11 or earlier.
-
 * [Provision an AKS Cluster (Azure)](https://learn.hashicorp.com/tutorials/terraform/aks)
   * Source Code: https://github.com/hashicorp/learn-terraform-provision-aks-cluster
 * [Getting started with Terraform and Kubernetes on Azure AKS](https://learnk8s.io/terraform-aks)
