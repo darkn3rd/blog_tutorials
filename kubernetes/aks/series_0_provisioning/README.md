@@ -2,4 +2,8 @@
 
 This area covers topics on standing up an AKS cluster.
 
-* [Part 1: Basic with Azure CLI](./part_1_basic_az/README.md) - this cover creating a basic cluster using Azure CLI (`az`).  The cluster will come with basic overlay network plugin `kubenet` and doesn't support an ingress controller or network policies.
+* Azure CLI
+  * [Basic](./azure_cli/0_basic/README.md) - provision cluster with `az` using the default network plugin `kubenet`.
+* Terraform
+  * [Basic](./terraform/0_basic/README.md) - provision cluster with `terraform` using the default network plugin `kubenet`.
+  * [Calico](./terraform/0_basic/README.md) - provision cluster with `terraform` using the network plugin `azure` and network policies with `calico`.
