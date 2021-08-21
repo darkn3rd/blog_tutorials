@@ -56,4 +56,4 @@ variable "ssh_public_key" {
   description = "A custom ssh key to control access to the AKS cluster"
   type        = string
   default     = "~/.ssh/id_rsa.pub"
-}  
+}
