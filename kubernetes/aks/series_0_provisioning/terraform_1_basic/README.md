@@ -4,7 +4,7 @@
 
   * [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
   * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
-  * [Terraform](https://www.terraform.io/) - provisioning tool to create cloud resources
+  * [terraform](https://www.terraform.io/) - provisioning tool to create cloud resources
 
 ## Azure Subscription
 
@@ -30,11 +30,11 @@ EOF
 ## Provision AKS Cluster
 
 ```bash
-tf apply --target module.rg  # or create outside of terraform
+tf apply --target module.rg -var create_group=true # or create outside of terraform
 tf apply --target module.aks
 ```
 
-## Credentials
+## Credentials for Kubectl
 
 ```bash
 export AZ_CLUSTER_NAME="$(terraform output -raw kubernetes_cluster_name)"
