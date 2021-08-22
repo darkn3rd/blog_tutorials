@@ -1,4 +1,4 @@
-
+# AKS with Calico for network policies
 
 
 Resources
@@ -44,9 +44,9 @@ AZ_LOCATION="westcentralus"
 # Create the resource group
 az group create --name $AZ_RESOURCE_GROUP --location $AZ_LOCATION
 
-# Create our two subnet network 
-az network vnet create -g $AZ_RESOURCE_GROUP --location $AZ_LOCATION --name $AZ_VNET --address-prefixes 10.0.0.0/8 -o none 
-az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name nodesubnet --address-prefixes 10.240.0.0/16 -o none 
+# Create our two subnet network
+az network vnet create -g $AZ_RESOURCE_GROUP --location $AZ_LOCATION --name $AZ_VNET --address-prefixes 10.0.0.0/8 -o none
+az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name nodesubnet --address-prefixes 10.240.0.0/16 -o none
 az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name podsubnet --address-prefixes 10.241.0.0/16 -o none
 
 export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
@@ -65,8 +65,8 @@ az aks create -n $AZ_CLUSTER_NAME -g $AZ_RESOURCE_GROUP -l $AZ_LOCATION \
 #### Adding node pool
 
 ```bash
-az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name "node2subnet" --address-prefixes 10.242.0.0/16 -o none 
-az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name "pod2subnet" --address-prefixes 10.243.0.0/16 -o none 
+az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name "node2subnet" --address-prefixes 10.242.0.0/16 -o none
+az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name "pod2subnet" --address-prefixes 10.243.0.0/16 -o none
 
 export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
 GROUP_PATH="/subscriptions/$AZ_SUBSCRIPTION_ID/resourceGroups/$AZ_RESOURCE_GROUP"
@@ -78,5 +78,5 @@ az aks nodepool add --cluster-name $AZ_CLUSTER_NAME -g $AZ_RESOURCE_GROUP  -n "n
   --node-count 2 \
   --vnet-subnet-id $NODE2_SUBNET_ID \
   --pod-subnet-id $POD2_SUBNET_ID \
-  --no-wait 
+  --no-wait
 ```

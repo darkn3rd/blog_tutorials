@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# [[ "$DEBUG" == 1 ]] && set -x
-## Check for az command
-command -v az > /dev/null || \
-  { echo "'az' command not not found" 1>&2; exit 1; }
-command -v jq > /dev/null || \
-  { echo "'jq' command not not found" 1>&2; exit 1; }
+[[ "$DEBUG" == 1 ]] && set -x
+
+## Check for required commands
+command -v az > /dev/null || { echo "'az' command not not found" 1>&2; exit 1; }
+command -v jq > /dev/null || { echo "'jq' command not not found" 1>&2; exit 1; }
 
 ## Verify these variables are set
 [[ -z "$AZ_LOCATION" ]] && { echo 'AZ_LOCATION not specified. Aborting' 1>&2 ; exit 1; }

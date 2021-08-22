@@ -14,5 +14,7 @@ if az group list | jq '.[].name' -r | grep -q "^${AZ_RESOURCE_GROUP}$"; then
     az aks delete \
      --resource-group "${AZ_RESOURCE_GROUP}" \
      --name "${AZ_CLUSTER_NAME}"
+  else
+    echo "Cannot find '$AZ_CLUSTER_NAME' Kubernetes cluster, skipping."
   fi
 fi
