@@ -1,11 +1,3 @@
-
-
-
-Resources
-
-* [Configure Azure CNI networking in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/configure-azure-cni)
-* [Secure traffic between pods using network policies in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/use-network-policies)
-
 ## FROM AZURE CNI ARTICLE
 
 ``` bash
@@ -17,7 +9,7 @@ az network vnet subnet list \
 
 az aks create \
     --resource-group $AZ_RESOURCE_GROUP \
-    --name myAKSCluster \
+    --name $AZ_CLUSTER_NAME \
     --network-plugin azure \
     --vnet-subnet-id <subnet-id> \
     --docker-bridge-address 172.17.0.1/16 \

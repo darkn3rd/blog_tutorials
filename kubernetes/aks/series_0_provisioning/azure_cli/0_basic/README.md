@@ -1,6 +1,14 @@
-# AKS Provision with `az` command
+# Baisc Cluster
 
-## Published Blogs
+This is a basic HA cluster with three nodes, one node per zone.
+
+This cluster will have the following details:
+
+* AKS (Kubernetes)
+  * Version v1.20.7 (2021-Aug-21) - default is latest per region
+  * Max Pods: 250
+  * Max Pods per Node: 110 (`kubenet`)
+
 
 * https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
 
