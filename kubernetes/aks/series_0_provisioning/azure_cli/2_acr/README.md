@@ -67,7 +67,13 @@ source env.sh
 # fetch object id of managed identity installed for VMSS node group
 AKS_SP_ID=$(az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME \
     --query "identityProfile.kubeletidentity.objectId" -o tsv)
-az role assignment list --assignee $AKS_SP_ID
+
+# list roles assigned to a provider (truncated string of the full scope)
+# NOTE: This assumes all resources are in the same resource group and
+#       subscription as the AKS cluster
+az role assignment list --assignee $AKS_SP_ID --all \
+  --query '[].{roleDefinitionName:roleDefinitionName, provider:scope}' \
+  --output table | sed 's|/subscriptions.*providers/||' | cut -c -80
 ```
 
 ## Resources

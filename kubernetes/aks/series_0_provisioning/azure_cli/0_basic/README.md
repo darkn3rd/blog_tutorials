@@ -1,4 +1,4 @@
-# Baisc Cluster
+# Basic Cluster
 
 This is a basic HA cluster with three nodes, one node per zone.
 
@@ -27,4 +27,5 @@ export AZ_LOCATION=westus2
 EOF
 
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
+./create_cluster.sh
 ```
