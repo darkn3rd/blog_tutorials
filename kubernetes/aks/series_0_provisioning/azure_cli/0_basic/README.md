@@ -5,10 +5,20 @@ This is a basic HA cluster with three nodes, one node per zone.
 This cluster will have the following details:
 
 * AKS (Kubernetes)
-  * Version v1.20.7 (2021-Aug-21) - default is latest per region
-  * Max Pods: 250
-  * Max Pods per Node: 110 (`kubenet`)
-
+  * Kubernetes version: latest per region (v1.20.7 for `westus2` on 2021-Aug-21)
+  * Network Plugin: `kubenet`
+  * Network Policy: none
+  * Max Pods for Cluster: 250
+    * Max Pods per Node: 110
+  * Azure Resoruces:
+    * Load Balancer (Standard)
+    * Public IP
+    * Network Security Group
+    * VMSS with 3 worker nodes
+      * Managed Identity for the worker nodes
+    * Virtual Network
+    * Routes
+      * route to pod overlay networks on the Nodes
 
 * https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
 

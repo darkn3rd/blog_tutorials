@@ -1,4 +1,9 @@
-# Baisc Cluster
+# AKS Cluster with Azure DNS
+
+This small guides shows how to allow pods to update requireds on Azure DNS Zone.  This is especially useful for the addon `external-dns` that can upsert DNS records on behalf load balancers through `service` or `ingress` resources.
+
+WARNING: This procedure allows ALL pods to access the given resource.  
+
 
 This is a basic HA cluster with three nodes, one node per zone.
 
