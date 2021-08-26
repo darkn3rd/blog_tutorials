@@ -6,10 +6,8 @@ command -v az > /dev/null || { echo "'az' command not not found" 1>&2; exit 1; }
 command -v jq > /dev/null || { echo "'jq' command not not found" 1>&2; exit 1; }
 
 ## Check for required variables
-[[ -z "$AZ_LOCATION" ]] && { echo 'AZ_LOCATION not specified. Aborting' 1>&2 ; exit 1; }
 [[ -z "$AZ_RESOURCE_GROUP" ]] && { echo 'AZ_RESOURCE_GROUP not specified. Aborting' 1>&2 ; exit 1; }
 [[ -z "$AZ_CLUSTER_NAME" ]] && { echo 'AZ_CLUSTER_NAME not specified. Aborting' 1>&2 ; exit 1; }
-[[ -z "$AZ_ACR_NAME" ]] && { echo 'AZ_ACR_NAME not specified. Aborting' 1>&2 ; exit 1; }
 
 ## Default variables
 AZ_VM_SIZE=${AZ_VM_SIZE:-Standard_DS2_v2}
@@ -17,6 +15,7 @@ KUBECONFIG=${KUBECONFIG:-$HOME/.kube/${AZ_CLUSTER_NAME}.yaml}
 
 ## create resource (idempotently)
 if ! az group list | jq '.[].name' -r | grep -q ${AZ_RESOURCE_GROUP}; then
+  [[ -z "$AZ_LOCATION" ]] && { echo 'AZ_LOCATION not specified. Aborting' 1>&2 ; exit 1; }
   az group create --name=${AZ_RESOURCE_GROUP} --location=${AZ_LOCATION}
 else
   echo "'$AZ_RESOURCE_GROUP' resource group is already created, skipping."
@@ -49,7 +48,6 @@ if az group list | jq '.[].name' -r | grep -q ${AZ_RESOURCE_GROUP}; then
         --node-vm-size $AZ_VM_SIZE \
         --load-balancer-sku standard \
         --enable-managed-identity \
-        --attach-acr ${AZ_ACR_NAME} \
         --node-count 3 \
         --zones 1 2 3
   else
