@@ -163,8 +163,8 @@ az role assignment create \
 
 ```bash
 . env.sh
-export AZ_TENANT_ID=$(az account show --query "tenantId" | tr -d '"')
-export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
+export AZ_TENANT_ID=$(az account show --query tenantId -o tsv)
+export AZ_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
 helmfile apply
 ```
@@ -173,8 +173,8 @@ helmfile apply
 
 ```bash
 . env.sh
-export AZ_TENANT_ID=$(az account show --query "tenantId" | tr -d '"')
-export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
+export AZ_TENANT_ID=$(az account show --query tenantId -o tsv)
+export AZ_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
 envsubst < chart-values.yaml.shtmpl > chart-values.yaml
 kubectl create namespace kube-addons

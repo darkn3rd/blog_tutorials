@@ -1,0 +1,33 @@
+repositories:
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: hello-kubernetes
+    namespace: kube-addons
+    chart: itscontained/raw
+    version: 0.2.5
+    values:
+      - resources:
+
+          - apiVersion: aadpodidentity.k8s.io/v1
+            kind: AzureIdentity
+            metadata:
+              annotations:
+                # recommended to use namespaced identites https://azure.github.io/aad-pod-identity/docs/configure/match_pods_in_namespace/
+                aadpodidentity.k8s.io/Behavior: namespaced 
+              name: extdns-identity
+              namespace: kube-addons
+            spec:
+              type: 0 # MSI
+              resourceID: {{ requiredEnv "IDENTITY_RESOURCE_ID" }} # <Identity_Id> # Resource Id From Previous step
+              clientID: {{ requiredEnv "IDENTITY_CLIENT_ID" }} # <Client_Id> # Client Id from previous step
+
+          - apiVersion: aadpodidentity.k8s.io/v1
+            kind: AzureIdentityBinding
+            metadata:
+              name: extdns-id-binding
+              namespace: kube-addons
+            spec:
+              azureIdentity: extdns-identity
+              selector: aadpodidbinding

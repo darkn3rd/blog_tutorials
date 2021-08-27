@@ -80,5 +80,67 @@ spec:
     kubernetes.io/os: linux
 ```
 
+## Process
+
+On a fresh cluster, there will be this initial value:
+
+```json
+{
+    "podIdentityProfile": null
+}
+```
+
+After running ``:
+
+```json
+{
+    "podIdentityProfile": {
+        "allowNetworkPluginKubenet": null,
+        "enabled": true,
+        "userAssignedIdentities": null,
+        "userAssignedIdentityExceptions": null
+    }
+}
+```
+
+After running:
+```shell
+az aks pod-identity add \
+  --resource-group ${AZ_RESOURCE_GROUP}  \
+  --cluster-name ${AZ_CLUSTER_NAME} \
+  --namespace ${POD_IDENTITY_NAMESPACE} \
+  --name ${POD_IDENTITY_NAME} \
+  --identity-resource-id ${IDENTITY_RESOURCE_ID}
+```
+
+```json
+{
+    "podIdentityProfile": {
+        "allowNetworkPluginKubenet": null,
+        "enabled": true,
+        "userAssignedIdentities": [
+            {
+                "bindingSelector": null,
+                "identity": {
+                    "clientId": "${IDENTITY_CLIENT_ID}",
+                    "objectId": "${IDENTITY_PRINCIPAL_ID}",
+                    "resourceId": "${IDENTITY_RESOURCE_ID}"
+                },
+                "name": "${POD_IDENTITY_NAME}",
+                "namespace": "${POD_IDENTITY_NAMESPACE}",
+                "provisioningInfo": null,
+                "provisioningState": "Assigned"
+            }
+        ],
+        "userAssignedIdentityExceptions": null
+    }
+}
+```
+
+# Resources
 
 * https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity
+* https://hovermind.com/azure-kubernetes-service/pod-identity.html
+* [Trying out the preview of Azure Active Directory pod-managed identities in Azure Kubernetes Service](https://blog.nillsf.com/index.php/2021/01/05/trying-out-the-preview-of-azure-active-directory-pod-managed-identities-in-azure-kubernetes-service/)
+* https://blog.baeke.info/2020/12/09/azure-ad-pod-managed-identities-in-aks-revisited/
+* https://jonathan18186.medium.com/azure-kubernetes-service-aks-with-azure-active-directory-aad-pod-identity-620cf210361e
