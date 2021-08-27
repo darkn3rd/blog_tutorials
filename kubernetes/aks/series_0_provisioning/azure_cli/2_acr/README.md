@@ -2,9 +2,6 @@
 
 This will create a basic HA cluster with three nodes (one node per zone) and support for a private container registry with ACR.
 
-
-This is a basic HA cluster with three nodes, one node per zone.
-
 This cluster will have the following details:
 
 * AKS (Kubernetes)
@@ -23,9 +20,6 @@ This cluster will have the following details:
     * Virtual Network
     * Routes
       * route to pod overlay networks on the Nodes
-
-
-* https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
 
 ## Requirements
 

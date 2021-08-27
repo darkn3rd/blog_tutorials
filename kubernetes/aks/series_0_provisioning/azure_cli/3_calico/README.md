@@ -1,82 +1,75 @@
 # AKS with Calico for network policies
 
+This creates an a basic HA cluster with network plugins Azure CNI and Calico.  
 
-Resources
+In this scenario, both pods and nodes are on the same virtual network due to Azure CNI.  Anything deployed on the virtual network will be able to connect to pods without out going through an loadbalancer endpoint created through a `service` (type `LoadBalancer`) or an `ingress`.
+
+This understandably is dangerous, so `network policies` is enabled through the Calico network plugin that will *allow* you to add further security.  You can create a policy that will DENY all ingress traffic to the pods, while configuring ALLOW traffic from pods or external traffic depending on a set of requirements you specify.
+
+This cluster will have the following details:
+
+* AKS (Kubernetes)
+  * Kubernetes version: latest per region (v1.20.7 for `westus2` on 2021-Aug-21)
+  * Network Plugin: `azure`
+  * Network Policy: `calico`
+  * Max Pods for Cluster: 250
+    * Max Pods per Node: 110
+  * Azure Resoruces:
+    * Load Balancer (Standard)
+    * Public IP
+    * Network Security Group
+    * VMSS with 3 worker nodes
+    * Managed Identity for the worker nodes
+      * AcrPull role added
+    * Virtual Network
+    * Routes
+      * route to pod overlay networks on the Nodes
+
+## Requirements
+
+  * [az](https://docs.microsoft.com/cli/azure/install-azure-cli) - provision and gather information about Azure cloud resources
+  * [kubectl](https://kubernetes.io/docs/tasks/tools/) - interact with Kubernetes
+
+## Instructions
+
+```bash
+# create environment source file
+cat <<-EOF > env.sh
+export AZ_RESOURCE_GROUP=blog-test
+export AZ_CLUSTER_NAME=blog-test
+export AZ_LOCATION=westus2
+export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME.yaml
+
+export AZ_NET_PLUGIN="azure"
+export AZ_NET_POLICY="calico"
+EOF
+
+source env.sh
+
+../scripts/create_cluster.sh
+```
+
+## Verifiication
+
+### Verify Kubernetes Cluster
+
+Verify your access to the cluster using `kubectl`
+
+```bash
+source env.sh
+kubectl get all --all-namespaces
+```
+
+You should see several new pods for Calico.
+
+## Cleanup
+
+```bash
+source env.sh
+../scripts/delete_cluster.sh
+```
+
+## Resources
 
 * [Configure Azure CNI networking in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/configure-azure-cni)
 * [Secure traffic between pods using network policies in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/use-network-policies)
-
-## FROM AZURE CNI ARTICLE
-
-``` bash
-az network vnet subnet list \
-    --resource-group $AZ_RESOURCE_GROUP \
-    --vnet-name $AZ_VNET \
-    --query "[0].id" --output tsv
-
-
-az aks create \
-    --resource-group $AZ_RESOURCE_GROUP \
-    --name myAKSCluster \
-    --network-plugin azure \
-    --vnet-subnet-id <subnet-id> \
-    --docker-bridge-address 172.17.0.1/16 \
-    --dns-service-ip 10.2.0.10 \
-    --service-cidr 10.2.0.0/24 \
-    --generate-ssh-keys
-```
-
-### Dynamic IP allocation
-
-```bash
-az feature register --namespace "Microsoft.ContainerService" --name "PodSubnetPreview"
-az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/PodSubnetPreview')].{Name:name,State:properties.state}"
-az provider register --namespace Microsoft.ContainerService
-```
-
-#### Dynamic allocation of IPs and enhanced subnet support
-
-```bash
-AZ_RESOURCE_GROUP="myResourceGroup"
-AZ_VNET="myVirtualNetwork"
-AZ_LOCATION="westcentralus"
-
-# Create the resource group
-az group create --name $AZ_RESOURCE_GROUP --location $AZ_LOCATION
-
-# Create our two subnet network
-az network vnet create -g $AZ_RESOURCE_GROUP --location $AZ_LOCATION --name $AZ_VNET --address-prefixes 10.0.0.0/8 -o none
-az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name nodesubnet --address-prefixes 10.240.0.0/16 -o none
-az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name podsubnet --address-prefixes 10.241.0.0/16 -o none
-
-export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
-GROUP_PATH="/subscriptions/$AZ_SUBSCRIPTION_ID/resourceGroups/$AZ_RESOURCE_GROUP"
-NODE_SUBNET_ID="$GROUP_PATH/providers/Microsoft.Network/virtualNetworks/$AZ_VNET/subnets/nodesubnet"
-POD_SUBNET_ID="$GROUP_PATH/providers/Microsoft.Network/virtualNetworks/$AZ_VNET/subnets/podsubnet"
-
-az aks create -n $AZ_CLUSTER_NAME -g $AZ_RESOURCE_GROUP -l $AZ_LOCATION \
-  --max-pods 250 \
-  --node-count 2 \
-  --network-plugin azure \
-  --vnet-subnet-id $NODE_SUBNET_ID \
-  --pod-subnet-id $POD_SUBNET_ID
-```
-
-#### Adding node pool
-
-```bash
-az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name "node2subnet" --address-prefixes 10.242.0.0/16 -o none
-az network vnet subnet create -g $AZ_RESOURCE_GROUP --vnet-name $AZ_VNET --name "pod2subnet" --address-prefixes 10.243.0.0/16 -o none
-
-export AZ_SUBSCRIPTION_ID=$(az account show --query id | tr -d '"')
-GROUP_PATH="/subscriptions/$AZ_SUBSCRIPTION_ID/resourceGroups/$AZ_RESOURCE_GROUP"
-NODE2_SUBNET_ID="$GROUP_PATH/providers/Microsoft.Network/virtualNetworks/$AZ_VNET/subnets/node2subnet"
-POD2_SUBNET_ID="$GROUP_PATH/providers/Microsoft.Network/virtualNetworks/$AZ_VNET/subnets/pod2subnet"
-
-az aks nodepool add --cluster-name $AZ_CLUSTER_NAME -g $AZ_RESOURCE_GROUP  -n "newnodepool" \
-  --max-pods 250 \
-  --node-count 2 \
-  --vnet-subnet-id $NODE2_SUBNET_ID \
-  --pod-subnet-id $POD2_SUBNET_ID \
-  --no-wait
-```

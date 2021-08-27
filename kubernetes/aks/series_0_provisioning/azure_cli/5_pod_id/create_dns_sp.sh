@@ -11,7 +11,7 @@ command -v jq > /dev/null || { echo "'jq' command not not found" 1>&2; exit 1; }
 [[ -z "${AZ_DNS_DOMAIN}" ]] && { echo 'AZ_DNS_DOMAIN not specified. Aborting' 1>&2 ; exit 1; }
 
 ## Create resource (idempotently)
-if ! az group list | jq '.[].name' -r | grep -q ${AZ_RESOURCE_GROUP}; then
+if ! az group list --query "[].name" -o tsv | grep -q ${AZ_RESOURCE_GROUP}; then
   [[ -z "$AZ_LOCATION" ]] && { echo 'AZ_LOCATION not specified. Aborting' 1>&2 ; exit 1; }
   az group create --name=${AZ_RESOURCE_GROUP} --location=${AZ_LOCATION}
 else
@@ -40,9 +40,9 @@ else
   exit 1
 fi
 
-if az group list | jq '.[].name' -r | grep -q ${AZ_RESOURCE_GROUP}; then
+if az group list --query "[].name" -o tsv | grep -q ${AZ_RESOURCE_GROUP}; then
   ## check if AKS cluster was already created
-  if az aks list | jq '.[].name' -r | grep -q ${AZ_CLUSTER_NAME}; then
+  if az aks list --query "[].name" -o tsv | grep -q ${AZ_CLUSTER_NAME}; then
     export POD_IDENTITY_NAME=${AZ_DNS_DOMAIN/./-}
     export POD_IDENTITY_NAMESPACE="kube_addons"
 
