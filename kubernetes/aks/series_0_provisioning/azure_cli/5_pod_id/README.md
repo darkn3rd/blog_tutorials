@@ -5,10 +5,26 @@ In a previous section on using Azure DNS, all the pods were authorize to make ch
 An alternative is to use a feature called Pod Identities, which associates an identity that has the requried priviledges, with a service account that the pod can use.  With this, we can grant only the external-dns service account to have the correct access.
 
 
+## Instructions
+
 ```bash
-az feature register --name EnablePodIdentityPreview --namespace Microsoft.ContainerService
-az extension add --name aks-preview
-az extension update --name aks-preview
+cat <<-EOF > env.sh
+export AZ_RESOURCE_GROUP=dgraph-test
+export AZ_CLUSTER_NAME=dgraph-test
+export AZ_LOCATION=westus2
+export AZ_DNS_DOMAIN="example.internal"
+export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
+EOF
+
+source env.sh
+
+../script/create_cluster.sh
+./enable_pod_identity.sh
+./install_pod_identity.sh
+
+../script/create_dns_zone.sh
+./create_dns_sp.sh
+```
 
 # Create an identity
 az group create --name myIdentityResourceGroup --location eastus

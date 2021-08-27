@@ -33,13 +33,13 @@ This cluster will have the following details:
 
 ```bash
 cat <<-EOF > env.sh
-export AZ_RESOURCE_GROUP=dgraph-test
-export AZ_CLUSTER_NAME=dgraph-test
+export AZ_RESOURCE_GROUP=blog-test
+export AZ_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
 EOF
 
 export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}
-./create_cluster.sh
+../scripts/create_cluster.sh
 ```
 
 ## Verifiication

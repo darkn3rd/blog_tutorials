@@ -43,8 +43,9 @@ export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME.yaml
 EOF
 
 source env.sh
-./scripts/create_acr.sh
-./scripts/create_cluster.sh
+../scripts/create_acr.sh
+../scripts/create_cluster.sh
+./attach_acr.sh
 ```
 
 ## Verifiication
