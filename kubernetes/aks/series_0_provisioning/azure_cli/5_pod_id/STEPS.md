@@ -35,7 +35,7 @@ IDENTITY_RESOURCE_ID=$(az identity show --resource-group ${AZ_RESOURCE_GROUP} --
 AZ_DNS_SCOPE=$(az network dns zone show --name ${AZ_DNS_DOMAIN} --resource-group ${AZ_RESOURCE_GROUP} --query id -o tsv)
 
 az role assignment create \
-  --assignee "$IDENTITY_PRINCIPAL_ID" \
+  --assignee "$IDENTITY_CLIENT_ID" \
   --role "DNS Zone Contributor" \
   --scope "$AZ_DNS_SCOPE"
 
