@@ -28,14 +28,21 @@ This cluster will have the following details:
 
 ## Instructions
 
+### Create Environment File
+
 ```bash
 cat <<-EOF > env.sh
 export AZ_RESOURCE_GROUP=blog-test
 export AZ_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME.yaml
+export AZ_ACR_NAME=blogimages
 EOF
+```
 
+### Create Azure Resources
+
+```bash
 source env.sh
 ../scripts/create_acr.sh
 ../scripts/create_cluster.sh

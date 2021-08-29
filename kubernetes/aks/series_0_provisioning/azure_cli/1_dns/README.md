@@ -36,6 +36,8 @@ This cluster will have the following details:
 
 ## Instructions
 
+### Create Environment File
+
 ```bash
 cat <<-EOF > env.sh
 export AZ_RESOURCE_GROUP=dgraph-test
@@ -44,7 +46,11 @@ export AZ_LOCATION=westus2
 export AZ_DNS_DOMAIN="example.internal"
 export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
 EOF
+```
 
+### Create Azure Resources
+
+```bash
 source env.sh
 
 ../script/create_cluster.sh
