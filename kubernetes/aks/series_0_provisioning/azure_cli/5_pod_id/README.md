@@ -7,7 +7,7 @@ An alternative is to use a feature called Pod Identities, which associates an id
 
 ## Instructions
 
-### Create Environment File
+### Create Environment Configuration
 
 ```bash
 cat <<-EOF > env.sh

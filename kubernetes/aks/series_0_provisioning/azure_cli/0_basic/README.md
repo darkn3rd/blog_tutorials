@@ -31,13 +31,19 @@ This cluster will have the following details:
 
 ## Instructions
 
+### Create Environment Configuration
+
 ```bash
 cat <<-EOF > env.sh
 export AZ_RESOURCE_GROUP=blog-test
 export AZ_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
 EOF
+```
 
+### Create Cluster
+
+```bash
 export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}
 ../scripts/create_cluster.sh
 ```

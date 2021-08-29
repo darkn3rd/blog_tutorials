@@ -36,7 +36,7 @@ This cluster will have the following details:
 
 ## Instructions
 
-### Create Environment File
+### Create Environment Configuration
 
 ```bash
 cat <<-EOF > env.sh

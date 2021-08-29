@@ -32,6 +32,8 @@ This cluster will have the following details:
 
 ## Instructions
 
+### Create Environment configuration
+
 ```bash
 # create environment source file
 cat <<-EOF > env.sh
@@ -43,7 +45,11 @@ export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME.yaml
 export AZ_NET_PLUGIN="azure"
 export AZ_NET_POLICY="calico"
 EOF
+```
 
+### Create Cluster
+
+```bash
 source env.sh
 
 ../scripts/create_cluster.sh
