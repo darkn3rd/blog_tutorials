@@ -3,7 +3,7 @@ variable "location" {}
 variable "create_group" { default = true }
 
 resource "azurerm_resource_group" "rg" {
-  count    = var.create_group ? 0 : 1
+  count    = var.create_group ? 1 : 0
   name     = var.name
   location = var.location
 }

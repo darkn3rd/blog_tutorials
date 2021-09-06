@@ -16,7 +16,6 @@ module "aks" {
   name                = var.cluster_name
   dns_prefix          = var.dns_prefix
   resource_group_name = var.resource_group_name
-
 }
 
 output "resource_group_name" {
