@@ -24,7 +24,7 @@ AZ_SSH_KEY_PATH="$HOME/.ssh/id_rsa"
 kubectl cp $AZ_SSH_KEY_PATH aks-ssh:/root/.ssh
 
 # exec into container
-kubectl exec -it aks-ssh --/bin/bash
+kubectl exec -it aks-ssh -- /bin/bash
 ```
 
 ## Connecting to Servers
@@ -32,5 +32,5 @@ kubectl exec -it aks-ssh --/bin/bash
 ```bash
 SERVER_IP="<server-ip-of-target-node>"
 chown root:root .ssh/id_rsa
-ssh azureuser@$${SERVER_IP}
+ssh azureuser@${SERVER_IP}
 ```

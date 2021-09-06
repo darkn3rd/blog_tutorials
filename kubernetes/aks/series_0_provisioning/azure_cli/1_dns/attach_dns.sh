@@ -21,7 +21,7 @@ if az network dns zone list --query "[?name=='$AZ_DNS_DOMAIN'].name" --output ts
   )
 
   AZ_PRINCIPAL_ID=$(
-    az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME \
+    az aks show -g $AZ_RESOURCE_GROUP -n $AZ_AKS_CLUSTER_NAME \
       --query "identityProfile.kubeletidentity.objectId" --output tsv
   )
 

@@ -16,26 +16,31 @@ Container Projects:
 ## Create env.sh file
 
 ```bash
-cat <<-EOF > env.sh
+cat <<-EOF > acr_env.sh
 # resource group
 export AZ_RESOURCE_GROUP=netpolmesh-test
 export AZ_LOCATION=westus2
+
+# resource group for ACR (change if different)
+export AZ_ACR_RESOURCE_GROUP=$AZ_RESOURCE_GROUP
 
 # container registry
 export AZ_ACR_NAME=netpolmeshtest
 EOF
 ```
 
+The resource group(s) should already have been created.
+
 ## Create an container registry
 
 ```bash
-source env.sh
+source acr_env.sh
 
 ############
 # create Azure Container Registry
 ############################################
 az acr create \
-  --resource-group ${AZ_RESOURCE_GROUP} \
+  --resource-group ${AZ_ACR_RESOURCE_GROUP} \
   --name ${AZ_ACR_NAME} \
   --sku Basic
 
@@ -46,7 +51,7 @@ az acr login --name ${AZ_ACR_NAME}
 ############################################
 cat <<-'EOF' >> env.sh
 export AZ_ACR_LOGIN_SERVER=$(az acr list \
-  --resource-group ${AZ_RESOURCE_GROUP} \
+  --resource-group ${AZ_ACR_RESOURCE_GROUP} \
   --query "[?name == \`${AZ_ACR_NAME}\`].loginServer | [0]" \
   --output tsv
 )

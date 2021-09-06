@@ -40,11 +40,11 @@ This cluster will have the following details:
 
 ```bash
 cat <<-EOF > env.sh
-export AZ_RESOURCE_GROUP=dgraph-test
-export AZ_CLUSTER_NAME=dgraph-test
+export AZ_RESOURCE_GROUP=blog-test
+export AZ_AKS_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
 export AZ_DNS_DOMAIN="example.internal"
-export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
+export KUBECONFIG=~/.kube/$AZ_AKS_CLUSTER_NAME
 EOF
 ```
 
@@ -78,7 +78,7 @@ Verify the the nodepool workers have access.  Specifically, a Managed Identity t
 ```bash
 source env.sh
 # fetch object id of managed identity installed for VMSS node group
-AKS_SP_ID=$(az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME \
+AKS_SP_ID=$(az aks show -g $AZ_RESOURCE_GROUP -n $AZ_AKS_CLUSTER_NAME \
     --query "identityProfile.kubeletidentity.objectId" -o tsv)
 
 # list roles assigned to a provider (truncated string of the full scope)

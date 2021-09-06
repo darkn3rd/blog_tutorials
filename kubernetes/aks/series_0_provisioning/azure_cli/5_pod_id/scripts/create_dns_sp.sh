@@ -7,7 +7,7 @@ command -v jq > /dev/null || { echo "'jq' command not not found" 1>&2; exit 1; }
 
 ## Check for required variables
 [[ -z "$AZ_RESOURCE_GROUP" ]] && { echo 'AZ_RESOURCE_GROUP not specified. Aborting' 1>&2 ; exit 1; }
-[[ -z "${AZ_CLUSTER_NAME}" ]] && { echo 'AZ_CLUSTER_NAME not specified. Aborting' 1>&2 ; exit 1; }
+[[ -z "${AZ_AKS_CLUSTER_NAME}" ]] && { echo 'AZ_AKS_CLUSTER_NAME not specified. Aborting' 1>&2 ; exit 1; }
 [[ -z "${AZ_DNS_DOMAIN}" ]] && { echo 'AZ_DNS_DOMAIN not specified. Aborting' 1>&2 ; exit 1; }
 
 ## Create resource (idempotently)

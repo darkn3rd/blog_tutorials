@@ -11,11 +11,11 @@ An alternative is to use a feature called Pod Identities, which associates an id
 
 ```bash
 cat <<-EOF > env.sh
-export AZ_RESOURCE_GROUP=dgraph-test
-export AZ_CLUSTER_NAME=dgraph-test
+export AZ_RESOURCE_GROUP=blog-test
+export AZ_AKS_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
 export AZ_DNS_DOMAIN="example.internal"
-export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
+export KUBECONFIG=~/.kube/$AZ_AKS_CLUSTER_NAME
 EOF
 ```
 

@@ -38,9 +38,9 @@ This cluster will have the following details:
 # create environment source file
 cat <<-EOF > env.sh
 export AZ_RESOURCE_GROUP=blog-test
-export AZ_CLUSTER_NAME=blog-test
+export AZ_AKS_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
-export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME.yaml
+export KUBECONFIG=~/.kube/$AZ_AKS_CLUSTER_NAME.yaml
 
 export AZ_NET_PLUGIN="azure"
 export AZ_NET_POLICY="calico"

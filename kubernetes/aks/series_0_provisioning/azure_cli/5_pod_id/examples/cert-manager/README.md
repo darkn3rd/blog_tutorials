@@ -22,7 +22,7 @@ This covers installing the following components:
 ```bash
 az aks pod-identity list \
   --resource-group ${AZ_RESOURCE_GROUP} \
-  --cluster-name ${AZ_CLUSTER_NAME} \
+  --cluster-name ${AZ_AKS_CLUSTER_NAME} \
   --query 'podIdentityProfile.userAssignedIdentities[].name' \
   --output tsv
 ```

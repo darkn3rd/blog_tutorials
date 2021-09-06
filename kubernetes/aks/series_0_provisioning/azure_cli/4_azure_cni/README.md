@@ -20,16 +20,16 @@ In order to ameliorate this risk while still using Azure CNI, one method place t
 ```bash
 cat <<-EOF > env.sh
 export AZ_RESOURCE_GROUP=blog-test
-export AZ_CLUSTER_NAME=blog-test
+export AZ_AKS_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
 
-export AZ_AKS_IDENTITY_NAME=${AZ_CLUSTER_NAME}-identity
+export AZ_AKS_IDENTITY_NAME=${AZ_AKS_CLUSTER_NAME}-identity
 
-export AZ_VNET_NAME="${AZ_CLUSTER_NAME}-vnet"
+export AZ_VNET_NAME="${AZ_AKS_CLUSTER_NAME}-vnet"
 export AZ_VNET_RANGE="10.0.0.0/8"
 
-export AZ_POD_SUBNET_NAME="${AZ_CLUSTER_NAME}-pod-subnet"
-export AZ_NODE_SUBNET_NAME="${AZ_CLUSTER_NAME}-node-subnet"
+export AZ_POD_SUBNET_NAME="${AZ_AKS_CLUSTER_NAME}-pod-subnet"
+export AZ_NODE_SUBNET_NAME="${AZ_AKS_CLUSTER_NAME}-node-subnet"
 export AZ_POD_SUBNET_RANGE="10.242.0.0/16"
 export AZ_NODE_SUBNET_RANGE="10.243.0.0/16"
 
@@ -103,7 +103,7 @@ az provider register --namespace Microsoft.ContainerService
 
 az aks create \
     --resource-group ${AZ_RESOURCE_GROUP} \
-    --name ${AZ_CLUSTER_NAME} \
+    --name ${AZ_AKS_CLUSTER_NAME} \
     --generate-ssh-keys \
     --vm-set-type VirtualMachineScaleSets \
     --node-vm-size ${AZ_VM_SIZE:-Standard_DS2_v2} \
@@ -120,7 +120,7 @@ az aks create \
 
 az aks get-credentials \
   --resource-group ${AZ_RESOURCE_GROUP} \
-  --name ${AZ_CLUSTER_NAME} \
+  --name ${AZ_AKS_CLUSTER_NAME} \
   --file ${KUBECONFIG}
 ```
 

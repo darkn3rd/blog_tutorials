@@ -3,9 +3,9 @@ repositories:
     url: https://charts.itscontained.io
 
 releases:
-  - name: pydgraph-client
+  - name: aks-ssh
     chart: itscontained/raw
-    namespace: pydgraph-client
+    namespace: aks-ssh
     version:  0.2.5
     values:
       - resources:
