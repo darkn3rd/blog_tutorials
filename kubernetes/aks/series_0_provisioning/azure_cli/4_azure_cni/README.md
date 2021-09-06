@@ -1,6 +1,6 @@
 # AKS with Azure CNI
 
-This scenario installed the network plugin Azure CNI, which puts both pods and nodes on the same virtual network.  This potentially dangerous anything running on the same subnet will have direct access pods on the Kubernetes cluster without the need to go through an endpoint, such as an `ingress` or `service`.
+This scenario installed the network plugin Azure CNI, which puts both pods and nodes on the same virtual network.  This potentially dangerous anything running on the same subnet will have direct access pods on the Kubernetes cluster without the need to go through an endpoint, such as an `ingress` or `service`.  As pods and nodes share the same subnet, there's a problem with IP exhaustion, where there will not be enough IP addresses to accomodate both pods and nodes.
 
 In order to ameliorate this risk while still using Azure CNI, one method place the nodes and pods on different virutal networks.
 
