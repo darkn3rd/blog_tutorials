@@ -2,7 +2,7 @@
 
 These are code related to tutorials created.
 
-## Sie Blogs
+## Die Blogs ( Τα ιστολόγια / Блогҳо / ብሎጎቹ )
 
 ### General
 
