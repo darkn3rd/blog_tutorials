@@ -1,9 +1,17 @@
 variable "resource_group_name" {}
 variable "cluster_name" {}
+variable "namespace" { default = "default" }
+
+resource "kubernetes_namespace" "default" {
+  metadata {
+    name = var.namespace
+  }
+}
 
 resource "kubernetes_deployment" "hello_kubernetes" {
   metadata {
     name = "hello-kubernetes"
+    namespace = kubernetes_namespace.default.metadata.0.name
   }
 
   spec {
@@ -52,12 +60,12 @@ resource "kubernetes_deployment" "hello_kubernetes" {
           }
 
           resources {
-            limits {
+            limits = {
               cpu    = "250m"
               memory = "128Mi"
             }
 
-            requests {
+            requests = {
               cpu    = "80m"
               memory = "64Mi"
             }
@@ -71,6 +79,7 @@ resource "kubernetes_deployment" "hello_kubernetes" {
 resource "kubernetes_service" "hello_kubernetes" {
   metadata {
     name = "hello-kubernetes"
+    namespace = kubernetes_namespace.default.metadata.0.name
   }
 
   spec {
@@ -80,7 +89,7 @@ resource "kubernetes_service" "hello_kubernetes" {
     }
 
     selector = {
-      app = "hello-kubernetes"
+      app = kubernetes_deployment.hello_kubernetes.spec[0].template[0].metadata[0].labels.app
     }
 
     type = "ClusterIP"

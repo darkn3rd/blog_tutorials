@@ -78,9 +78,12 @@ These are code related to tutorials created.
       * Helm3 + Helm2 on macOS (`helm`) - https://joachim8675309.medium.com/install-helm3-helm2-on-macos-d65f61509799
   * AKS
       * Provisioning
-          * Basic AKS (`az`) - https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
-          * PodIdentity preview w/ cert-manager + external-dns (`az`) - https://joachim8675309.medium.com/aks-with-aad-pod-identity-7c2cbf906eb9
-          * PodSubnet preview w/ Azure CNI plugin (`az`) - https://joachim8675309.medium.com/aks-with-azure-cni-ae36712b1e8c
+          * Azure CLI
+              * Basic AKS (`az`) - https://joachim8675309.medium.com/azure-kubernetes-service-b89cc52b7f02
+              * PodIdentity preview w/ cert-manager + external-dns (`az`) - https://joachim8675309.medium.com/aks-with-aad-pod-identity-7c2cbf906eb9
+              * PodSubnet preview w/ Azure CNI plugin (`az`) - https://joachim8675309.medium.com/aks-with-azure-cni-ae36712b1e8c
+          * Terraform
+              * Basic AKS (`terraform`) - https://joachim8675309.medium.com/building-aks-with-terraform-662a61acb59c
       * Managing Endpoints: service and ingress
           * external-dns - https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
           * ingress-nginx - https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
