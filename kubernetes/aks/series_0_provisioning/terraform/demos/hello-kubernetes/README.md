@@ -32,6 +32,14 @@ terraform init
 terraform apply --var namespace="hello"
 ```
 
+### Using External DNS
+
+If external-dns is installed with access to Azure DNS, you can supply the domain with the following:
+
+```bash
+terraform apply --var namespace="hello" --var domain="example.com"
+```
+
 ## Verify Deployment
 
 ```bash

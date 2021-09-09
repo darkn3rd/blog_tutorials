@@ -1,6 +1,13 @@
 variable "resource_group_name" {}
 variable "cluster_name" {}
 variable "namespace" { default = "default" }
+variable "domain" { default = "" }
+
+locals {
+  a_record                = "hello.${var.domain}"
+  external_dns_annotation = { "external-dns.alpha.kubernetes.io/hostname" = local.a_record }
+  service_annotations     = var.domain != "" ? local.external_dns_annotation : {}
+}
 
 resource "kubernetes_namespace" "default" {
   metadata {
@@ -10,7 +17,7 @@ resource "kubernetes_namespace" "default" {
 
 resource "kubernetes_deployment" "hello_kubernetes" {
   metadata {
-    name = "hello-kubernetes"
+    name      = "hello-kubernetes"
     namespace = kubernetes_namespace.default.metadata.0.name
   }
 
@@ -78,8 +85,9 @@ resource "kubernetes_deployment" "hello_kubernetes" {
 
 resource "kubernetes_service" "hello_kubernetes" {
   metadata {
-    name = "hello-kubernetes"
-    namespace = kubernetes_namespace.default.metadata.0.name
+    name        = "hello-kubernetes"
+    namespace   = kubernetes_namespace.default.metadata.0.name
+    annotations = local.service_annotations
   }
 
   spec {
