@@ -2,6 +2,7 @@ variable "resource_group_name" {}
 variable "cluster_name" {}
 variable "namespace" { default = "default" }
 variable "domain" { default = "" }
+variable "service_type" { default = "ClusterIP" }
 
 locals {
   a_record                = "hello.${var.domain}"
@@ -100,6 +101,6 @@ resource "kubernetes_service" "hello_kubernetes" {
       app = kubernetes_deployment.hello_kubernetes.spec[0].template[0].metadata[0].labels.app
     }
 
-    type = "ClusterIP"
+    type = var.service_type
   }
 }

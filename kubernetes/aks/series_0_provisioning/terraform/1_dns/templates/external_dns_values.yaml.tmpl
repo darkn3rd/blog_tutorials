@@ -1,0 +1,10 @@
+provider: azure
+azure:
+  resourceGroup: ${resource_group}
+  tenantId: ${tenant_id}
+  subscriptionId: ${subscription_id}
+  useManagedIdentityExtension: true
+logLevel: ${log_level}
+domainFilters:
+  - ${domain}
+txtOwnerId: external-dns

@@ -1,29 +1,38 @@
-# resource groups
-variable "cluster_group" {}
-variable "dns_zone_group" {}
-variable "cluster_location" {}
-variable "dns_zone_location" {}
-variable "create_cluster_group" { default = false }
-variable "create_dns_zone_group" { default = false }
+##########
+# input variables
+##########################
 
 # azure dns
+variable "dns_zone_group" {}
+variable "dns_zone_location" {}
+variable "create_dns_zone_group" { default = false }
+
 variable "dns_prefix" {}
-variable "cluster_name" {}
+variable "create_dns_zone" { default = true }
+variable "domain" {}
+variable "subdomain_prefix" { default = "" }
 
 # aks
-variable "create_dns_zone" { default = true }
-variable "subdomain_prefix" { default = "" }
-variable "domain" {}
+variable "cluster_group" {}
+variable "cluster_location" {}
+variable "create_cluster_group" { default = false }
 
-# attach_dns - see warning
+variable "cluster_name" {}
+
+# managed identity role binding
 variable "enable_attach_dns" { default = false }
+
+##########
+# data sources
+##########################
+data "azurerm_client_config" "current" {}
 
 ##########
 # Azure Infrastructure
 ##########################
 module "cluster_rg" {
   source       = "../modules/group"
-  name         = var.cluster_name  # should be var.cluster_group
+  name         = var.cluster_group
   location     = var.cluster_location
   create_group = var.create_cluster_group
 }
@@ -52,25 +61,6 @@ module "aks" {
 
 
 ##########
-# attach_dns - this associates Azure DNS zone to the managed identity for the
-#              VMSS of the default node  group.
-#
-# WARNING: Do NOT do this in produciton!
-#          This allows ALL pods to access the Azure DNS Zone.  This is only used
-#          for demonstration purposes for this tutorial.
-
-# NOTE: See AAD Pod Identity to allow explicit pods to access the Azure DNS Zone
-#       resource
-##########################
-resource "azurerm_role_assignment" "attach_dns" {
-  count = var.enable_attach_dns ? 1 : 0
-
-  scope                = module.dns.dns_zone_id
-  role_definition_name = "DNS Zone Contributor"
-  principal_id         = module.aks.kubelet_identity[0].object_id
-}
-
-##########
 # Output variables
 ##########################
 output "resource_group_name" {
@@ -82,5 +72,17 @@ output "resource_group_location" {
 }
 
 output "kubernetes_cluster_name" {
-  value = module.aks.kubernetes_cluster_name
+  value = module.aks.name
+}
+
+output "dns_zone_id" {
+  value = module.dns.dns_zone_id
+}
+
+output "managed_identity_id" {
+  value = module.aks.kubelet_identity[0].object_id
+}
+
+output "managed_identity" {
+  value = module.aks.kubelet_identity[0]
 }

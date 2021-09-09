@@ -18,7 +18,7 @@ az login
 
 You can use the following:
 
-* create a prviate domain like `example.internal`.
+* create a prviate domain like `example.internal`. In order to fully use this, you can modify local /etc/hosts entry to match private DNS zone, setup local DNS server, use SSH jump host or VPN that has access to a private DNS service, or access the services by IP address.
 * point your public domain to Azure Name Servers (after deployment), so that your zone will be used for DNS lookups within your domain.  For this scenario, `example.com` will be used.
 
 # Steps
@@ -90,46 +90,6 @@ az aks get-credentials \
 kubectl get all --all-namespaces
 ```
 
-## Explore Networking
-
-You can view the IP addresses used by nodes and pods with the following commands:
-
-```bash
-JSONPATH_NODES='{range .items[*]}{@.metadata.name}{"\t"}{@.status.addresses[?(@.type == "InternalIP")].address}{"\n"}{end}'
-JSONPATH_PODS='{range .items[*]}{@.metadata.name}{"\t"}{@.status.podIP}{"\n"}{end}'
-
-cat <<-EOF
-Nodes:
-------------
-$(kubectl get nodes --output jsonpath="$JSONPATH_NODES" | xargs printf "%-40s %s\n")
-
-Pods:
-------------
-$(kubectl get pods --output jsonpath="$JSONPATH_PODS" --all-namespaces | \
-    xargs printf "%-40s %s\n"
-)
-EOF
-```
-
-## Demo: hello-kubernetes
-
-See [demos/hello-kubernetes/README.md](../demos/hello-kubernetes/README.md)
-
-## Explore Routing
-
-Assuming the default `kubenet` plug-in is used, you can view the routes created with the following command:
-
-```bash
-AZ_RESOURCE_GROUP=$(terraform output -raw resource_group_name)
-AZ_LOCATION=$(terraform output -raw resource_group_location)
-AZ_AKS_CLUSTER_NAME=$(terraform output -raw kubernetes_cluster_name)
-
-az network route-table list \
-  --resource-group MC_${AZ_RESOURCE_GROUP}_${AZ_AKS_CLUSTER_NAME}_${AZ_LOCATION} \
-  --query '[].routes[].{Name:name,"Address Prefix":addressPrefix,"Next hop IP address":nextHopIpAddress}' \
-  --output table
-```
-
 # Cleanup
 
 ```bash
@@ -138,8 +98,6 @@ terraform destroy
 
 # Links
 
-* [Creating a Kubernetes Cluster with AKS and Terraform](https://www.hashicorp.com/blog/kubernetes-cluster-with-aks-and-terraform) on May 23 2018 by Nic Jackson - this article has not been updated and example code is Terraform v0.11 or earlier.
-* [Provision an AKS Cluster (Azure)](https://learn.hashicorp.com/tutorials/terraform/aks)
-  * Source Code: https://github.com/hashicorp/learn-terraform-provision-aks-cluster
-* [Getting started with Terraform and Kubernetes on Azure AKS](https://learnk8s.io/terraform-aks)
-* [Create a Kubernetes cluster with Azure Kubernetes Service using Terraform](https://docs.microsoft.com/azure/developer/terraform/create-k8s-cluster-with-tf-and-aks) on Aug 07, 2021 - this article covers using Azure storage for maintaining state, and using Container Insights as well as basic Azure.
+* [Terraform Provider for Azure (Resource Manager): Examples](https://github.com/hashicorp/terraform-provider-azurerm/tree/main/examples)
+* [Create a Kubernetes cluster with Azure Kubernetes Service using Terraform](https://docs.microsoft.com/en-us/azure/developer/terraform/create-k8s-cluster-with-tf-and-aks)
+* [Kubernetes Provider for Terraform: AKS (Azure Kubernetes Service)](https://github.com/hashicorp/terraform-provider-kubernetes/tree/main/_examples/aks)

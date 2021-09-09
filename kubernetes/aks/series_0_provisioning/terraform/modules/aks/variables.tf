@@ -48,7 +48,7 @@ variable "vm_size" {
 variable "agent_count" {
   description = "The number of Agents that should exist in the Agent Pool."
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "ssh_public_key" {

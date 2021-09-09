@@ -32,13 +32,24 @@ terraform init
 terraform apply --var namespace="hello"
 ```
 
-### Using External DNS
+### Using External DNS with Service
 
 If external-dns is installed with access to Azure DNS, you can supply the domain with the following:
 
 ```bash
-terraform apply --var namespace="hello" --var domain="example.com"
+terraform apply --var namespace="hello" --var domain="example.com" --var service_type="LoadBalancer"
 ```
+
+If you have GNU grep† installed, you can test the results of the `LoadBalancer` with the following
+
+```bash
+DOMAIN="example.com"; URL="http://hello.${DOMAIN}"
+for i in {1..20}; do
+  curl --silent $URL | grep -oP 'hello-kubernetes-[^<]*|aks-[^(]*' | tr '\n' '\t'; printf "\n"
+done
+```
+
+† On macOS with [Homebrew](https://brew.sh/): `brew install grep && export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"`
 
 ## Verify Deployment
 
