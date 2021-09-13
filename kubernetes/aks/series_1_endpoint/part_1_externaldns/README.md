@@ -17,33 +17,15 @@ Create a global env.sh to hold  all the values  we'll will use.
 ```bash
 export AZ_RESOURCE_GROUP="external-dns"
 export AZ_LOCATION="westus2"
-export AZ_CLUSTER_NAME="demo-external-dns"
-export KUBECONFIG=~/.kube/$AZ_CLUSTER_NAME
+export AZ_AKS_CLUSTER_NAME="demo-external-dns"
+export KUBECONFIG=~/.kube/$AZ_AKS_CLUSTER_NAME.yaml
 
 export AZ_DNS_DOMAIN="<replace-with-your-domain>" # example.com
-## GoDaddy API credentials (if GoDaddy is used)
-export GODADDY_API_KEY="<secret_goes_here>"
-export GODADDY_API_SECRET="<secret_goes_here>"
-
-## Terraform variable definitions (if Terraform is used)
-export TF_VAR_resource_group_name=$AZ_RESOURCE_GROUP
-export TF_VAR_location=$AZ_LOCATION
-export TF_VAR_domain=$AZ_DNS_DOMAIN
 ```
 
 # Deploy Cloud Resources
 
 ## AKS
-
-### Using existing automation from other projects)
-
-You need to have an AKS cluster for this exercise.  For information about provisioning an AKS cluster, see [AKS Provision README](../../azure/aks/aks_provision_az/README.md)).  You can use that guide with this by running the following:
-
-```bash
-. env.sh
-
-pushd ../../azure/aks/aks_provision_az/; ./create_cluster.sh; popd
-```
 
 ### Using embedded scripts
 
@@ -52,7 +34,7 @@ pushd ../../azure/aks/aks_provision_az/; ./create_cluster.sh; popd
 
 az aks create \
   --resource-group ${AZ_RESOURCE_GROUP} \
-  --name ${AZ_CLUSTER_NAME} \
+  --name ${AZ_AKS_CLUSTER_NAME} \
   --generate-ssh-keys \
   --vm-set-type VirtualMachineScaleSets \
   --node-vm-size ${AZ_VM_SIZE:-Standard_DS2_v2} \
@@ -63,85 +45,57 @@ az aks create \
 
 az aks get-credentials \
   --resource-group ${AZ_RESOURCE_GROUP} \
-  --name ${AZ_CLUSTER_NAME} \
+  --name ${AZ_AKS_CLUSTER_NAME} \
   --file ${KUBECONFIG:-$HOME/.kube/config}
-```
-
-### Using  BYOA (Bring Your Own AKS)
-
-If you used another source to provision an AKS Kubernetes cluster, make sure that *Managed Identity* (aka *MSI*) is enabled.  You can example with:
-
-```bash
-az aks update -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME --enable-managed-identity
 ```
 
 ## Azure DNS Zone
 
-You should have a domain registered, and then either configure Azure DNS to support a subdomain or transfer DNS to Azure DNS zone from the domain provider such as GoDaddy.  For examples on this, see [Azure DNS README](../../azure/azure_dns/README.md).
+For this tutorial, an Azure DNS zone is required to illustrate the automation between Kubernetes and Azure DNS through External DNS.
 
-### Using Adjacent Project Scripts (includes GoDaddy)
+For best results, using a public registered domain is optimal.  For this path, `example.com`, will be used as an example domain.  You can also use a private domain that will not be resolvable on the public Internet, such as `example.iternal`.  Below are some notes on both of these paths:
 
-There are  previous blog posts that demonstrated how to do this process with GoDaddy.  YOu can use those scripts with the following:
+* public register domain
+  * sub-domain like `stage.example.com` - create NS record on the service provicer, e.g. GoDaddy, OpenSRS, etc. that points to Azure DNS name servers.
+  * full domain like `example.com` - transfer control of the domain from the service provider to use Azure DNS nameservers.
+* private domain
+  * local resolution - create duplicate entries in local DNS server or `/etc/hosts`
+  * remote resolution - operate from within the private network (VPN) or through a jump host or bation host.
 
-```bash
-. env.sh
 
-pushd ../../azure/azure_dns/
-terraform init
-# Create domain in Azure DNS
-terraform apply --target module.azure_dns_domain
-# point GoDaddy name servers to Azure DNS
-# NOTE: Skip this if  you use a different service.  Refer to their  documentation
-# for a similar procedure
-terraform apply --target module.godaddy_dns_nameservers
-popd
-```
+### Creating Azure DNS Zone with Azure CLI
 
-### Using Terraform
-
-Included is a small Terraform script to initialize an Azure DNS Zone.  
 
 ```bash
-. env.sh
-
-pushd ./terraform
-# initialize terraform providers
-terraform init
-# run the terraform script
-terraform apply
-popd
+az network dns zone create \
+  --resource-group ${AZ_RESOURCE_GROUP} \
+  --name ${AZ_DNS_DOMAIN}
 ```
 
-### Using Azure CLI
+### Creating Azure DNS Zone with Terraform
 
-```bash
-az network dns zone create -g $AZ_RESOURCE_GROUP -n $AZ_DNS_DOMAIN
-```
+* see [terraform/README.md](./terraform/README.md)
+
+### Related
+
+I have previous articles that walk through how to do transfer of control to Azure DNS from GoDaddy.  The process should be similar for other domain name providers.
+
+* [Azure DNS README](../../../../azure/azure_dns/README.md)
 
 ### Verify Azure DNS Zone
 
 ```bash
-# jq way
-az network dns zone list | \
-  jq ".[] | select(.name == \"$AZ_DNS_DOMAIN\")"
-
-# JMES way
-az network dns zone list --query "[?name=='$AZ_DNS_DOMAIN']"
+# JMES
+az network dns zone list --query "[?name=='$AZ_DNS_DOMAIN']" --output table
 ```
 
-## Add Access to Azure DNS Zone
+## Add Access to Azure DNS Zone using kublet identity
 
 ```bash
 ## get principal id from VMSS using JMESPath
 export AZ_PRINCIPAL_ID=$(
-  az aks show -g $AZ_RESOURCE_GROUP -n $AZ_CLUSTER_NAME \
-    --query "identityProfile.kubeletidentity.objectId" | tr -d '"'
-)
-
-## using jq
-export AZ_DNS_SCOPE=$(
-  az network dns zone list |
-   jq -r ".[] | select(.name == \"$AZ_DNS_DOMAIN\").id"
+  az aks show -g $AZ_RESOURCE_GROUP -n $AZ_AKS_CLUSTER_NAME \
+    --query "identityProfile.kubeletidentity.objectId" --output tsv
 )
 
 ## using JMESPath
@@ -195,6 +149,7 @@ EXTERNAL_DNS_POD_NAME=$(
     --selector "app.kubernetes.io/name=external-dns,app.kubernetes.io/instance=external-dns" \
     --output name
 )
+
 kubectl logs --namespace kube-addons $EXTERNAL_DNS_POD_NAME
 ```
 
@@ -227,7 +182,7 @@ kubectl delete pvc --namespace dgraph --selector release=demo
 . env.sh
 az aks delete \
   --resource-group $AZ_RESOURCE_GROUP \
-  --name $AZ_CLUSTER_NAME
+  --name $AZ_AKS_CLUSTER_NAME
 ```
 
 ## Destroy Azure DNS

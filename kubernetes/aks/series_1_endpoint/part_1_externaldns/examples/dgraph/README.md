@@ -6,7 +6,7 @@
   * Tools: `helm` or `helmfile`
   * Kubernetes (AKS)
 * Securing Dgraph (*allow list*)
-  * evironment variables: `AZ_CLUSTER_NAME`, `AZ_RESOURCE_GROUP`
+  * evironment variables: `AZ_AKS_CLUSTER_NAME`, `AZ_RESOURCE_GROUP`
 * DNS configuraiton autoamtion
   * Tools: `helm` or `helmfile`
   * ExternalDNS (`external-dns`) configured
@@ -17,11 +17,11 @@
 You can limit access with an *allow list*
 
 ```bash
-source ../../env.sh # fetch AZ_RESOURCE_GROUP and AZ_CLUSTER_NAME
+source ../../env.sh # fetch AZ_RESOURCE_GROUP and AZ_AKS_CLUSTER_NAME
 
 ## Build Accept List
 DG_ALLOW_LIST=$(az aks show \
-  --name $AZ_CLUSTER_NAME \
+  --name $AZ_AKS_CLUSTER_NAME \
   --resource-group $AZ_RESOURCE_GROUP | \
   jq -r '.networkProfile.podCidr,.networkProfile.serviceCidr' | \
   tr '\n' ','
