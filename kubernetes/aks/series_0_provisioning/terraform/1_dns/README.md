@@ -74,13 +74,13 @@ terraform apply --target "module.dns"
 ## Credentials for Kubectl
 
 ```bash
-export AZ_CLUSTER_NAME="$(terraform output -raw kubernetes_cluster_name)"
-export AZ_RESOURCE_GROUP="$(terraform output -raw resource_group_name)"
-export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}.yaml
+export AZ_AKS_CLUSTER_NAME="$(terraform output -raw kubernetes_cluster_name)"
+export AZ_AKS_RESOURCE_GROUP="$(terraform output -raw cluster_resource_group_name)"
+export KUBECONFIG=~/.kube/${AZ_AKS_CLUSTER_NAME}.yaml
 
 az aks get-credentials \
-  --resource-group $AZ_RESOURCE_GROUP \
-  --name $AZ_CLUSTER_NAME \
+  --resource-group $AZ_AKS_RESOURCE_GROUP \
+  --name $AZ_AKS_CLUSTER_NAME \
   --file $KUBECONFIG
 ```
 

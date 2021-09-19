@@ -63,26 +63,34 @@ module "aks" {
 ##########
 # Output variables
 ##########################
-output "resource_group_name" {
+output "cluster_resource_group_location" {
+  value = module.cluster_rg.location
+}
+
+output "cluster_resource_group_name" {
   value = module.cluster_rg.name
 }
 
-output "resource_group_location" {
-  value = module.cluster_rg.location
+output "dns_zone_resource_group_name" {
+  value = module.dns_zone_rg.name
+}
+
+output "dns_zone_resource_group_location" {
+  value = module.dns_zone_rg.location
 }
 
 output "kubernetes_cluster_name" {
   value = module.aks.name
 }
 
+output "kubelet_identity_id" {
+  value = module.aks.kubelet_identity[0].object_id
+}
+
 output "dns_zone_id" {
   value = module.dns.dns_zone_id
 }
 
-output "managed_identity_id" {
-  value = module.aks.kubelet_identity[0].object_id
-}
-
-output "managed_identity" {
-  value = module.aks.kubelet_identity[0]
+output "dns_zone_name" {
+  value = module.dns.dns_zone_name
 }
