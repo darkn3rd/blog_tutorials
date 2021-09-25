@@ -1,6 +1,6 @@
 output "name" {
   description = "The Kubernetes Managed Cluster name."
-  value = azurerm_kubernetes_cluster.k8s.name
+  value       = azurerm_kubernetes_cluster.k8s.name
 }
 
 output "kubelet_identity" {
@@ -9,5 +9,5 @@ output "kubelet_identity" {
 }
 
 output "kube_config" {
-  value       = azurerm_kubernetes_cluster.k8s.kube_config
+  value = azurerm_kubernetes_cluster.k8s.kube_config
 }
