@@ -11,17 +11,17 @@ variable "enable_cert" { default = false }
 variable "cluster_issuer" { default = "" }
 
 locals {
-  a_record                = "hello.${var.domain}"
+  a_record = "hello.${var.domain}"
 
   # service 
-  external_dns_annotation = { "external-dns.alpha.kubernetes.io/hostname" = local.a_record }
-  enable_external_dns_annotation = var.service_type  == "LoadBalancer" && var.domain != "" && enable_ingress == false ? true : false
-  service_annotations     = var.domain != "" && enable_external_dns_annotation ? local.external_dns_annotation : {}
+  external_dns_annotation        = { "external-dns.alpha.kubernetes.io/hostname" = local.a_record }
+  enable_external_dns_annotation = var.service_type == "LoadBalancer" && var.domain != "" && var.enable_ingress == false ? true : false
+  service_annotations            = var.domain != "" && local.enable_external_dns_annotation ? local.external_dns_annotation : {}
 
   # ingress
-  ingress_class_annotation = { "kubernetes.io/ingress.class" = var.ingress_class }
-  cluster_issuer_annotation = var.domain != "" ? { "cert-manager.io/cluster-issuer" = var.cluster_issuer } : {}
-  ingress_annoation = merge(local.ingress_class_annotation, local.cluster_issuer_annotation) 
+  ingress_class_annotation  = { "kubernetes.io/ingress.class" = var.ingress_class }
+  cluster_issuer_annotation = var.domain != "" && var.cluster_issuer != "" ? { "cert-manager.io/cluster-issuer" = var.cluster_issuer } : {}
+  ingress_annotations       = merge(local.ingress_class_annotation, local.cluster_issuer_annotation)
 }
 
 resource "kubernetes_namespace" "default" {
@@ -114,7 +114,7 @@ resource "kubernetes_service" "default" {
 }
 
 resource "kubernetes_ingress" "default" {
-  count = enabled_ingress ? 1 : 0
+  count = var.enable_ingress ? 1 : 0
 
   metadata {
     name        = "hello-kubernetes"
@@ -129,7 +129,7 @@ resource "kubernetes_ingress" "default" {
     }
 
     rule {
-      hosts = local.a_record
+      host = local.a_record
       http {
         path {
           path = "/"
