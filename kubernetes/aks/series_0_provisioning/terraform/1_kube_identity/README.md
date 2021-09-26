@@ -1,4 +1,6 @@
-# AKS with (External-DNS)
+# AKS with Kube Identity
+
+These guides will use kube-identity to allow access to cloud resources, specifically `Azure DNS`.
 
 # Requirements
 

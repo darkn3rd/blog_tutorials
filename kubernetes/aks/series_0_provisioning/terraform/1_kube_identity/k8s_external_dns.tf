@@ -17,11 +17,12 @@ locals {
 # external_dns - helm chart that adds external-dns functionality
 ##########################
 resource "helm_release" "external_dns" {
-  name       = "external-dns"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "external-dns"
-  namespace  = "kube-addons"
+  count            = var.enable_external_dns ? 1 : 0
+  name             = "external-dns"
+  repository       = "https://charts.bitnami.com/bitnami"
+  chart            = "external-dns"
+  namespace        = "kube-addons"
   create_namespace = true
-  version    = "5.4.5"
-  values     = [local.external_dns_values]
+  version          = "5.4.5"
+  values           = [local.external_dns_values]
 }

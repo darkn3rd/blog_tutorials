@@ -20,6 +20,8 @@ variable "create_cluster_group" { default = false }
 variable "cluster_name" {}
 
 # managed identity role binding
+variable "enable_ingress_nginx" { default = false }
+variable "enable_external_dns" { default = true }
 variable "enable_attach_dns" { default = false }
 
 ##########

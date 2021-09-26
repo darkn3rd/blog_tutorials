@@ -1,0 +1,30 @@
+controller:
+  replicaCount: ${controller_replica_count}
+  nodeSelector:
+    kubernetes.io/os: linux
+  admissionWebhooks:
+    patch:
+      nodeSelector:
+        kubernetes.io/os: linux
+  service:
+    externalTrafficPolicy: Local
+  resources:
+    limits:
+      cpu: ${controller_limit_cpu}
+      memory: ${controller_limit_memory}
+    requests:
+      cpu: ${controller_request_cpu}
+      memory: ${controller_request_memory}
+
+defaultBackend:
+  enabled: ${enable_default_backend}
+  replicaCount: ${default_backend_replica_count}
+  nodeSelector:
+    kubernetes.io/os: linux
+  resources:
+    limits:
+      cpu: ${default_backend_limit_cpu}
+      memory: ${default_backend_limit_memory}
+    requests:
+      cpu: ${default_backend_request_cpu}
+      memory: ${default_backend_request_memory}
