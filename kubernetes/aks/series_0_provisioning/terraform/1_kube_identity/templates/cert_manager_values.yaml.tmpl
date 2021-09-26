@@ -1,5 +1,13 @@
+---
 installCRDs: true
 extraArgs:
   - --cluster-resource-namespace=kube-addons
 global:
   logLevel: ${log_level}
+resources:
+  limits:
+    cpu: ${limit_cpu}
+    memory: ${limit_memory}
+  requests:
+    cpu: ${request_cpu}
+    memory: ${request_memory}

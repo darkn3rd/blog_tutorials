@@ -1,10 +1,15 @@
 locals {
   external_dns_vars = {
-    resource_group  = var.dns_zone_group,
-    tenant_id       = data.azurerm_client_config.current.tenant_id,
-    subscription_id = data.azurerm_client_config.current.subscription_id,
-    log_level       = "debug",
+    resource_group  = var.dns_zone_group
+    tenant_id       = data.azurerm_client_config.current.tenant_id
+    subscription_id = data.azurerm_client_config.current.subscription_id
     domain          = var.domain
+    log_level       = "debug"
+
+    limit_cpu      = "200m"
+    limit_memory   = "256Mi"
+    request_cpu    = "100m"
+    request_memory = "128Mi"
   }
 
   external_dns_values = templatefile(
@@ -25,4 +30,5 @@ resource "helm_release" "external_dns" {
   create_namespace = true
   version          = "5.4.5"
   values           = [local.external_dns_values]
+  depends_on       = [azurerm_role_assignment.attach_dns]
 }

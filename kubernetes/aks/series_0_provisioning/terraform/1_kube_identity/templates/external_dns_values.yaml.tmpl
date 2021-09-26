@@ -1,3 +1,4 @@
+---
 provider: azure
 azure:
   resourceGroup: ${resource_group}
@@ -8,3 +9,11 @@ logLevel: ${log_level}
 domainFilters:
   - ${domain}
 txtOwnerId: external-dns
+
+resources:
+  limits:
+    cpu: ${limit_cpu}
+    memory: ${limit_memory}
+  requests:
+    cpu: ${request_cpu}
+    memory: ${request_memory}

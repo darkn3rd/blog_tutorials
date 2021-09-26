@@ -18,7 +18,6 @@ locals {
     "${path.module}/templates/ingress_nginx_values.yaml.tmpl",
     local.ingress_nginx_vars
   )
-
 }
 
 ##########

@@ -16,13 +16,16 @@ variable "subdomain_prefix" { default = "" }
 variable "cluster_group" {}
 variable "cluster_location" {}
 variable "create_cluster_group" { default = false }
-
 variable "cluster_name" {}
 
-# managed identity role binding
-variable "enable_ingress_nginx" { default = false }
-variable "enable_external_dns" { default = true }
+# managed identity role binding (kubelet id)
 variable "enable_attach_dns" { default = false }
+
+# kubernetes addons
+variable "enable_external_dns" { default = true }
+variable "enable_ingress_nginx" { default = false }
+variable "enable_cert_manager" { default = false }
+variable "acme_issuer_email" { default = "" } # required if cert_manager=true
 
 ##########
 # data sources
