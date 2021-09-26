@@ -2,12 +2,26 @@ variable "resource_group_name" {}
 variable "cluster_name" {}
 variable "namespace" { default = "default" }
 variable "domain" { default = "" }
+
 variable "service_type" { default = "ClusterIP" }
+
+variable "enable_ingress" { default = false }
+variable "ingress_class" { default = "nginx" }
+variable "enable_cert" { default = false }
+variable "cluster_issuer" { default = "" }
 
 locals {
   a_record                = "hello.${var.domain}"
+
+  # service 
   external_dns_annotation = { "external-dns.alpha.kubernetes.io/hostname" = local.a_record }
-  service_annotations     = var.domain != "" ? local.external_dns_annotation : {}
+  enable_external_dns_annotation = var.service_type  == "LoadBalancer" && var.domain != "" && enable_ingress == false ? true : false
+  service_annotations     = var.domain != "" && enable_external_dns_annotation ? local.external_dns_annotation : {}
+
+  # ingress
+  ingress_class_annotation = { "kubernetes.io/ingress.class" = var.ingress_class }
+  cluster_issuer_annotation = var.domain != "" ? { "cert-manager.io/cluster-issuer" = var.cluster_issuer } : {}
+  ingress_annoation = merge(local.ingress_class_annotation, local.cluster_issuer_annotation) 
 }
 
 resource "kubernetes_namespace" "default" {
@@ -16,7 +30,7 @@ resource "kubernetes_namespace" "default" {
   }
 }
 
-resource "kubernetes_deployment" "hello_kubernetes" {
+resource "kubernetes_deployment" "default" {
   metadata {
     name      = "hello-kubernetes"
     namespace = kubernetes_namespace.default.metadata.0.name
@@ -49,21 +63,15 @@ resource "kubernetes_deployment" "hello_kubernetes" {
 
           env {
             name = "KUBERNETES_NAMESPACE"
-
             value_from {
-              field_ref {
-                field_path = "metadata.namespace"
-              }
+              field_ref { field_path = "metadata.namespace" }
             }
           }
 
           env {
             name = "KUBERNETES_NODE_NAME"
-
             value_from {
-              field_ref {
-                field_path = "spec.nodeName"
-              }
+              field_ref { field_path = "spec.nodeName" }
             }
           }
 
@@ -84,7 +92,7 @@ resource "kubernetes_deployment" "hello_kubernetes" {
   }
 }
 
-resource "kubernetes_service" "hello_kubernetes" {
+resource "kubernetes_service" "default" {
   metadata {
     name        = "hello-kubernetes"
     namespace   = kubernetes_namespace.default.metadata.0.name
@@ -98,9 +106,40 @@ resource "kubernetes_service" "hello_kubernetes" {
     }
 
     selector = {
-      app = kubernetes_deployment.hello_kubernetes.spec[0].template[0].metadata[0].labels.app
+      app = kubernetes_deployment.default.spec[0].template[0].metadata[0].labels.app
     }
 
     type = var.service_type
   }
+}
+
+resource "kubernetes_ingress" "default" {
+  count = enabled_ingress ? 1 : 0
+
+  metadata {
+    name        = "hello-kubernetes"
+    namespace   = kubernetes_namespace.default.metadata.0.name
+    annotations = local.ingress_annotations
+  }
+
+  spec {
+    tls {
+      hosts       = [local.a_record]
+      secret_name = "tls-secret"
+    }
+
+    rule {
+      hosts = local.a_record
+      http {
+        path {
+          path = "/"
+          backend {
+            service_name = kubernetes_service.default.metadata[0].name
+            service_port = kubernetes_service.default.spec[0].port[0].port
+          }
+        }
+      }
+    }
+  }
+
 }
