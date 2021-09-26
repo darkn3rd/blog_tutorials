@@ -7,7 +7,7 @@ variable "service_type" { default = "ClusterIP" }
 
 variable "enable_ingress" { default = false }
 variable "ingress_class" { default = "nginx" }
-variable "enable_cert" { default = false }
+variable "enable_tls" { default = false }
 variable "cluster_issuer" { default = "" }
 
 locals {
@@ -20,7 +20,7 @@ locals {
 
   # ingress
   ingress_class_annotation  = { "kubernetes.io/ingress.class" = var.ingress_class }
-  cluster_issuer_annotation = var.domain != "" && var.cluster_issuer != "" ? { "cert-manager.io/cluster-issuer" = var.cluster_issuer } : {}
+  cluster_issuer_annotation = var.domain != "" && var.cluster_issuer != "" && var.enable_tls ? { "cert-manager.io/cluster-issuer" = var.cluster_issuer } : {}
   ingress_annotations       = merge(local.ingress_class_annotation, local.cluster_issuer_annotation)
 }
 
@@ -123,9 +123,12 @@ resource "kubernetes_ingress" "default" {
   }
 
   spec {
-    tls {
-      hosts       = [local.a_record]
-      secret_name = "tls-secret"
+    dynamic "tls" {
+      for_each = var.enable_tls ? { include = "block" } : {}
+      content {
+        hosts       = [local.a_record]
+        secret_name = "tls-secret"
+      }
     }
 
     rule {

@@ -22,36 +22,43 @@ The clsuter_name and corresponding resource group need to match the cluster that
 cat <<-EOF >> $TF_VARS
 resource_group_name = "aks-basic-tf"
 cluster_name        = "basic"
+namespace           = "hello"
 EOF
 ```
 
-## Deploy hello-kubernetes AKS Cluster
+## Deploy `hello-kubernetes` AKS Cluster
 
 ```bash
 terraform init
 terraform apply --var namespace="hello"
 ```
 
-### Using External DNS with Service
+### Using External DNS with `service`
 
-If external-dns is installed with access to Azure DNS, you can supply the domain with the following:
-
-```bash
-terraform apply --var namespace="hello" --var domain="example.com" --var service_type="LoadBalancer"
-```
-
-If you have GNU grep† installed, you can test the results of the `LoadBalancer` with the following
+If `external-dns` is installed with access to Azure DNS, you can supply the domain with the following:
 
 ```bash
-DOMAIN="example.com"; URL="http://hello.${DOMAIN}"
-for i in {1..20}; do
-  curl --silent $URL | grep -oP 'hello-kubernetes-[^<]*|aks-[^(]*' | tr '\n' '\t'; printf "\n"
-done
+terraform apply --var domain="example.com" --var service_type="LoadBalancer"
 ```
 
-† On macOS with [Homebrew](https://brew.sh/): `brew install grep && export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"`
+### Using External DNS with `ingress`
 
-## Verify Deployment
+If `external-dns` is installed with access to Azure DNS along with `ingress-nginx`, you can supply the domain with the following:
+
+```bash
+terraform apply --var domain="example.com" --var enable_ingress="true" 
+```
+
+### Using Cert Manager
+If `external-dns` and `cert-manager` are installed with access to Azure DNS along with `ingress-nginx`, you can supply the domain with the following:
+
+```bash
+terraform apply --var domain="example.com" --var enable_ingress="true" \
+  -var enable_tls="true" --var cluster_issuer="letsencrypt-prod"
+```
+
+
+## Verify deployment
 
 ```bash
 # assumes KUBECONFIG is in the specified path
@@ -61,7 +68,7 @@ export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}.yaml
 kubectl get all --namespace hello
 ```
 
-## Test Application locally
+## Test aplication locally
 
 After running this below, you can verify using http://localhost:8080
 
@@ -70,8 +77,27 @@ After running this below, you can verify using http://localhost:8080
 AZ_CLUSTER_NAME=$(awk -F'"' '/cluster_name/{ print $2 }' terraform.tfvars)
 export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}.yaml
 
-kubectl port-forward --namespace "hello" service/hello-kubernetes 8080:80
+kubectl port-forward --namespace "hello" service/hello-kubernetes 8080:80 &
+
+for i in {1..20}; do
+  curl --silent localhost:8080 | grep -oP 'hello-kubernetes-[^<]*|aks-[^(]*' | tr '\n' '\t'; printf "\n"
+done
 ```
+
+## Test application endpoint through the domain name
+
+If you used a external load balancer (`service` or `ingress`), you can test through the domain name (assuming it's a publically registered domain name).  With GNU grep† installed, you can test the results with the following:
+
+```bash
+DOMAIN="example.com"
+URL="http://hello.${DOMAIN}" # URL="https://hello.${DOMAIN}" if TLS is enabled
+for i in {1..20}; do
+  curl --silent $URL | grep -oP 'hello-kubernetes-[^<]*|aks-[^(]*' | tr '\n' '\t'; printf "\n"
+done
+```
+
+† On macOS with [Homebrew](https://brew.sh/): `brew install grep && export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"`
+
 
 # Cleanup
 
