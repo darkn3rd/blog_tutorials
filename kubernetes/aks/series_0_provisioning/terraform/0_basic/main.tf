@@ -19,13 +19,18 @@ module "aks" {
 }
 
 output "resource_group_name" {
-  value = module.aks.resource_group_name
+  value = module.rg.name
 }
 
 output "resource_group_location" {
-  value = module.aks.resource_group_location
+  value = module.rg.location
 }
 
 output "kubernetes_cluster_name" {
-  value = module.aks.kubernetes_cluster_name
+  value = module.aks.name
+}
+
+output "kubernetes_config" {
+  value = module.aks.kube_config_raw
+  sensitive = true
 }

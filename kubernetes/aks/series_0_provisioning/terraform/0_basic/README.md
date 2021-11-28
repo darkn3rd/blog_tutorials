@@ -30,7 +30,7 @@ EOF
 
 ## Provision AKS Cluster
 
-The `--target` (or `-target`) is required because modules do not support dependency mechanism. The resource group will need to be created first, before creating AKS.
+The `--target` (or `-target`) is required because Terraform does not support dependency mechanism with modules. The resource group will need to be created first, before creating AKS.
 
 ```bash
 # create resource group if it does not already exists
@@ -46,14 +46,24 @@ terraform apply
 ## Credentials for Kubectl
 
 ```bash
-export AZ_CLUSTER_NAME="$(terraform output -raw kubernetes_cluster_name)"
-export AZ_RESOURCE_GROUP="$(terraform output -raw resource_group_name)"
-export KUBECONFIG=~/.kube/${AZ_CLUSTER_NAME}.yaml
+export AZ_AKS_CLUSTER_NAME="$(terraform output -raw kubernetes_cluster_name)"
+export AZ_AKS_RESOURCE_GROUP="$(terraform output -raw resource_group_name)"
+export KUBECONFIG=~/.kube/${AZ_AKS_CLUSTER_NAME}.yaml
 
 az aks get-credentials \
-  --resource-group $AZ_RESOURCE_GROUP \
-  --name $AZ_CLUSTER_NAME \
+  --resource-group $AZ_AKS_RESOURCE_GROUP \
+  --name $AZ_AKS_CLUSTER_NAME \
   --file $KUBECONFIG
+```
+
+### Alternative Credentials
+
+Should the Azure CLI no longer work, which is not an infrequent problem, you can alternatively use this:
+
+```bash
+export AZ_AKS_CLUSTER_NAME="$(terraform output -raw kubernetes_cluster_name)"
+export KUBECONFIG=~/.kube/${AZ_AKS_CLUSTER_NAME}.yaml
+terraform output -raw kubernetes_config > $KUBECONFIG
 ```
 
 ## Verify
