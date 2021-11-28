@@ -36,7 +36,7 @@ This cluster will have the following details:
 ```bash
 cat <<-EOF > env.sh
 export AZ_RESOURCE_GROUP=blog-test
-export AZ_CLUSTER_NAME=blog-test
+export AZ_AKS_CLUSTER_NAME=blog-test
 export AZ_LOCATION=westus2
 EOF
 ```

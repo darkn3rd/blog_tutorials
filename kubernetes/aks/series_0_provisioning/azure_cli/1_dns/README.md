@@ -54,7 +54,7 @@ EOF
 source env.sh
 
 ../script/create_cluster.sh
-../script/cerate_dns.sh
+../script/create_dns.sh
 
 # allow access to DNS zone from AKS nodes
 ./attach_dns.sh
