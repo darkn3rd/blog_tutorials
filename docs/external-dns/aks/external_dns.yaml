@@ -1,0 +1,252 @@
+---
+# Source: external-dns/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: external-dns
+  namespace: kube-addons
+  labels: 
+    app.kubernetes.io/name: external-dns
+    helm.sh/chart: external-dns-5.1.1
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: external-dns/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: external-dns
+  labels: 
+    app.kubernetes.io/name: external-dns
+    helm.sh/chart: external-dns-5.1.1
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  azure.json: "ewogICJ0ZW5hbnRJZCI6ICIwNTQ5Yzk4ZC1iYTNmLTRiZmItYjUxMy02N2NlZjZkMWE5Y2IiLAogICJzdWJzY3JpcHRpb25JZCI6ICJkZGExMzQyNS0xZDdmLTRmNTItOWI3My1jNjhlYzY4ZGNkZWQiLAogICJyZXNvdXJjZUdyb3VwIjogImJsb2ctdGVzdCIsCiAgInVzZU1hbmFnZWRJZGVudGl0eUV4dGVuc2lvbiI6IHRydWUKfQo="
+---
+# Source: external-dns/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: external-dns
+  labels: 
+    app.kubernetes.io/name: external-dns
+    helm.sh/chart: external-dns-5.1.1
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - pods
+      - nodes
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - "networking.k8s.io"
+      - getambassador.io
+    resources:
+      - ingresses
+      - hosts
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - route.openshift.io
+    resources:
+      - routes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.istio.io
+    resources:
+      - gateways
+      - virtualservices
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - zalando.org
+    resources:
+      - routegroups
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - zalando.org
+    resources:
+      - routegroups/status
+    verbs:
+      - patch
+      - update
+  - apiGroups:
+      - projectcontour.io
+    resources:
+      - httpproxies
+    verbs:
+      - get
+      - watch
+      - list
+  - apiGroups:
+      - gloo.solo.io
+      - gateway.solo.io
+    resources:
+      - proxies
+      - virtualservices
+    verbs:
+      - get
+      - list
+      - watch
+---
+# Source: external-dns/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: external-dns
+  labels: 
+    app.kubernetes.io/name: external-dns
+    helm.sh/chart: external-dns-5.1.1
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns
+subjects:
+  - kind: ServiceAccount
+    name: external-dns
+    namespace: kube-addons
+---
+# Source: external-dns/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-dns
+  namespace: kube-addons
+  labels: 
+    app.kubernetes.io/name: external-dns
+    helm.sh/chart: external-dns-5.1.1
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/managed-by: Helm
+spec:
+  ports:
+    - name: http
+      port: 7979
+      protocol: TCP
+      targetPort: http
+  selector: 
+    app.kubernetes.io/name: external-dns
+    app.kubernetes.io/instance: external-dns
+  type: ClusterIP
+---
+# Source: external-dns/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: kube-addons
+  labels: 
+    app.kubernetes.io/name: external-dns
+    helm.sh/chart: external-dns-5.1.1
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: external-dns
+      app.kubernetes.io/instance: external-dns
+  template:
+    metadata:
+      labels: 
+        app.kubernetes.io/name: external-dns
+        helm.sh/chart: external-dns-5.1.1
+        app.kubernetes.io/instance: external-dns
+        app.kubernetes.io/managed-by: Helm
+      annotations:
+        checksum/secret: 44b5332ac52673e268307083fa7ad75dea06c61a1568d74b401366d018cd2efb
+    spec:
+      
+      securityContext: 
+        fsGroup: 1001
+        runAsUser: 1001
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: external-dns
+                    app.kubernetes.io/instance: external-dns
+                namespaces:
+                  - "kube-addons"
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      serviceAccountName: external-dns
+      containers:
+        - name: external-dns
+          image: "docker.io/bitnami/external-dns:0.8.0-debian-10-r26"
+          imagePullPolicy: "IfNotPresent"
+          args:
+            # Generic arguments
+            - --log-level=debug
+            - --log-format=text
+            - --domain-filter=devopsstudio.org
+            - --policy=upsert-only
+            - --provider=azure
+            - --registry=txt
+            - --interval=1m
+            - --txt-owner-id=external-dns
+            - --source=service
+            - --source=ingress
+            # Azure Arguments
+            - --azure-resource-group=blog-test
+          env:
+          ports:
+            - name: http
+              containerPort: 7979
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          volumeMounts:
+            # Azure mountPath(s)
+            - name: azure-config-file
+              mountPath: /etc/kubernetes/
+              readOnly: true
+      volumes:
+        # Azure volume(s)
+        - name: azure-config-file
+          secret:
+            secretName: external-dns
+
