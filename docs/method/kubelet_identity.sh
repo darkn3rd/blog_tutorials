@@ -61,3 +61,9 @@ EOF
 kubectl create secret generic azure-config-file --from-file=azure.json --namespace $K8S_NAMESPACE
 
 kc apply -f rbac_cluster.yaml -n $K8S_NAMESPACE
+
+
+###########################
+az aks delete \
+  --resource-group ${AZ_AKS_RESOURCE_GROUP} \
+  --name ${AZ_AKS_CLUSTER_NAME}
