@@ -10,17 +10,16 @@ This is especially useful for the addon `external-dns` to automatically update D
 
 ## **SECURITY WARNING**
 
-This procedure will attach a role to the managed identity called *kubelet identity*, which is essentially the service principal created for a node pool.  This allow **ALL** pods running on the cluster to have priviledges to the resource.
+This procedure will attach a role to the managed identity called *kubelet identity*, which is essentially the service principal created for the Kubernetes node pool.  This allows **ALL** pods running on the cluster to have priviledges to the resource.
 
-Depending on the service, this can be dangerous and inappropriate as it violates the principal of least priviledge.  For exapmle, for ACR (Azure Container Registry) where **ALL** pods **NEED** to pull images from the service, this would be an appropriate configuration.  
+Depending on the service, this can be dangerous and inappropriate as it violates the *principal of least priviledge*.  For exapmle, for ACR (Azure Container Registry) where **ALL** pods **NEED** to pull images from the service (*read only* access), this would be an appropriate configuration.  
 
-For a CI/CD solution that would push images to the ACR service, this would NOT appropriate, and should be restricted at the pod level using pod identity.  Modifying DNS records, such as services running on `external-dns` and `cert-manager` pods, also falls into this category, and this method is not appropriate.
+For a CI/CD solution that would push images to the ACR service (*write* access), this would **NOT** be appropriate, and should be restricted at the pod level using *aad pod identity* method.  Modifying DNS records, such as services using the `external-dns` and `cert-manager` addons, also falls into this category, and therefore this method is **NOT** appropriate.
 
-For demonstration purposes ONLY, this guide shows how to use *kubelet identity* with Azure DNS service.  This is used as a learning exercise to learn how:
+For ***demonstration purposes ONLY*** and in violation of *least priviledge*, this guide shows how to use *kubelet identity* with Azure DNS service.  This is used as a *learning exercise* to learn how do the following:
 
-* use the External DNS service on AKD with Azure DNS
-* configure security privileges on a managed identity for the whole cluster (kubelet identity)
-
+* use the External DNS service on Azure Kubernetes Service with Azure DNS
+* configure security privileges on a managed identity for the whole cluster (*kubelet identity*)
 
 ## Overview
 
@@ -78,7 +77,7 @@ source env.sh
 ./attach_dns.sh
 ```
 
-## Verifiication
+## Verification
 
 ### Verify Kubernetes Cluster
 
