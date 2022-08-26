@@ -1,8 +1,11 @@
 # NGINX Service Mesh
 
-
-
-
+1. Installing NSM + KIC (NGINX+) on GKE
+2. Installing Dgraph + pydgraph client
+   * Dgraph: ACLs enabled for tenants
+3. Installing Ingress to access Dgraph
+   * certificates
+   * domain name service
 
 ## Dgraph Demo
 
