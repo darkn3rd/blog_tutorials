@@ -27,7 +27,7 @@ releases:
                 solvers:
                   - dns01:
                       cloudDNS:
-                        project: {{ env "CLOUD_DNS_PROJECT_ID" }}
+                        project: {{ env "DNS_PROJECT_ID" }}
 
           - apiVersion: cert-manager.io/v1
             kind: ClusterIssuer
@@ -41,8 +41,6 @@ releases:
                   name: letsencrypt-prod
                 solvers:
                   - dns01:
-                      azureDNS:
-                        subscriptionID: {{ requiredEnv "AZ_SUBSCRIPTION_ID" }}
-                        resourceGroupName: {{ requiredEnv "AZ_RESOURCE_GROUP" }}
-                        hostedZoneName: {{ requiredEnv "AZ_DNS_DOMAIN" }}
-                        environment: AzurePublicCloud
+                      cloudDNS:
+                        project: {{ env "DNS_PROJECT_ID" }}
+

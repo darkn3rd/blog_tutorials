@@ -1,7 +1,4 @@
-GKE_CLUSTER_NAME="my-external-dns-cluster"
-GKE_REGION="us-central1"
-GKE_SA_NAME="worker-nodes-sa"
-GKE_SA_EMAIL="$GKE_SA_NAME@${GKE_PROJECT_ID}.iam.gserviceaccount.com"
+source env.sh
 
 #######################
 # GSA with least priv for GKE
@@ -31,9 +28,15 @@ gcloud container clusters create $GKE_CLUSTER_NAME \
   --service-account "$GKE_SA_EMAIL" \
   --workload-pool "$GKE_PROJECT_ID.svc.id.goog"
 
+#######################
+# KUBECONFIG
+##########################################
+gcloud container clusters  get-credentials $GKE_CLUSTER_NAME \
+  --project $GKE_PROJECT_ID \
+  --region $GKE_REGION
 
 #######################
-# WORKLOAD IDENTITY
+# WORKLOAD IDENTITY - PART1
 ##########################################
 DNS_SA_NAME="external-dns-sa"
 DNS_SA_EMAIL="$DNS_SA_NAME@${GKE_PROJECT_ID}.iam.gserviceaccount.com"
@@ -42,18 +45,36 @@ gcloud iam service-accounts create $DNS_SA_NAME --display-name $DNS_SA_NAME
 gcloud projects add-iam-policy-binding $DNS_PROJECT_ID \
    --member serviceAccount:$DNS_SA_EMAIL --role "roles/dns.admin"
 
-# LINK KSA-to-GSA
+# LINK ExternalDNS KSA to Cloud DNS GSA
 gcloud iam service-accounts add-iam-policy-binding $DNS_SA_EMAIL \
+  --project $GKE_PROJECT_ID \
   --role "roles/iam.workloadIdentityUser" \
   --member "serviceAccount:$GKE_PROJECT_ID.svc.id.goog[${EXTERNALDNS_NS:-"default"}/external-dns]"
 
-# Post Deployment LINK GSA-to-KSA
-kubectl annotate serviceaccount "external-dns" \
-  --namespace ${EXTERNALDNS_NS:-"default"} \
-  "iam.gke.io/gcp-service-account=$DNS_SA_EMAIL"
+# LINK CertManager KSA to Cloud DNS GSA
+gcloud iam service-accounts add-iam-policy-binding $DNS_SA_EMAIL \
+  --project $GKE_PROJECT_ID \
+  --role "roles/iam.workloadIdentityUser" \
+  --member "serviceAccount:$GKE_PROJECT_ID.svc.id.goog[${CERTMANAGER_NS:-"default"}/cert-manager]"
 
-# Patch POD Spec
+
+#######################
+# DEPLOY EXTERNAL_DNS
+##########################################
+helmfile apply
+
+#######################
+# WORKLOAD IDENTITY - PART2
+##########################################
+# Post Deployment LINK GSA-to-KSA
+# kubectl annotate serviceaccount "external-dns" \
+#   --namespace ${EXTERNALDNS_NS:-"default"} \
+#   "iam.gke.io/gcp-service-account=$DNS_SA_EMAIL"
+
+# Patch POD Spec (only needed if mixed pods)
 kubectl patch deployment "external-dns" \
   --namespace ${EXTERNALDNS_NS:-"default"} \
   --patch \
  '{"spec": {"template": {"spec": {"nodeSelector": {"iam.gke.io/gke-metadata-server-enabled": "true"}}}}}'
+
+nodeSelector
