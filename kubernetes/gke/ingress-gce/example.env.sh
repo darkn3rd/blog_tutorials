@@ -19,9 +19,9 @@ export CERTMANAGER_NS="kube-addons"
 export DNS_SA_NAME="cloud-dns-sa"
 export DNS_SA_EMAIL="$DNS_SA_NAME@${GKE_PROJECT_ID}.iam.gserviceaccount.com"
 
-
 # cert-manager
 export ACME_ISSUER_EMAIL="user@example.com" # CHANGE ME
+export ACME_ISSUER_NAME="letsencrypt-prod"
 
 # other
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True

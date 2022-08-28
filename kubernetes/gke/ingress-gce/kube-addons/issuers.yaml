@@ -7,10 +7,6 @@ releases:
     chart: itscontained/raw
     namespace: kube-addons
     version:  0.2.5
-    ## only required if releases included in same helmfile
-    ## otherwise, comment out
-    # needs:
-    #   - kube-addons/cert-manager
     disableValidation: true
     values:
       - resources:
@@ -43,4 +39,3 @@ releases:
                   - dns01:
                       cloudDNS:
                         project: {{ env "DNS_PROJECT_ID" }}
-
