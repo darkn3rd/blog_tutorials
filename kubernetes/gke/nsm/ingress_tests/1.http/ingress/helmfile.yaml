@@ -1,0 +1,66 @@
+repositories:
+  # https://artifacthub.io/packages/helm/nginx/nginx-ingress
+  - name: nginx-stable
+    url: https://helm.nginx.com/stable
+  # https://artifacthub.io/packages/helm/dgraph/dgraph/0.0.17
+  - name: dgraph
+    url: https://charts.dgraph.io
+    # https://artifacthub.io/packages/helm/cert-manager/cert-manager
+  - name: jetstack
+    url: https://charts.jetstack.io
+  # https://artifacthub.io/packages/helm/bitnami/external-dns
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+
+releases:
+  - name: external-dns
+    namespace: kube-addons
+    chart: bitnami/external-dns
+    version: 6.8.1
+    values:
+      - provider: google
+        google:
+          zoneVisibility: public
+          project: {{ env "CLOUD_DNS_PROJECT_ID" }}
+        logLevel: {{ env "EXTERNALDNS_LOG_LEVEL" | default "debug" }}
+        domainFilters:
+          - {{ requiredEnv "CLOUD_DNS_DOMAIN" }}
+        txtOwnerId: external-dns
+        rbac:
+          create: true
+          apiVersion: v1
+        policy: upsert-only
+
+  - name: cert-manager
+    namespace: kube-addons
+    chart: jetstack/cert-manager
+    version: 1.9.1
+    values:
+      - installCRDs: true
+        extraArgs:
+          - --cluster-resource-namespace=kube-addons
+        global:
+          logLevel: 2
+
+  - name: nginx-ingress
+    chart: nginx-stable/nginx-ingress
+    namespace: nginx-ingress
+    version: 0.14.0
+    values:
+      - controller:
+          nginxplus: true
+          image:
+            repository: gcr.io/{{ requiredEnv "GCR_PROJECT_ID" }}/nginx-plus-ingress
+            tag: "2.3.0"
+          enableLatencyMetrics: true
+
+  - name: demo-ingress-http
+    namespace: dgraph
+    chart: dgraph/dgraph
+    version: 0.0.17
+    values:
+      - alpha:
+          configFile:
+            config.yaml: |
+              security:
+                whitelist: {{ env "DG_ACCEPT_LIST" | default "0.0.0.0/0" | quote }}
