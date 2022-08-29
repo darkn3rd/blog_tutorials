@@ -1,0 +1,82 @@
+repositories:
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: cert-manager-issuers
+    chart: itscontained/raw
+    namespace: ratel
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: dgraph-ratel
+            spec:
+              selector:
+                matchLabels:
+                  app: dgraph
+                  component: ratel
+              replicas: 1
+              template:
+                metadata:
+                  labels:
+                    app: dgraph
+                    component: ratel
+                spec:
+                  containers:
+                  - name: dgraph-ratel
+                    image: docker.io/dgraph/ratel:v21.03.2
+                    imagePullPolicy:
+                    command:
+                      - dgraph-ratel
+                    ports:
+                    - name: http-ratel
+                      containerPort: 8000
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: dgraph-ratel
+              labels:
+                app: dgraph
+                component: ratel
+            spec:
+              # gce-ingress created outside of k8s, cannot route to ClusterIP
+              type: NodePort
+              ports:
+              - port: 80
+                targetPort: 8000
+                name: http-ratel
+              selector:
+                app: dgraph
+                component: ratel
+
+          - apiVersion: networking.k8s.io/v1
+            kind: Ingress
+            metadata:
+              name: dgraph-ratel
+              labels:
+                app: dgraph
+                component: ratel
+              annotations:
+                cert-manager.io/cluster-issuer: letsencrypt-prod
+                kubernetes.io/ingress.class: gce
+            spec:
+              tls:
+                - hosts:
+                    - ratel.{{ requiredEnv "DNS_DOMAIN" }}
+                  secretName: tls-secret
+              rules:
+                - host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
+                  http:
+                    paths:
+                      - backend:
+                          service:
+                            name:  dgraph-ratel
+                            port:
+                              number: 80
+                        pathType: ImplementationSpecific
+                        path: /*

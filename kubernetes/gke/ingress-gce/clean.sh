@@ -1,7 +1,8 @@
 # Kubernetes Resources - dgraph
-helm delete "demo-ingress-http" --namespace "dgraph"
-kubectl delete pvc/datadir-demo-ingress-http-dgraph-alpha-{0..2} --namespace "dgraph"
-kubectl delete pvc/datadir-demo-ingress-http-dgraph-zero-{0..2} --namespace "dgraph"
+helm delete "dgraph" --namespace "dgraph"
+# IMPORT: delete storage
+kubectl delete pvc --selector app=dgraph-alpha --namespace "dgraph"
+kubectl delete pvc --selector app=dgraph-zero --namespace "dgraph"
 
 # Kubernetes Resources - kube-addons
 helm delete "cert-manager" --namespace "kube-addons"

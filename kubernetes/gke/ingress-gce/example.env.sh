@@ -25,3 +25,4 @@ export ACME_ISSUER_NAME="letsencrypt-prod"
 
 # other
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+export ClOUD_BILLING_ACCOUNT="<my-cloud-billing-account>" # CHANGEME
