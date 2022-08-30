@@ -1,8 +1,8 @@
 # Kubernetes Resources - dgraph
 helm delete "dgraph" --namespace "dgraph"
+helm delete "ratel" --namespace "ratel"
 # IMPORT: delete storage
-kubectl delete pvc --selector app=dgraph-alpha --namespace "dgraph"
-kubectl delete pvc --selector app=dgraph-zero --namespace "dgraph"
+kubectl delete pvc --selector app=dgraph --namespace "dgraph"
 
 # Kubernetes Resources - kube-addons
 helm delete "cert-manager" --namespace "kube-addons"

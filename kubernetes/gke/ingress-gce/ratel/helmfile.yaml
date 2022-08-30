@@ -3,7 +3,7 @@ repositories:
     url: https://charts.itscontained.io
 
 releases:
-  - name: cert-manager-issuers
+  - name: ratel
     chart: itscontained/raw
     namespace: ratel
     version:  0.2.5
