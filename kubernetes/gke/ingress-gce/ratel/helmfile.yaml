@@ -62,7 +62,7 @@ releases:
                 app: dgraph
                 component: ratel
               annotations:
-                cert-manager.io/cluster-issuer: letsencrypt-prod
+                cert-manager.io/cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
                 kubernetes.io/ingress.class: gce
             spec:
               tls:
