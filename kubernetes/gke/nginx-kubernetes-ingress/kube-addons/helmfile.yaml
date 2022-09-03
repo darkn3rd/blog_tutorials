@@ -19,6 +19,15 @@ releases:
         google:
           zoneVisibility: public
           project: {{ env "DNS_PROJECT_ID" }}
+        sources:
+          - crd
+          - service
+          - ingress
+        # use with NGINX VirtualServer CRD
+        crd:
+          create: true
+          apiversion: externaldns.nginx.org/v1
+          kind: DNSEndpoint
         serviceAccount:
           annotations:
             # google workgroup identity annotation
