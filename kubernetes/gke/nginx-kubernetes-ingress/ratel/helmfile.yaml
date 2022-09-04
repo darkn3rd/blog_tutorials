@@ -54,6 +54,7 @@ releases:
                 app: dgraph
                 component: ratel
 
+          {{- if ne (env "NGINX_CRD") "true" }}
           - apiVersion: networking.k8s.io/v1
             kind: Ingress
             metadata:
@@ -80,3 +81,4 @@ releases:
                               number: 80
                         pathType: ImplementationSpecific
                         path: /
+          {{- end }}

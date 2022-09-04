@@ -1,0 +1,84 @@
+repositories:
+  # https://artifacthub.io/packages/helm/itscontained/raw
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: ratel
+    chart: itscontained/raw
+    namespace: ratel
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-http
+            spec:
+              host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+              - name: ratel
+                service: dgraph-ratel
+                port: 80
+              routes:
+              - path: /
+                action:
+                  pass: ratel
+
+  - name: dgraph
+    chart: itscontained/raw
+    namespace: dgraph
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-http
+            spec:
+              host: graph.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: dgraph-tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+              - name: dgraph
+                service: http-alpha
+                port: 8080
+              routes:
+              - path: /
+                action:
+                  pass: dgraph
+
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-grpc
+              namespace: dgraph
+            spec:
+              host: graph.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: grpc-tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+              - name: grpc
+                service: grpc-alpha
+                port: 9080
+                type: grpc
+              routes:
+              - path: /
+                action:
+                  pass: grpc
