@@ -38,7 +38,8 @@ releases:
             ingressClassName: null
             annotations:
               cert-manager.io/cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
-              nginx.org/grpc-services: "grpc-alpha"
+              # Name of Service is $ReleaseName-dgraph-alpha
+              nginx.org/grpc-services: "dgraph-dgraph-alpha"
               kubernetes.io/ingress.class: nginx
             tls:
               - hosts:

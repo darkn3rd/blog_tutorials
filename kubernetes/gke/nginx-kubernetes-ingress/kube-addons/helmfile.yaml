@@ -25,7 +25,7 @@ releases:
           - ingress
         # use with NGINX VirtualServer CRD
         crd:
-          create: true
+          create: false
           apiversion: externaldns.nginx.org/v1
           kind: DNSEndpoint
         serviceAccount:
@@ -63,9 +63,9 @@ releases:
           iam.gke.io/gke-metadata-server-enabled: "true"
 
   - name: nginx-ingress
-    namespace: nginx-ingress
+    namespace: kube-addons
     chart: nginx-stable/nginx-ingress
-    version: 2.3.0
+    version: 0.14.0
     values:
       - controller:
           nginxplus: false

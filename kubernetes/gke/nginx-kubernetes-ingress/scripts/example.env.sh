@@ -1,7 +1,7 @@
 
 # gke
 export GKE_PROJECT_ID="my-gke-project" # CHANGE ME
-export GKE_CLUSTER_NAME="my-external-dns-cluster" # CHANGE ME
+export GKE_CLUSTER_NAME="my-nginx-kic" # CHANGE ME
 export GKE_REGION="us-central1"
 export GKE_SA_NAME="gke-worker-nodes-sa"
 export GKE_SA_EMAIL="$GKE_SA_NAME@${GKE_PROJECT_ID}.iam.gserviceaccount.com"

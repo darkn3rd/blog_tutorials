@@ -4,6 +4,7 @@
 
 ```bash
 # gRPC
+curl -sOL https://raw.githubusercontent.com/dgraph-io/pydgraph/master/pydgraph/proto/api.proto
 grpcurl -proto api.proto grpc.$DNS_DOMAIN:443 api.Dgraph/CheckVersion
 # HTTP
 curl --silent https://dgraph.$DNS_DOMAIN/health | jq
