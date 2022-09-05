@@ -41,7 +41,7 @@ releases:
             ingressClassName: null
             annotations:
               cert-manager.io/cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
-              # Name of Service is $ReleaseName-dgraph-alpha
+              # Name of Service is '${RELEASE}-dgraph-alpha'
               nginx.org/grpc-services: "dgraph-dgraph-alpha"
               kubernetes.io/ingress.class: nginx
             tls:
@@ -72,13 +72,14 @@ releases:
               externalDNS:
                 enable: true
               upstreams:
-              - name: dgraph
-                service: dgraph-dgraph-alpha
-                port: 8080
+                - name: dgraph
+                  # Name of Service is '${RELEASE}-dgraph-alpha'
+                  service: dgraph-dgraph-alpha
+                  port: 8080
               routes:
-              - path: /
-                action:
-                  pass: dgraph
+                - path: /
+                  action:
+                    pass: dgraph
 
           - apiVersion: k8s.nginx.org/v1
             kind: VirtualServer
@@ -94,12 +95,13 @@ releases:
               externalDNS:
                 enable: true
               upstreams:
-              - name: grpc
-                service: dgraph-dgraph-alpha
-                port: 9080
-                type: grpc
+                - name: grpc
+                  # Name of Service is '${RELEASE}-dgraph-alpha'
+                  service: dgraph-dgraph-alpha
+                  port: 9080
+                  type: grpc
               routes:
-              - path: /
-                action:
-                  pass: grpc
+                - path: /
+                  action:
+                    pass: grpc
   {{- end }}

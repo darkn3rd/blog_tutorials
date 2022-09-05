@@ -1,5 +1,6 @@
 # Kubernetes Resources - dgraph
 helm delete "dgraph" --namespace "dgraph"
+[[ "$NGINX_CRD" == "true" ]] && helm delete "dgraph-virtualservers" --namespace "dgraph"
 helm delete "ratel" --namespace "ratel"
 # IMPORT: delete storage
 kubectl delete pvc --selector app=dgraph --namespace "dgraph"
@@ -8,7 +9,7 @@ kubectl delete pvc --selector app=dgraph --namespace "dgraph"
 helm delete "cert-manager" --namespace "kube-addons"
 helm delete "cert-manager-issuers" --namespace "kube-addons"
 helm delete "external-dns" --namespace "kube-addons"
-helm delete "ingress-nginx" --namespace "kube-addons"
+helm delete "nginx-ingress" --namespace "kube-addons"
 
 # Google Cloud Resources
 gcloud container clusters delete $GKE_CLUSTER_NAME --project $GKE_PROJECT_ID --region $GKE_REGION

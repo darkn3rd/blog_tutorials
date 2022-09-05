@@ -28,14 +28,14 @@ releases:
                     component: ratel
                 spec:
                   containers:
-                  - name: dgraph-ratel
-                    image: docker.io/dgraph/ratel:v21.03.2
-                    imagePullPolicy:
-                    command:
-                      - dgraph-ratel
-                    ports:
-                    - name: http-ratel
-                      containerPort: 8000
+                    - name: dgraph-ratel
+                      image: docker.io/dgraph/ratel:v21.03.2
+                      imagePullPolicy:
+                      command:
+                        - dgraph-ratel
+                      ports:
+                        - name: http-ratel
+                          containerPort: 8000
 
           - apiVersion: v1
             kind: Service
@@ -47,9 +47,9 @@ releases:
             spec:
               type: ClusterIP
               ports:
-              - port: 80
-                targetPort: 8000
-                name: http-ratel
+                - port: 80
+                  targetPort: 8000
+                  name: http-ratel
               selector:
                 app: dgraph
                 component: ratel
@@ -68,13 +68,13 @@ releases:
               externalDNS:
                 enable: true
               upstreams:
-              - name: ratel
-                service: dgraph-ratel
-                port: 80
+                - name: ratel
+                  service: dgraph-ratel
+                  port: 80
               routes:
-              - path: /
-                action:
-                  pass: ratel
+                - path: /
+                  action:
+                    pass: ratel
 
           {{- else }}
           - apiVersion: networking.k8s.io/v1

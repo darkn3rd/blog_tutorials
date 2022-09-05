@@ -87,17 +87,3 @@ releases:
         nginxServiceMesh:
           enable: false
           enableEgress: false
-
-      - controller:
-          replicaCount: 1
-          nodeSelector:
-            kubernetes.io/os: linux
-          admissionWebhooks:
-            patch:
-              nodeSelector:
-                kubernetes.io/os: linux
-          service:
-            externalTrafficPolicy: Local
-        defaultBackend:
-          nodeSelector:
-            kubernetes.io/os: linux
