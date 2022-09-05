@@ -54,7 +54,29 @@ releases:
                 app: dgraph
                 component: ratel
 
-          {{- if ne (env "NGINX_CRD") "true" }}
+          {{- if eq (env "NGINX_CRD") "true" }}
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-http
+            spec:
+              host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+              - name: ratel
+                service: dgraph-ratel
+                port: 80
+              routes:
+              - path: /
+                action:
+                  pass: ratel
+
+          {{- else }}
           - apiVersion: networking.k8s.io/v1
             kind: Ingress
             metadata:

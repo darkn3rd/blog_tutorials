@@ -2,6 +2,9 @@ repositories:
   # https://artifacthub.io/packages/helm/dgraph/dgraph/0.0.19
   - name: dgraph
     url: https://charts.dgraph.io
+  # https://artifacthub.io/packages/helm/itscontained/raw
+  - name: itscontained
+    url: https://charts.itscontained.io
 
 releases:
   - name: dgraph
@@ -47,3 +50,56 @@ releases:
                 secretName: grpc-tls-secret
             alpha_grpc_hostname: grpc.{{ requiredEnv "DNS_DOMAIN" }}
         {{- end }}
+
+  {{- if eq (env "NGINX_CRD") "true" }}
+  - name: dgraph-virtualservers
+    chart: itscontained/raw
+    namespace: dgraph
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-http
+            spec:
+              host: dgraph.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: dgraph-tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+              - name: dgraph
+                service: dgraph-dgraph-alpha
+                port: 8080
+              routes:
+              - path: /
+                action:
+                  pass: dgraph
+
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-grpc
+              namespace: dgraph
+            spec:
+              host: grpc.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: grpc-tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+              - name: grpc
+                service: dgraph-dgraph-alpha
+                port: 9080
+                type: grpc
+              routes:
+              - path: /
+                action:
+                  pass: grpc
+  {{- end }}
