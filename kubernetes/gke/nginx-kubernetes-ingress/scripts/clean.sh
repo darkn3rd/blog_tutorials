@@ -1,4 +1,4 @@
-# Kubernetes Resources - dgraph
+# Kubernetes Resources - dgraph and ratel
 helm delete "dgraph" --namespace "dgraph"
 [[ "$NGINX_CRD" == "true" ]] && helm delete "dgraph-virtualservers" --namespace "dgraph"
 helm delete "ratel" --namespace "ratel"
