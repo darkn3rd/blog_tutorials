@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
 URLS=(https://docs.nginx.com/nginx-service-mesh/examples/{prometheus,grafana,otel-collector,jaeger}.yaml)
+COMPONENT_TEMP=$(mktemp)
 COMPONENT_FILE=$(mktemp)
+HELMFILE="helmfile.yaml"
 
 # download Kubernetes manifests
 for URL in ${URLS[*]}; do curl -sOL $URL; done
 
 # create new helmfile.yaml
-cat << EOF > ./helmfile.yaml
+cat << EOF > $HELMFILE
 repositories:
   # https://artifacthub.io/packages/helm/itscontained/raw
   - name: itscontained
@@ -27,6 +29,7 @@ for COMPONENT in {prometheus,grafana,otel-collector,jaeger}; do
   - name: $COMPONENT
     chart: itscontained/raw
     disableValidation: true
+    namespace: nsm-monitoring
     values:
       - resources:
 EOF
@@ -35,12 +38,17 @@ EOF
   sed -i \
       -e 's/^/            /' \
       -e 's/.*---.*//' \
-      -e 's/   apiVersion:/ - apiVersion:/' \
+      -e 's/^            apiVersion:/          - apiVersion:/' \
       $COMPONENT.yaml
 
+  # remove blocks that create a Namespace
+  grep -n -A2 -B1 "kind: Namespace" $COMPONENT.yaml \
+   | sed -n 's/^\([0-9]\{1,\}\).*/\1d/p' \
+   | sed -f - $COMPONENT.yaml > $COMPONENT_TEMP
+
   # append Helm chart section to helmfile.yaml
-  cat $COMPONENT_FILE $COMPONENT.yaml >> ./helmfile.yaml
+  cat $COMPONENT_FILE $COMPONENT_TEMP >> $HELMFILE
 done
 
 # remove temporary files
-rm $COMPONENT_FILE {prometheus,grafana,otel-collector,jaeger}.yaml
+rm $COMPONENT_FILE $COMPONENT_TEMP {prometheus,grafana,otel-collector,jaeger}.yaml

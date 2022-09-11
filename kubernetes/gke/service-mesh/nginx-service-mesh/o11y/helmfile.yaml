@@ -11,14 +11,11 @@ releases:
   - name: prometheus
     chart: itscontained/raw
     disableValidation: true
+    namespace: nsm-monitoring
     values:
       - resources:
             # Warning: this deployment is for demo purposes only and is not recommended for production environments
 
-          - apiVersion: v1
-            kind: Namespace
-            metadata:
-              name: nsm-monitoring
 
           - apiVersion: v1
             kind: ServiceAccount
@@ -198,6 +195,7 @@ releases:
   - name: grafana
     chart: itscontained/raw
     disableValidation: true
+    namespace: nsm-monitoring
     values:
       - resources:
             # Warning: this deployment is for demo purposes only and is not recommended for production environments
@@ -209,14 +207,14 @@ releases:
               namespace: nsm-monitoring
             data:
               datasources.yaml: |
-              - apiVersion: 1
+                apiVersion: 1
                 datasources:
                 - name: prometheus
                   type: prometheus
                   access: proxy
                   url: http://prometheus.nsm-monitoring.svc:9090
               dashboards.yaml: |
-              - apiVersion: 1
+                apiVersion: 1
                 providers:
                 - name: default
                   options:
@@ -989,14 +987,11 @@ releases:
   - name: otel-collector
     chart: itscontained/raw
     disableValidation: true
+    namespace: nsm-monitoring
     values:
       - resources:
             # Warning: this deployment is for demo purposes only and is not recommended for production environments
 
-          - apiVersion: v1
-            kind: Namespace
-            metadata:
-              name: nsm-monitoring
 
           - apiVersion: v1
             kind: ConfigMap
@@ -1082,14 +1077,11 @@ releases:
   - name: jaeger
     chart: itscontained/raw
     disableValidation: true
+    namespace: nsm-monitoring
     values:
       - resources:
             # Warning: this deployment is for demo purposes only and is not recommended for production environments
 
-          - apiVersion: v1
-            kind: Namespace
-            metadata:
-              name: nsm-monitoring
 
           - apiVersion: apps/v1
             kind: Deployment

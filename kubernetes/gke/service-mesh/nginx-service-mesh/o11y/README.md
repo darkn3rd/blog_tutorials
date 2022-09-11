@@ -11,7 +11,6 @@ This solution will download applicable Kubernetes manifests and convert helm cha
 
 The goal of this is to have several manifests installed as a single package, so that it is easier to manage,  such as deleting these in the future.  The alternative is to patch or delete all of the manifests individually, rather than as a single using.
 
-
 ## Instructions
 
 You can fetch the manifests and install the manifests as Helm charts with these commands.
