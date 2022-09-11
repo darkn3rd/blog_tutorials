@@ -1,0 +1,1142 @@
+repositories:
+  # https://artifacthub.io/packages/helm/itscontained/raw
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+
+  ##########################
+  # prometheus chart
+  ####################################################
+  - name: prometheus
+    chart: itscontained/raw
+    disableValidation: true
+    values:
+      - resources:
+            # Warning: this deployment is for demo purposes only and is not recommended for production environments
+
+          - apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: nsm-monitoring
+
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: prometheus.nsm.nginx
+              namespace: nsm-monitoring
+
+          - apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRole
+            metadata:
+              name: prometheus.nsm.nginx
+            rules:
+            - apiGroups:
+              - ''
+              resources:
+              - services
+              - endpoints
+              - pods
+              verbs:
+              - get
+              - list
+              - watch
+            - nonResourceURLs:
+              - "/metrics"
+              verbs:
+              - get
+
+          - apiVersion: rbac.authorization.k8s.io/v1
+            kind: ClusterRoleBinding
+            metadata:
+              name: prometheus.nsm.nginx
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: ClusterRole
+              name: prometheus.nsm.nginx
+            subjects:
+            - kind: ServiceAccount
+              name: prometheus.nsm.nginx
+              namespace: nsm-monitoring
+
+          - apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: prometheus-configuration
+              namespace: nsm-monitoring
+            data:
+              prometheus.yaml: |
+                global:
+                  scrape_interval: 10s
+                scrape_configs:
+                - job_name: 'nginx-mesh-sidecars'
+                  kubernetes_sd_configs:
+                  - role: pod
+                  relabel_configs:
+                  - source_labels: [__meta_kubernetes_pod_container_name]
+                    action: keep
+                    regex: nginx-mesh-sidecar
+                  - action: labelmap
+                    regex: __meta_kubernetes_pod_label_nsm_nginx_com_(.+)
+                  - action: labeldrop
+                    regex: __meta_kubernetes_pod_label_nsm_nginx_com_(.+)
+                  - action: labelmap
+                    regex: __meta_kubernetes_pod_label_(.+)
+                  - source_labels: [__meta_kubernetes_namespace]
+                    action: replace
+                    target_label: namespace
+                  - source_labels: [__meta_kubernetes_pod_name]
+                    action: replace
+                    target_label: pod
+                - job_name: 'nginx-plus-ingress'
+                  kubernetes_sd_configs:
+                  - role: pod
+                  relabel_configs:
+                  - source_labels: [__meta_kubernetes_pod_container_name]
+                    action: keep
+                    regex: nginx-plus-ingress
+                  - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                    action: keep
+                    regex: true
+                  - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                    action: replace
+                    target_label: __address__
+                    regex: (.+)(?::\d+);(\d+)
+                    replacement: $1:$2
+                  - source_labels: [__meta_kubernetes_namespace]
+                    action: replace
+                    target_label: namespace
+                  - source_labels: [__meta_kubernetes_pod_name]
+                    action: replace
+                    target_label: pod
+                  - action: labelmap
+                    regex: __meta_kubernetes_pod_label_nsm_nginx_com_(.+)
+                  - action: labeldrop
+                    regex: __meta_kubernetes_pod_label_nsm_nginx_com_(.+)
+                  - action: labelmap
+                    regex: __meta_kubernetes_pod_label_(.+)
+                  - action: labelmap
+                    regex: __meta_kubernetes_pod_annotation_nsm_nginx_com_enable_(.+)
+                  metric_relabel_configs:
+                  - source_labels: [__name__]
+                    regex: 'nginx_ingress_controller_upstream_server_response_latency_ms(.+)'
+                    target_label: __name__
+                    replacement: 'nginxplus_upstream_server_response_latency_ms$1'
+                  - source_labels: [__name__]
+                    regex: 'nginx_ingress_nginxplus(.+)'
+                    target_label: __name__
+                    replacement: 'nginxplus$1'
+                  - source_labels: [service]
+                    target_label: dst_service
+                  - source_labels: [resource_namespace]
+                    target_label: dst_namespace
+                  - source_labels: [pod_owner]
+                    regex: '(.+)\/(.+)'
+                    target_label: dst_$1
+                    replacement: $2
+                  - action: labeldrop
+                    regex: pod_owner
+                  - source_labels: [pod_name]
+                    target_label: dst_pod
+
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: prometheus
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: prometheus
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: prometheus
+              template:
+                metadata:
+                  labels:
+                    app.kubernetes.io/name: prometheus
+                  annotations:
+                    injector.nsm.nginx.com/auto-inject: "false"
+                spec:
+                  serviceAccountName: prometheus.nsm.nginx
+                  containers:
+                  - name: prometheus
+                    image: prom/prometheus:latest
+                    args:
+                    - --config.file=/etc/prometheus/prometheus.yaml
+                    - --storage.tsdb.path=/prometheus
+                    ports:
+                    - containerPort: 9090
+                    volumeMounts:
+                    - name: prometheus-config-volume
+                      mountPath: /etc/prometheus
+                    - name: prometheus-storage-volume
+                      mountPath: /prometheus
+                  volumes:
+                  - name: prometheus-config-volume
+                    configMap:
+                      name: prometheus-configuration
+                  - name: prometheus-storage-volume
+                    emptyDir: {}
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: prometheus
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: prometheus
+            spec:
+              selector:
+                app.kubernetes.io/name: prometheus
+              ports:
+              - port: 9090
+
+  ##########################
+  # grafana chart
+  ####################################################
+  - name: grafana
+    chart: itscontained/raw
+    disableValidation: true
+    values:
+      - resources:
+            # Warning: this deployment is for demo purposes only and is not recommended for production environments
+
+          - apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: grafana-config
+              namespace: nsm-monitoring
+            data:
+              datasources.yaml: |
+              - apiVersion: 1
+                datasources:
+                - name: prometheus
+                  type: prometheus
+                  access: proxy
+                  url: http://prometheus.nsm-monitoring.svc:9090
+              dashboards.yaml: |
+              - apiVersion: 1
+                providers:
+                - name: default
+                  options:
+                    path: /var/lib/grafana/dashboards
+                    homeDashboardId: nginx-mesh-top
+              nginx-mesh-top.json: |
+                {
+                  "annotations": {
+                    "list": [
+                      {
+                        "builtIn": 1,
+                        "datasource": "-- Grafana --",
+                        "enable": true,
+                        "hide": true,
+                        "iconColor": "rgba(0, 211, 255, 1)",
+                        "name": "Annotations & Alerts",
+                        "type": "dashboard"
+                      }
+                    ]
+                  },
+                  "editable": true,
+                  "gnetId": null,
+                  "graphTooltip": 0,
+                  "id": null,
+                  "links": [],
+                  "panels": [
+                    {
+                      "cacheTimeout": null,
+                      "colorBackground": false,
+                      "colorValue": false,
+                      "colors": [
+                        "#299c46",
+                        "rgba(237, 129, 40, 0.89)",
+                        "#d44a3a"
+                      ],
+                      "datasource": "prometheus",
+                      "fieldConfig": {
+                        "defaults": {},
+                        "overrides": []
+                      },
+                      "format": "percentunit",
+                      "gauge": {
+                        "maxValue": 100,
+                        "minValue": 0,
+                        "show": false,
+                        "thresholdLabels": false,
+                        "thresholdMarkers": true
+                      },
+                      "gridPos": {
+                        "h": 6,
+                        "w": 8,
+                        "x": 0,
+                        "y": 0
+                      },
+                      "id": 4,
+                      "interval": null,
+                      "links": [],
+                      "mappingType": 1,
+                      "mappingTypes": [
+                        {
+                          "name": "value to text",
+                          "value": 1
+                        },
+                        {
+                          "name": "range to text",
+                          "value": 2
+                        }
+                      ],
+                      "maxDataPoints": 100,
+                      "nullPointMode": "connected",
+                      "nullText": null,
+                      "postfix": "",
+                      "postfixFontSize": "50%",
+                      "prefix": "",
+                      "prefixFontSize": "50%",
+                      "rangeMaps": [
+                        {
+                          "from": "null",
+                          "text": "N/A",
+                          "to": "null"
+                        }
+                      ],
+                      "sparkline": {
+                        "fillColor": "rgba(31, 118, 189, 0.18)",
+                        "full": true,
+                        "lineColor": "rgb(31, 120, 193)",
+                        "show": true
+                      },
+                      "tableColumn": "",
+                      "targets": [
+                        {
+                          "expr": "sum(irate(nginxplus_upstream_server_responses{code=~\"1xx|2xx\"}[30s])) / sum(irate(nginxplus_upstream_server_responses[30s]))",
+                          "format": "time_series",
+                          "interval": "5s",
+                          "intervalFactor": 1,
+                          "refId": "A"
+                        }
+                      ],
+                      "thresholds": "",
+                      "title": "GLOBAL SUCCESS RATE",
+                      "type": "singlestat",
+                      "valueFontSize": "80%",
+                      "valueMaps": [
+                        {
+                          "op": "=",
+                          "text": "N/A",
+                          "value": "null"
+                        }
+                      ],
+                      "valueName": "current"
+                    },
+                    {
+                      "cacheTimeout": null,
+                      "colorBackground": false,
+                      "colorValue": false,
+                      "colors": [
+                        "#299c46",
+                        "rgba(237, 129, 40, 0.89)",
+                        "#d44a3a"
+                      ],
+                      "datasource": "prometheus",
+                      "fieldConfig": {
+                        "defaults": {},
+                        "overrides": []
+                      },
+                      "format": "reqps",
+                      "gauge": {
+                        "maxValue": 100,
+                        "minValue": 0,
+                        "show": false,
+                        "thresholdLabels": false,
+                        "thresholdMarkers": true
+                      },
+                      "gridPos": {
+                        "h": 6,
+                        "w": 13,
+                        "x": 8,
+                        "y": 0
+                      },
+                      "id": 6,
+                      "interval": null,
+                      "links": [],
+                      "mappingType": 1,
+                      "mappingTypes": [
+                        {
+                          "name": "value to text",
+                          "value": 1
+                        },
+                        {
+                          "name": "range to text",
+                          "value": 2
+                        }
+                      ],
+                      "maxDataPoints": 100,
+                      "nullPointMode": "connected",
+                      "nullText": null,
+                      "postfix": "",
+                      "postfixFontSize": "50%",
+                      "prefix": "",
+                      "prefixFontSize": "50%",
+                      "rangeMaps": [
+                        {
+                          "from": "null",
+                          "text": "N/A",
+                          "to": "null"
+                        }
+                      ],
+                      "sparkline": {
+                        "fillColor": "rgba(31, 118, 189, 0.18)",
+                        "full": true,
+                        "lineColor": "rgb(31, 120, 193)",
+                        "show": true
+                      },
+                      "tableColumn": "",
+                      "targets": [
+                        {
+                          "expr": "sum(irate(nginxplus_http_requests_total[30s]))",
+                          "format": "time_series",
+                          "interval": "5s",
+                          "intervalFactor": 1,
+                          "refId": "A"
+                        }
+                      ],
+                      "thresholds": "",
+                      "title": "GLOBAL REQUEST VOLUME",
+                      "type": "singlestat",
+                      "valueFontSize": "80%",
+                      "valueMaps": [
+                        {
+                          "op": "=",
+                          "text": "N/A",
+                          "value": "null"
+                        }
+                      ],
+                      "valueName": "current"
+                    },
+                    {
+                      "cacheTimeout": null,
+                      "colorBackground": false,
+                      "colorValue": false,
+                      "colors": [
+                        "#299c46",
+                        "rgba(237, 129, 40, 0.89)",
+                        "#d44a3a"
+                      ],
+                      "datasource": "prometheus",
+                      "fieldConfig": {
+                        "defaults": {},
+                        "overrides": []
+                      },
+                      "format": "none",
+                      "gauge": {
+                        "maxValue": 100,
+                        "minValue": 0,
+                        "show": false,
+                        "thresholdLabels": false,
+                        "thresholdMarkers": true
+                      },
+                      "gridPos": {
+                        "h": 6,
+                        "w": 3,
+                        "x": 21,
+                        "y": 0
+                      },
+                      "id": 5,
+                      "interval": null,
+                      "links": [],
+                      "mappingType": 1,
+                      "mappingTypes": [
+                        {
+                          "name": "value to text",
+                          "value": 1
+                        },
+                        {
+                          "name": "range to text",
+                          "value": 2
+                        }
+                      ],
+                      "maxDataPoints": 100,
+                      "nullPointMode": "connected",
+                      "nullText": null,
+                      "postfix": "",
+                      "postfixFontSize": "50%",
+                      "prefix": "",
+                      "prefixFontSize": "50%",
+                      "rangeMaps": [
+                        {
+                          "from": "null",
+                          "text": "N/A",
+                          "to": "null"
+                        }
+                      ],
+                      "sparkline": {
+                        "fillColor": "rgba(31, 118, 189, 0.18)",
+                        "full": true,
+                        "lineColor": "rgb(31, 120, 193)",
+                        "show": false
+                      },
+                      "tableColumn": "",
+                      "targets": [
+                        {
+                          "expr": "count(nginxplus_http_requests_total)",
+                          "format": "time_series",
+                          "interval": "5s",
+                          "intervalFactor": 1,
+                          "refId": "A"
+                        }
+                      ],
+                      "thresholds": "",
+                      "title": "PODS MONITORED",
+                      "type": "singlestat",
+                      "valueFontSize": "200%",
+                      "valueMaps": [
+                        {
+                          "op": "=",
+                          "text": "N/A",
+                          "value": "null"
+                        }
+                      ],
+                      "valueName": "current"
+                    },
+                    {
+                      "aliasColors": {},
+                      "bars": false,
+                      "dashLength": 10,
+                      "dashes": false,
+                      "datasource": "prometheus",
+                      "fieldConfig": {
+                        "defaults": {},
+                        "overrides": []
+                      },
+                      "fill": 1,
+                      "fillGradient": 0,
+                      "gridPos": {
+                        "h": 9,
+                        "w": 12,
+                        "x": 0,
+                        "y": 6
+                      },
+                      "hiddenSeries": false,
+                      "id": 2,
+                      "legend": {
+                        "avg": false,
+                        "current": false,
+                        "max": false,
+                        "min": false,
+                        "show": true,
+                        "total": false,
+                        "values": false
+                      },
+                      "lines": true,
+                      "linewidth": 1,
+                      "links": [],
+                      "nullPointMode": "null",
+                      "options": {
+                        "alertThreshold": true
+                      },
+                      "percentage": false,
+                      "pointradius": 5,
+                      "points": false,
+                      "renderer": "flot",
+                      "seriesOverrides": [],
+                      "spaceLength": 10,
+                      "stack": false,
+                      "steppedLine": false,
+                      "targets": [
+                        {
+                          "expr": "irate(nginxplus_http_requests_total[30s])",
+                          "format": "time_series",
+                          "interval": "",
+                          "intervalFactor": 1,
+                          "refId": "A"
+                        }
+                      ],
+                      "thresholds": [],
+                      "timeFrom": null,
+                      "timeRegions": [],
+                      "timeShift": null,
+                      "title": "Request Volume",
+                      "tooltip": {
+                        "shared": true,
+                        "sort": 0,
+                        "value_type": "individual"
+                      },
+                      "type": "graph",
+                      "xaxis": {
+                        "buckets": null,
+                        "mode": "time",
+                        "name": null,
+                        "show": true,
+                        "values": []
+                      },
+                      "yaxes": [
+                        {
+                          "format": "reqps",
+                          "label": null,
+                          "logBase": 1,
+                          "max": null,
+                          "min": "0",
+                          "show": true
+                        },
+                        {
+                          "format": "short",
+                          "label": null,
+                          "logBase": 1,
+                          "max": null,
+                          "min": null,
+                          "show": true
+                        }
+                      ],
+                      "yaxis": {
+                        "align": false,
+                        "alignLevel": null
+                      }
+                    },
+                    {
+                      "aliasColors": {},
+                      "bars": false,
+                      "dashLength": 10,
+                      "dashes": false,
+                      "datasource": "prometheus",
+                      "fieldConfig": {
+                        "defaults": {},
+                        "overrides": []
+                      },
+                      "fill": 1,
+                      "fillGradient": 0,
+                      "gridPos": {
+                        "h": 9,
+                        "w": 12,
+                        "x": 12,
+                        "y": 6
+                      },
+                      "hiddenSeries": false,
+                      "id": 123124,
+                      "legend": {
+                        "avg": false,
+                        "current": false,
+                        "max": false,
+                        "min": false,
+                        "show": true,
+                        "total": false,
+                        "values": false
+                      },
+                      "lines": true,
+                      "linewidth": 1,
+                      "links": [],
+                      "nullPointMode": "null",
+                      "options": {
+                        "alertThreshold": true
+                      },
+                      "percentage": false,
+                      "pointradius": 5,
+                      "points": false,
+                      "renderer": "flot",
+                      "seriesOverrides": [],
+                      "spaceLength": 10,
+                      "stack": false,
+                      "steppedLine": false,
+                      "targets": [
+                        {
+                          "expr": "sum(irate(nginxplus_upstream_server_responses{code=~\"1xx|2xx\"}[30s])) by (app, version) / sum(irate(nginxplus_upstream_server_responses[30s])) by (app, version)",
+                          "format": "time_series",
+                          "instant": false,
+                          "interval": "",
+                          "intervalFactor": 1,
+                          "legendFormat": "",
+                          "refId": "A"
+                        }
+                      ],
+                      "thresholds": [],
+                      "timeFrom": null,
+                      "timeRegions": [],
+                      "timeShift": null,
+                      "title": "Pod Success",
+                      "tooltip": {
+                        "shared": true,
+                        "sort": 0,
+                        "value_type": "individual"
+                      },
+                      "type": "graph",
+                      "xaxis": {
+                        "buckets": null,
+                        "mode": "time",
+                        "name": null,
+                        "show": true,
+                        "values": []
+                      },
+                      "yaxes": [
+                        {
+                          "format": "percentunit",
+                          "label": null,
+                          "logBase": 1,
+                          "max": "1",
+                          "min": "0",
+                          "show": true
+                        },
+                        {
+                          "format": "short",
+                          "label": null,
+                          "logBase": 1,
+                          "max": null,
+                          "min": null,
+                          "show": true
+                        }
+                      ],
+                      "yaxis": {
+                        "align": false,
+                        "alignLevel": null
+                      }
+                    },
+                    {
+                      "aliasColors": {},
+                      "bars": false,
+                      "dashLength": 10,
+                      "dashes": false,
+                      "datasource": null,
+                      "description": "RSS used by NGINX Service Mesh sidecars",
+                      "fieldConfig": {
+                        "defaults": {},
+                        "overrides": []
+                      },
+                      "fill": 1,
+                      "fillGradient": 0,
+                      "gridPos": {
+                        "h": 8,
+                        "w": 12,
+                        "x": 0,
+                        "y": 15
+                      },
+                      "hiddenSeries": false,
+                      "id": 123126,
+                      "legend": {
+                        "avg": false,
+                        "current": false,
+                        "max": false,
+                        "min": false,
+                        "show": true,
+                        "total": false,
+                        "values": false
+                      },
+                      "lines": true,
+                      "linewidth": 1,
+                      "nullPointMode": "null",
+                      "options": {
+                        "alertThreshold": true
+                      },
+                      "percentage": false,
+                      "pointradius": 2,
+                      "points": false,
+                      "renderer": "flot",
+                      "seriesOverrides": [],
+                      "spaceLength": 10,
+                      "stack": false,
+                      "steppedLine": false,
+                      "targets": [
+                        {
+                          "expr": "nginxplus_workers_mem_rss",
+                          "interval": "",
+                          "legendFormat": "",
+                          "refId": "A"
+                        }
+                      ],
+                      "thresholds": [],
+                      "timeFrom": null,
+                      "timeRegions": [],
+                      "timeShift": null,
+                      "title": "Sidecar Memory Usage (RSS)",
+                      "tooltip": {
+                        "shared": true,
+                        "sort": 0,
+                        "value_type": "individual"
+                      },
+                      "type": "graph",
+                      "xaxis": {
+                        "buckets": null,
+                        "mode": "time",
+                        "name": null,
+                        "show": true,
+                        "values": []
+                      },
+                      "yaxes": [
+                        {
+                          "format": "decbytes",
+                          "label": null,
+                          "logBase": 1,
+                          "max": null,
+                          "min": null,
+                          "show": true
+                        },
+                        {
+                          "format": "short",
+                          "label": null,
+                          "logBase": 1,
+                          "max": null,
+                          "min": null,
+                          "show": true
+                        }
+                      ],
+                      "yaxis": {
+                        "align": false,
+                        "alignLevel": null
+                      }
+                    },
+                    {
+                      "aliasColors": {},
+                      "bars": false,
+                      "dashLength": 10,
+                      "dashes": false,
+                      "datasource": null,
+                      "description": "Private memory used by NGINX Service Mesh sidecars",
+                      "fieldConfig": {
+                        "defaults": {},
+                        "overrides": []
+                      },
+                      "fill": 1,
+                      "fillGradient": 0,
+                      "gridPos": {
+                        "h": 8,
+                        "w": 12,
+                        "x": 12,
+                        "y": 15
+                      },
+                      "hiddenSeries": false,
+                      "id": 123128,
+                      "legend": {
+                        "avg": false,
+                        "current": false,
+                        "max": false,
+                        "min": false,
+                        "show": true,
+                        "total": false,
+                        "values": false
+                      },
+                      "lines": true,
+                      "linewidth": 1,
+                      "nullPointMode": "null",
+                      "options": {
+                        "alertThreshold": true
+                      },
+                      "percentage": false,
+                      "pointradius": 2,
+                      "points": false,
+                      "renderer": "flot",
+                      "seriesOverrides": [],
+                      "spaceLength": 10,
+                      "stack": false,
+                      "steppedLine": false,
+                      "targets": [
+                        {
+                          "expr": "nginxplus_workers_mem_private",
+                          "interval": "",
+                          "legendFormat": "",
+                          "refId": "A"
+                        }
+                      ],
+                      "thresholds": [],
+                      "timeFrom": null,
+                      "timeRegions": [],
+                      "timeShift": null,
+                      "title": "Sidecar Memory Usage (Private)",
+                      "tooltip": {
+                        "shared": true,
+                        "sort": 0,
+                        "value_type": "individual"
+                      },
+                      "type": "graph",
+                      "xaxis": {
+                        "buckets": null,
+                        "mode": "time",
+                        "name": null,
+                        "show": true,
+                        "values": []
+                      },
+                      "yaxes": [
+                        {
+                          "format": "short",
+                          "label": null,
+                          "logBase": 1,
+                          "max": null,
+                          "min": null,
+                          "show": true
+                        },
+                        {
+                          "format": "short",
+                          "label": null,
+                          "logBase": 1,
+                          "max": null,
+                          "min": null,
+                          "show": true
+                        }
+                      ],
+                      "yaxis": {
+                        "align": false,
+                        "alignLevel": null
+                      }
+                    }
+                  ],
+                  "refresh": "5s",
+                  "schemaVersion": 27,
+                  "style": "dark",
+                  "tags": [],
+                  "templating": {
+                    "list": []
+                  },
+                  "time": {
+                    "from": "now-5m",
+                    "to": "now"
+                  },
+                  "timepicker": {
+                    "refresh_intervals": [
+                      "5s",
+                      "10s",
+                      "30s",
+                      "1m",
+                      "5m",
+                      "15m",
+                      "30m",
+                      "1h",
+                      "2h",
+                      "1d"
+                    ],
+                    "time_options": [
+                      "5m",
+                      "15m",
+                      "1h",
+                      "6h",
+                      "12h",
+                      "24h",
+                      "2d",
+                      "7d",
+                      "30d"
+                    ]
+                  },
+                  "timezone": "",
+                  "title": "NGINX Mesh Top",
+                  "uid": "N3zQ72OWk",
+                  "version": 1
+                }
+
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: grafana
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: grafana
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: grafana
+              template:
+                metadata:
+                  labels:
+                    app.kubernetes.io/name: grafana
+                  annotations:
+                    injector.nsm.nginx.com/auto-inject: "false"
+                spec:
+                  containers:
+                  - name: grafana
+                    image: grafana/grafana:latest
+                    ports:
+                    - containerPort: 3000
+                    volumeMounts:
+                    - name: grafana-config
+                      mountPath: /etc/grafana/provisioning
+                    - name: grafana-dashboard
+                      mountPath: /var/lib/grafana/dashboards
+                    - name: grafana-home-dashboard
+                      mountPath: /usr/share/grafana/public/dashboards
+                  volumes:
+                  - name: grafana-config
+                    configMap:
+                      name: grafana-config
+                      items:
+                      - key: datasources.yaml
+                        path: datasources/datasources.yaml
+                      - key: dashboards.yaml
+                        path: dashboards/dashboards.yaml
+                  - name: grafana-dashboard
+                    configMap:
+                      name: grafana-config
+                      items:
+                      - key: nginx-mesh-top.json
+                        path: nginx-mesh-top.json
+                  - name: grafana-home-dashboard
+                    configMap:
+                      name: grafana-config
+                      items:
+                      - key: nginx-mesh-top.json
+                        path: home.json
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: grafana
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: grafana
+            spec:
+              selector:
+                app.kubernetes.io/name: grafana
+              ports:
+              - port: 3000
+
+  ##########################
+  # otel-collector chart
+  ####################################################
+  - name: otel-collector
+    chart: itscontained/raw
+    disableValidation: true
+    values:
+      - resources:
+            # Warning: this deployment is for demo purposes only and is not recommended for production environments
+
+          - apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: nsm-monitoring
+
+          - apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: otel-collector-config
+              namespace: nsm-monitoring
+            data:
+              otel-collector-config: |
+                receivers:
+                  otlp:
+                    protocols:
+                      grpc:
+                      http:
+                processors:
+                extensions:
+                exporters:
+                  jaeger:
+                    endpoint: "jaeger.nsm-monitoring.svc:14250"
+                    tls:
+                      insecure: true
+                service:
+                  pipelines:
+                    traces:
+                      receivers: [otlp]
+                      processors: []
+                      exporters: [jaeger]
+
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: otel-collector
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: otel-collector
+            spec:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: otel-collector
+              replicas: 1
+              template:
+                metadata:
+                  labels:
+                    app.kubernetes.io/name: otel-collector
+                  annotations:
+                    injector.nsm.nginx.com/auto-inject: "false"
+                spec:
+                  containers:
+                  - name: otel-collector
+                    image: otel/opentelemetry-collector:0.55.0
+                    command:
+                      - /otelcol
+                      - --config=/conf/otel-collector-config.yaml
+                    ports:
+                    - containerPort: 4317
+                    volumeMounts:
+                    - name: otel-collector-config
+                      mountPath: /conf
+                  volumes:
+                  - name: otel-collector-config
+                    configMap:
+                      name: otel-collector-config
+                      items:
+                      - key: otel-collector-config
+                        path: otel-collector-config.yaml
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: otel-collector
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: otel-collector
+            spec:
+              selector:
+                app.kubernetes.io/name: otel-collector
+              ports:
+              - name: otlp-grpc
+                port: 4317
+
+  ##########################
+  # jaeger chart
+  ####################################################
+  - name: jaeger
+    chart: itscontained/raw
+    disableValidation: true
+    values:
+      - resources:
+            # Warning: this deployment is for demo purposes only and is not recommended for production environments
+
+          - apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: nsm-monitoring
+
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: jaeger
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: jaeger
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: jaeger
+              template:
+                metadata:
+                  labels:
+                    app.kubernetes.io/name: jaeger
+                  annotations:
+                    injector.nsm.nginx.com/auto-inject: "false"
+                spec:
+                  containers:
+                  - name: jaeger
+                    image: jaegertracing/all-in-one:latest
+                    ports:
+                    - containerPort: 16686
+                    - containerPort: 6831
+                      protocol: UDP
+                    - containerPort: 14268
+                    - containerPort: 14250
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: jaeger
+              namespace: nsm-monitoring
+              labels:
+                app.kubernetes.io/name: jaeger
+            spec:
+              selector:
+                app.kubernetes.io/name: jaeger
+              ports:
+              - name: frontend
+                port: 16686
+              - name: collector
+                port: 6831
+                protocol: UDP
+              - name: collector-http
+                port: 14268
+              - name: collector-grpc
+                port: 14250
