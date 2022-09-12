@@ -20,3 +20,19 @@
      * external-dns
      * cert-manager
      * kubernetes-ingress (NGINX ingress controller)
+
+
+# Part 1: NSM
+
+1. Observability
+2. NGINX service mesh
+3. Dgraph demo
+   * show that non-mesh traffic doesn't work
+   * show that mesh traffic works
+
+NOTE: There may be a problem with observability that cannot scrape Dgraph.
+
+# Part 2: NGINX Ingress Controller
+
+
+1. ExternalDNS, CertManager, and NGINX+ Ingress Controller

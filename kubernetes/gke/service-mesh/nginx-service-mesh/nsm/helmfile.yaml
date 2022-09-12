@@ -17,11 +17,12 @@ releases:
           samplerRatio: 1
         tracing: null
         mtls:
-          mode: permissive # or strict
+          mode: {{ env "NSM_MTLS_MODE" | default "permissive" }}
         autoInjection:
+          {{- if ne (env "NSM_AUTO_INJECTION") "false" }}
           disable: false
           disabledNamespaces:
             - nsm-monitoring
-          # enabledNamespaces:
-          #   - dgraph
-          #   - ratel
+          {{- else }}
+          disable: true
+          {{- end }}

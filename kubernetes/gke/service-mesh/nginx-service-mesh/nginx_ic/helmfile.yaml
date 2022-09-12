@@ -1,0 +1,32 @@
+repositories:
+  # https://artifacthub.io/packages/helm/nginx/nginx-ingress
+  - name: nginx-stable
+    url: https://helm.nginx.com/stable
+
+releases:
+  # NOTE: tutorial online uses 'nginx-ingress' for namespace
+  - name: nginx-ingress
+    namespace: kube-addons
+    chart: nginx-stable/nginx-ingress
+    version: 0.14.0
+    values:
+      - controller:
+          nginxplus: true
+          image:
+            repository: gcr.io/{{ requiredEnv "GCR_PROJECT_ID" }}/nginx-plus-ingress
+            tag: 2.3.0
+          # NGINX Configmap
+          config:
+            entries:
+              ssl-redirect: "True"
+              http2: "True"
+          ingressClass: nginx
+          # NGINX IC CRDs
+          enableCustomResources: true
+          enableCertManager: true
+          enableExternalDNS: true
+          # Prometheus must be installed
+          enableLatencyMetrics: true
+        nginxServiceMesh:
+          enable: true
+          enableEgress: true
