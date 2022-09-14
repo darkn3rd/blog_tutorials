@@ -26,7 +26,7 @@ helmfile template \
   | kubectl apply --namespace "dgraph" --filename -
 ```
 
-## Workaround: Manual injection excluding 5080 and 7080 ports
+## WORKAROUND: Manual injection excluding 5080 and 7080 ports
 
 ```bash
 kubectl get namespace "dgraph" > /dev/null 2> /dev/null \

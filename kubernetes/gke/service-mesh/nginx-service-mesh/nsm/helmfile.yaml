@@ -17,7 +17,8 @@ releases:
           samplerRatio: 1
         tracing: null
         mtls:
-          mode: {{ env "NSM_MTLS_MODE" | default "permissive" }}
+          # strict or permissive
+          mode: {{ env "NSM_MTLS_MODE" | default "strict" }}
         autoInjection:
           {{- if eq (env "NSM_AUTO_INJECTION") "true" }}
           disable: false

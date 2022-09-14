@@ -4,11 +4,15 @@ kubectl delete pvc --selector app=dgraph --namespace "dgraph"
 # delete namespace, configmap, secret
 kubectl delete namespace "dgraph"
 
-# Kubernetes Resources - kube-addons
-helm delete "cert-manager" --namespace "kube-addons"
-helm delete "cert-manager-issuers" --namespace "kube-addons"
-helm delete "external-dns" --namespace "kube-addons"
-helm delete "nginx-ingress" --namespace "kube-addons"
+# delete positive-test client
+kubectl delete deploy/pydgraph-client --namespace "pydgraph-client"
+kubectl delete namespace "pydgraph-client"
+# delete negative-test client
+helm delete "pydgraph-client" --namespace "pydgraph-no-mesh"
+
+# delete service mesh
+helm delete "nsm" --namespace"nginx-mesh"
+
 
 # Google Cloud Resources
 gcloud container clusters delete $GKE_CLUSTER_NAME \
