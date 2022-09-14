@@ -20,6 +20,15 @@ You can fetch the manifests and install the manifests as Helm charts with these 
 helmfile apply
 ```
 
+### Viewing
+
+```bash
+kubectl --namespace nsm-monitoring port-forward svc/prometheus 9090
+kubectl --namespace nsm-monitoring port-forward svc/grafana 3000
+kubectl --namespace nsm-monitoring port-forward svc/jaeger 16686
+```
+
+
 To uninstall them with helmfile, you can run:
 
 ```bash
