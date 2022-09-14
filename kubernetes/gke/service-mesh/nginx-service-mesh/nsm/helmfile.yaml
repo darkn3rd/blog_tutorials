@@ -19,7 +19,7 @@ releases:
         mtls:
           mode: {{ env "NSM_MTLS_MODE" | default "permissive" }}
         autoInjection:
-          {{- if ne (env "NSM_AUTO_INJECTION") "false" }}
+          {{- if eq (env "NSM_AUTO_INJECTION") "true" }}
           disable: false
           disabledNamespaces:
             - nsm-monitoring
