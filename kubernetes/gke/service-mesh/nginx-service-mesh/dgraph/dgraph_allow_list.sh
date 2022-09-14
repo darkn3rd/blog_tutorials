@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 DG_ALLOW_LIST=$(gcloud container clusters  describe $GKE_CLUSTER_NAME \
   --project $GKE_PROJECT_ID \
   --region $GKE_REGION \

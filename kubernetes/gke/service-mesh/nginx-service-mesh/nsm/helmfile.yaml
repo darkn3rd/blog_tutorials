@@ -1,5 +1,5 @@
 repositories:
-  # https://artifacthub.io/packages/helm/nginx/nginx-ingress
+  # https://artifacthub.io/packages/helm/nginx/nginx-service-mesh
   - name: nginx-stable
     url: https://helm.nginx.com/stable
 

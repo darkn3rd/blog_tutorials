@@ -36,3 +36,11 @@ NOTE: There may be a problem with observability that cannot scrape Dgraph.
 
 
 1. ExternalDNS, CertManager, and NGINX+ Ingress Controller
+
+
+# IDEA
+
+* pydgraph-injected (default)
+* pydgraph-inject-disabled
+* dgraph-injected (default)
+* strict
