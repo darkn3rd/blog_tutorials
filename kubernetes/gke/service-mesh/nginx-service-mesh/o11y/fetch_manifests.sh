@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 URLS=(https://docs.nginx.com/nginx-service-mesh/examples/{prometheus,grafana,otel-collector,jaeger}.yaml)
 COMPONENT_TEMP=$(mktemp)
 COMPONENT_FILE=$(mktemp)
