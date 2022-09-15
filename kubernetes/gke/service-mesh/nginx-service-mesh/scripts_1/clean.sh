@@ -11,8 +11,19 @@ kubectl delete namespace "pydgraph-client"
 helm delete "pydgraph-client" --namespace "pydgraph-no-mesh"
 
 # delete service mesh
-helm delete "nsm" --namespace"nginx-mesh"
+helm delete "nsm" --namespace "nginx-mesh"
+kubectl delete pvc/spire-data-spire-server-0 --namespace "nginx-mesh"
 
+# delete o11y
+kubectl delete deploy/jaeger --namespace "nsm-monitoring"
+kubectl delete deploy/grafana --namespace "nsm-monitoring"
+kubectl delete deploy/otel-collector --namespace "nsm-monitoring"
+kubectl delete deploy/prometheus --namespace "nsm-monitoring"
+kubectl delete svc/jaeger --namespace "nsm-monitoring"
+kubectl delete svc/grafana --namespace "nsm-monitoring"
+kubectl delete svc/otel-collector --namespace "nsm-monitoring"
+kubectl delete svc/prometheus --namespace "nsm-monitoring"
+kubectl delete namespace "nsm-monitoring"
 
 # Google Cloud Resources
 gcloud container clusters delete $GKE_CLUSTER_NAME \
