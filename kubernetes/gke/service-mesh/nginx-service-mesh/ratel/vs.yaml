@@ -1,0 +1,33 @@
+repositories:
+  # https://artifacthub.io/packages/helm/itscontained/raw
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: ratel-virtualserver
+    chart: itscontained/raw
+    namespace: ratel
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-http
+            spec:
+              host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+                - name: ratel
+                  service: dgraph-ratel
+                  port: 80
+              routes:
+                - path: /
+                  action:
+                    pass: ratel

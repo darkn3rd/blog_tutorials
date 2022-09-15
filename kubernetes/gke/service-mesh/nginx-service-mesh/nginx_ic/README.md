@@ -1,13 +1,26 @@
-#!/usr/bin/env bash
-# Instructions based on these docs:
-# * https://docs.nginx.com/nginx-ingress-controller/installation/pulling-ingress-controller-image/
 
-# copy files locally here
-cp ~/Downloads/nginx-repo.{jwt,key,crt} .
 
+```bash
 PRIV_REG="private-registry.nginx.com"
 NGINX_IC_NAP_IMAGE="$PRIV_REG/nginx-ic-nap/nginx-plus-ingress"
 
+# copy to local directory
+cp ~/Downloads/nginx-repo.{jwt,key,crt} .
+
+# Test Certficates
+curl --silent \
+  --key nginx-repo.key \
+  --cert nginx-repo.crt \
+  https://private-registry.nginx.com/v2/nginx-ic/nginx-plus-ingress/tags/list \
+  | jq
+
+curl --silent \
+  --key nginx-repo.key \
+  --cert nginx-repo.crt \
+  https://private-registry.nginx.com/v2/nginx-ic-nap/nginx-plus-ingress/tags/list \
+  | jq
+
+# copy private certificates locally
 if [[ "$(uname -s)" == "Linux" ]]; then
   DOCKER_CERTS_PATH="/etc/docker/certs.d/$PRIV_REG"
   sudo mkdir -p $DOCKER_CERTS_PATH
@@ -24,7 +37,12 @@ elif  [[ "$(uname -s)" == "Darwin" ]]; then
   fi
 fi
 
-# Restart Docker Destop
+# Add Private NGINX credentials to Docker
+sudo mkdir -p $DOCKER_CERTS_PATH
+sudo cp nginx-repo.crt $DOCKER_CERTS_PATH/client.cert
+sudo cp nginx-repo.key $DOCKER_CERTS_PATH/client.key
+
+# Publish Private NGINX images to GCR
 docker pull $NGINX_IC_NAP_IMAGE:2.3.0
 docker tag $NGINX_IC_NAP_IMAGE:2.3.0 gcr.io/$GCR_PROJECT_ID/nginx-plus-ingress:2.3.0
 docker push gcr.io/$GCR_PROJECT_ID/nginx-plus-ingress:2.3.0

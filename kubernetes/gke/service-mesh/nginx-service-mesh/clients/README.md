@@ -40,18 +40,6 @@ helmfile --file ./examples/pydgraph/helmfile.yaml --namespace "pydgraph-no-mesh"
 
 # Test Client Image
 
-## Set Environment
-
-```bash
-# POSITIVE tests
-export CLIENT_NAMESPACE="pydgraph-client"
-
-# NEGATIVE tests
-export CLIENT_NAMESPACE="pydgraph-no-mesh"
-
-```
-
-
 ## Run Negative Tests
 
 ```bash
@@ -109,7 +97,7 @@ kubectl exec -ti --container "pydgraph-client" --namespace $CLIENT_NAMESPACE \
   ${PYDGRAPH_POD} -- bash
 ```
 
-These are expected to work: 
+These are expected to work:
 
 ```bash
 # test gRPC connection
@@ -129,4 +117,14 @@ python3 load_data.py \
   --alpha ${DGRAPH_ALPHA_SERVER}:9080 \
   --files ./sw.nquads.rdf \
   --schema ./sw.schema
+```
+
+# Test through Ingress
+
+```bash
+curl dgraph.${DNS_DOMAIN}/health | jq
+curl dgraph.${DNS_DOMAIN}/state | jq
+
+curl -sOL https://raw.githubusercontent.com/dgraph-io/pydgraph/master/pydgraph/proto/api.proto api.proto
+grpcurl -proto api.proto grpc.$DNS_DOMAIN:443 api.Dgraph/CheckVersion
 ```
