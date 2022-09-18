@@ -16,8 +16,10 @@ releases:
               port: 4317
           samplerRatio: 1
         tracing: null
+        # 'allow' or 'deny'
+        accessControlMode: {{ env "NSM_ACCESS_CONTROL_MODE" | default "allow" }}
         mtls:
-          # strict or permissive
+          # 'strict' or 'permissive'
           mode: {{ env "NSM_MTLS_MODE" | default "strict" }}
         autoInjection:
           {{- if eq (env "NSM_AUTO_INJECTION") "true" }}

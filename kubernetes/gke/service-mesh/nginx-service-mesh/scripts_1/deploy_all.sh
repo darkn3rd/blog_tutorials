@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 pushd o11y && ./fetch_manifests.sh && popd
-helmfile --file o11y/helmfile.yaml
-helmfile --file nsm/helmfile.yaml
+helmfile --file ./o11y/helmfile.yaml apply
+helmfile --file ./nsm/helmfile.yaml apply
 
 # Dgraph with manual injection + skip ports
 kubectl get namespace "dgraph" > /dev/null 2> /dev/null \

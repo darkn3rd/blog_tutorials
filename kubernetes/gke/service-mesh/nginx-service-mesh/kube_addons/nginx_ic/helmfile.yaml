@@ -12,6 +12,10 @@ releases:
     values:
       - controller:
           nginxplus: true
+          {{- if eq (env "NGINX_APP_PROTECT") "true" }}
+          appprotect:
+            enable: true
+          {{- end }}
           image:
             repository: gcr.io/{{ requiredEnv "GCR_PROJECT_ID" }}/nginx-plus-ingress
             tag: 2.3.0

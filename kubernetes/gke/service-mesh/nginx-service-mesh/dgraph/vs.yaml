@@ -17,6 +17,10 @@ releases:
               name: dgraph-http
             spec:
               host: dgraph.{{ requiredEnv "DNS_DOMAIN" }}
+              {{- if eq (env "NGINX_APP_PROTECT") "true" }}
+              policies:
+                - name: dgraph-policy
+              {{- end }}
               tls:
                 secret: dgraph-tls-secret
                 cert-manager:
@@ -40,6 +44,10 @@ releases:
               namespace: dgraph
             spec:
               host: grpc.{{ requiredEnv "DNS_DOMAIN" }}
+              {{- if eq (env "NGINX_APP_PROTECT") "true" }}
+              policies:
+                - name: dgraph-policy
+              {{- end }}
               tls:
                 secret: grpc-tls-secret
                 cert-manager:
@@ -56,3 +64,14 @@ releases:
                 - path: /
                   action:
                     pass: grpc
+
+          {{- if eq (env "NGINX_APP_PROTECT") "true" }}
+          - apiVersion: k8s.nginx.org/v1
+            kind: Policy
+            metadata:
+              name: dgraph-policy
+            spec:
+              accessControl:
+                allow:
+                  - {{ env "MY_IP_ADDRESS" | default "0.0.0.0/0" | quote }}
+          {{- end }}

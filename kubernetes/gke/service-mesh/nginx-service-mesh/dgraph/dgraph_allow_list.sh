@@ -6,5 +6,5 @@ DG_ALLOW_LIST=$(gcloud container clusters  describe $GKE_CLUSTER_NAME \
   | jq -r '.clusterIpv4Cidr,.servicesIpv4Cidr' \
   | tr '\n' ','
 )
-MY_IP_ADDRESS=$(curl --silent ifconfig.me)
+export MY_IP_ADDRESS=$(curl --silent ifconfig.me)
 export DG_ALLOW_LIST="${DG_ALLOW_LIST}${MY_IP_ADDRESS}/32"
