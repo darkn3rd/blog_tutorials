@@ -15,7 +15,7 @@ releases:
               host: otel-collector.nsm-monitoring.svc
               port: 4317
           samplerRatio: 1
-        tracing: null
+        tracing: {} 
         # 'allow' or 'deny'
         accessControlMode: {{ env "NSM_ACCESS_CONTROL_MODE" | default "allow" }}
         mtls:

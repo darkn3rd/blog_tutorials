@@ -1,0 +1,37 @@
+apiVersion: specs.smi-spec.io/v1alpha3
+kind: TCPRoute
+metadata:
+  name: dgraph-ports
+spec:
+  matches:
+    ports:
+    - 8080
+    - 9080
+---
+apiVersion: specs.smi-spec.io/v1alpha3
+kind: HTTPRouteGroup
+metadata:
+  name: dgraph-routes
+  namespace: default
+spec:
+  matches:
+  - name: everything
+    pathRegex: ".*"
+    methods: ["*"]
+---
+apiVersion: access.smi-spec.io/v1alpha2
+kind: TrafficTarget
+metadata:
+  name: traffic-target
+spec:
+  destination:
+    kind: ServiceAccount
+    name: destination-sa
+  rules:
+  - kind: HTTPRouteGroup
+    name: route-group
+    matches:
+    - destination-traffic
+  sources:
+  - kind: ServiceAccount
+    name: source-allowed-sa
