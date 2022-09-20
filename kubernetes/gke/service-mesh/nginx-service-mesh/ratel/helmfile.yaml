@@ -11,6 +11,12 @@ releases:
     disableValidation: true
     values:
       - resources:
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: dgraph-ratel
+            automountServiceAccountToken: false
+
           - apiVersion: apps/v1
             kind: Deployment
             metadata:
@@ -27,6 +33,7 @@ releases:
                     app: dgraph
                     component: ratel
                 spec:
+                  serviceAccountName: dgraph-ratel
                   containers:
                     - name: dgraph-ratel
                       image: docker.io/dgraph/ratel:v21.03.2

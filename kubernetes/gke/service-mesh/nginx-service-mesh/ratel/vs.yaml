@@ -14,7 +14,7 @@ releases:
           - apiVersion: k8s.nginx.org/v1
             kind: VirtualServer
             metadata:
-              name: dgraph-http
+              name: dgraph-ratel-http
             spec:
               host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
               tls:
@@ -31,3 +31,34 @@ releases:
                 - path: /
                   action:
                     pass: ratel
+
+          {{- if eq (env "NSM_ACCESS_CONTROL_MODE") "deny" }}
+          - apiVersion: specs.smi-spec.io/v1alpha3
+            kind: HTTPRouteGroup
+            metadata:
+              name: ratel-route-group
+            spec:
+              matches:
+                - name: destination-traffic
+                  methods: ["*"]
+                  pathRegex: ".*"
+
+          - apiVersion: access.smi-spec.io/v1alpha2
+            kind: TrafficTarget
+            metadata:
+              name: ratel-traffic-target
+            spec:
+              destination:
+                kind: ServiceAccount
+                name: dgraph-ratel
+                namespace: ratel
+              rules:
+                - kind: HTTPRouteGroup
+                  name: ratel-route-group
+                  matches:
+                    - destination-traffic
+              sources:
+                - kind: ServiceAccount
+                  name: nginx-ingress-nginx-ingress
+                  namespace: kube-addons
+          {{- end }}

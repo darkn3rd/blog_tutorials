@@ -65,6 +65,12 @@ releases:
     version:  0.2.5
     values:
       - resources:
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: pydgraph-client
+            automountServiceAccountToken: false
+            
           - apiVersion: apps/v1
             kind: Deployment
             metadata:
@@ -79,6 +85,7 @@ releases:
                   labels:
                     app: pydgraph-client
                 spec:
+                  serviceAccountName: dgraph-ratel
                   containers:
                   - name: pydgraph-client
                     image: gcr.io/{{ requiredEnv "GCR_PROJECT_ID" }}/pydgraph-client:latest
