@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+source env.sh
+
 # enable billing and APIs for GCR if not done already
 gcloud projects create $GCR_PROJECT_ID
 gcloud config set project $GCR_PROJECT_ID

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+source env.sh
 
 # install cert-manager (must be before nginx_ic)
 helmfile --file ./kube_addons/cert_manager/helmfile.yaml apply
 helmfile --file ./kube_addons/cert_manager/issuers.yaml apply
 
-# isntall kics (depends on cert_manager)
+# install kics (depends on cert_manager)
 export NGINX_APP_PROTECT=true
 helmfile --file ./kube_addons/nginx_ic/helmfile.yaml apply
 

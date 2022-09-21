@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+source env.sh
+
 # Kubernetes Resources - dgraph
 kubectl delete svc,sts,cm --selector app=dgraph --namespace "dgraph"
 kubectl delete pvc --selector app=dgraph --namespace "dgraph"

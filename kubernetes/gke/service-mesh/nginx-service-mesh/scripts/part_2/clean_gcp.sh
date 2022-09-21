@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source env.sh
 
 gcloud projects remove-iam-policy-binding $DNS_PROJECT_ID \
    --member serviceAccount:$DNS_SA_EMAIL --role "roles/dns.admin"

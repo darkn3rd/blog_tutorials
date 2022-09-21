@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source env.sh
 
 # Ratel Resources
 kubectl delete deploy/dgraph-ratel --namespace "ratel"

@@ -1,5 +1,8 @@
+#!/usr/bin/env bash
+source env.sh
+
 #######################
-# WORKLOAD IDENTITY - PART1
+# WORKLOAD IDENTITY
 ##########################################
 gcloud iam service-accounts create $DNS_SA_NAME --display-name $DNS_SA_NAME
 gcloud projects add-iam-policy-binding $DNS_PROJECT_ID \

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source env.sh
 
 # enable billing and APIs for DNS project if not done already
 gcloud projects create $DNS_PROJECT_ID

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # .
 # ├── clients
 # │   └── fetch_scripts.sh

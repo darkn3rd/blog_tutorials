@@ -75,3 +75,34 @@ releases:
                 allow:
                   - {{ env "MY_IP_ADDRESS" | default "0.0.0.0/0" | quote }}
           {{- end }}
+
+          {{- if eq (env "NSM_ACCESS_CONTROL_MODE") "deny" }}
+          - apiVersion: specs.smi-spec.io/v1alpha3
+            kind: HTTPRouteGroup
+            metadata:
+              name: dgraph-route-group
+            spec:
+              matches:
+                - name: destination-traffic
+                  methods: ["*"]
+                  pathRegex: ".*"
+
+          - apiVersion: access.smi-spec.io/v1alpha2
+            kind: TrafficTarget
+            metadata:
+              name: dgraph-traffic-target
+            spec:
+              destination:
+                kind: ServiceAccount
+                name: dgraph
+                namespace: dgraph
+              rules:
+                - kind: HTTPRouteGroup
+                  name: dgraph-route-group
+                  matches:
+                    - destination-traffic
+              sources:
+                - kind: ServiceAccount
+                  name: nginx-ingress-nginx-ingress
+                  namespace: kube-addons
+          {{- end }}

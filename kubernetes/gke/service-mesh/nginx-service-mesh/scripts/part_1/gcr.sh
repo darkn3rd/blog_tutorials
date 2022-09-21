@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+source env.sh
+
 # Grant local docker access to GCR
 gcloud auth configure-docker
 

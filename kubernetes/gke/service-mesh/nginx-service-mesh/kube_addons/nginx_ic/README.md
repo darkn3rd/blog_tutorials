@@ -24,23 +24,15 @@ curl --silent \
 if [[ "$(uname -s)" == "Linux" ]]; then
   DOCKER_CERTS_PATH="/etc/docker/certs.d/$PRIV_REG"
   sudo mkdir -p $DOCKER_CERTS_PATH
-  if [[ -f nginx-repo.crt || -f nginx-repo.key ]]; then
-    sudo cp nginx-repo.crt $DOCKER_CERTS_PATH/client.cert
-    sudo cp nginx-repo.key $DOCKER_CERTS_PATH/client.key
-  fi
 elif  [[ "$(uname -s)" == "Darwin" ]]; then
   DOCKER_CERTS_PATH="$HOME/.docker/certs.d/$PRIV_REG"
   mkdir -p $DOCKER_CERTS_PATH
-  if [[ -f nginx-repo.crt || -f nginx-repo.key ]]; then
-    cp nginx-repo.crt $DOCKER_CERTS_PATH/client.cert
-    cp nginx-repo.key $DOCKER_CERTS_PATH/client.key
-  fi
 fi
 
-# Add Private NGINX credentials to Docker
-sudo mkdir -p $DOCKER_CERTS_PATH
-sudo cp nginx-repo.crt $DOCKER_CERTS_PATH/client.cert
-sudo cp nginx-repo.key $DOCKER_CERTS_PATH/client.key
+if [[ -f nginx-repo.crt || -f nginx-repo.key ]]; then
+  cp nginx-repo.crt $DOCKER_CERTS_PATH/client.cert
+  cp nginx-repo.key $DOCKER_CERTS_PATH/client.key
+fi
 
 # Publish Private NGINX images to GCR
 docker pull $NGINX_IC_NAP_IMAGE:2.3.0
