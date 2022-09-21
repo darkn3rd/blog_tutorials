@@ -1,0 +1,39 @@
+repositories:
+  # https://artifacthub.io/packages/helm/bitnami/external-dns
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+
+releases:
+  - name: external-dns
+    namespace: kube-addons
+    chart: bitnami/external-dns
+    version: 6.8.1
+    values:
+      - provider: google
+        google:
+          zoneVisibility: public
+          project: {{ env "DNS_PROJECT_ID" }}
+        sources:
+          - crd
+          - service
+          - ingress
+        # use with NGINX VirtualServer CRD
+        crd:
+          create: false
+          apiversion: externaldns.nginx.org/v1
+          kind: DNSEndpoint
+        serviceAccount:
+          annotations:
+            # google workgroup identity annotation
+            iam.gke.io/gcp-service-account: {{ requiredEnv "DNS_SA_EMAIL" }}
+        nodeSelector:
+          # deploy on nodes that support workgroup identity
+          iam.gke.io/gke-metadata-server-enabled: "true"
+        logLevel: {{ env "EXTERNALDNS_LOG_LEVEL" | default "debug" }}
+        domainFilters:
+          - {{ requiredEnv "DNS_DOMAIN" }}
+        txtOwnerId: external-dns
+        rbac:
+          create: true
+          apiVersion: v1
+        policy: upsert-only

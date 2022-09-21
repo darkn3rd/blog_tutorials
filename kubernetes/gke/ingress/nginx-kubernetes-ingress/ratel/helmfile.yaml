@@ -1,0 +1,106 @@
+repositories:
+  # https://artifacthub.io/packages/helm/itscontained/raw
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: ratel
+    chart: itscontained/raw
+    namespace: ratel
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: dgraph-ratel
+            spec:
+              selector:
+                matchLabels:
+                  app: dgraph
+                  component: ratel
+              replicas: 1
+              template:
+                metadata:
+                  labels:
+                    app: dgraph
+                    component: ratel
+                spec:
+                  containers:
+                    - name: dgraph-ratel
+                      image: docker.io/dgraph/ratel:v21.03.2
+                      imagePullPolicy:
+                      command:
+                        - dgraph-ratel
+                      ports:
+                        - name: http-ratel
+                          containerPort: 8000
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: dgraph-ratel
+              labels:
+                app: dgraph
+                component: ratel
+            spec:
+              type: ClusterIP
+              ports:
+                - port: 80
+                  targetPort: 8000
+                  name: http-ratel
+              selector:
+                app: dgraph
+                component: ratel
+
+          {{- if eq (env "NGINX_CRD") "true" }}
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-http
+            spec:
+              host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+                - name: ratel
+                  service: dgraph-ratel
+                  port: 80
+              routes:
+                - path: /
+                  action:
+                    pass: ratel
+
+          {{- else }}
+          - apiVersion: networking.k8s.io/v1
+            kind: Ingress
+            metadata:
+              name: dgraph-ratel
+              labels:
+                app: dgraph
+                component: ratel
+              annotations:
+                cert-manager.io/cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+                kubernetes.io/ingress.class: nginx
+            spec:
+              tls:
+                - hosts:
+                    - ratel.{{ requiredEnv "DNS_DOMAIN" }}
+                  secretName: tls-secret
+              rules:
+                - host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
+                  http:
+                    paths:
+                      - backend:
+                          service:
+                            name:  dgraph-ratel
+                            port:
+                              number: 80
+                        pathType: ImplementationSpecific
+                        path: /
+          {{- end }}

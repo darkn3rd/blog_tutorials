@@ -1,0 +1,35 @@
+repositories:
+  # https://artifacthub.io/packages/helm/dgraph/dgraph/0.0.19
+  - name: dgraph
+    url: https://charts.dgraph.io
+
+
+releases:
+  - name: dgraph
+    namespace: dgraph
+    chart: dgraph/dgraph
+    version: 0.0.19
+    values:
+      - image:
+          tag: v21.03.2
+        alpha:
+          configFile:
+            config.yaml: |
+              security:
+                whitelist: {{ env "DG_ACCEPT_LIST" | default "0.0.0.0/0" | quote }}
+          service:
+            # gce-ingress created outside of k8s, cannot route to ClusterIP
+            type: NodePort
+        global:
+          ingress:
+            enabled: true
+            ingressClassName: null
+            annotations:
+              cert-manager.io/cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              # https://cloud.google.com/kubernetes-engine/docs/how-to/custom-ingress-controller#controller_summary
+              kubernetes.io/ingress.class: gce
+            tls:
+              - hosts:
+                  - dgraph.{{ requiredEnv "DNS_DOMAIN" }}
+                secretName: tls-secret
+            alpha_hostname: dgraph.{{ requiredEnv "DNS_DOMAIN" }}

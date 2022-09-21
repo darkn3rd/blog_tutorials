@@ -1,0 +1,64 @@
+repositories:
+  # https://artifacthub.io/packages/helm/itscontained/raw
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: ratel-virtualserver
+    chart: itscontained/raw
+    namespace: ratel
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-ratel-http
+            spec:
+              host: ratel.{{ requiredEnv "DNS_DOMAIN" }}
+              tls:
+                secret: tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+                - name: ratel
+                  service: dgraph-ratel
+                  port: 80
+              routes:
+                - path: /
+                  action:
+                    pass: ratel
+
+          {{- if eq (env "NSM_ACCESS_CONTROL_MODE") "deny" }}
+          - apiVersion: specs.smi-spec.io/v1alpha3
+            kind: HTTPRouteGroup
+            metadata:
+              name: ratel-route-group
+            spec:
+              matches:
+                - name: destination-traffic
+                  methods: ["*"]
+                  pathRegex: ".*"
+
+          - apiVersion: access.smi-spec.io/v1alpha2
+            kind: TrafficTarget
+            metadata:
+              name: ratel-traffic-target
+            spec:
+              destination:
+                kind: ServiceAccount
+                name: dgraph-ratel
+                namespace: ratel
+              rules:
+                - kind: HTTPRouteGroup
+                  name: ratel-route-group
+                  matches:
+                    - destination-traffic
+              sources:
+                - kind: ServiceAccount
+                  name: nginx-ingress-nginx-ingress
+                  namespace: kube-addons
+          {{- end }}

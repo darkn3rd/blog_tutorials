@@ -1,0 +1,31 @@
+repositories:
+  # https://artifacthub.io/packages/helm/nginx/nginx-service-mesh
+  - name: nginx-stable
+    url: https://helm.nginx.com/stable
+
+releases:
+  - name: nsm
+    namespace: nginx-mesh
+    chart: nginx-stable/nginx-service-mesh
+    values:
+      - prometheusAddress: prometheus.nsm-monitoring.svc:9090
+        telemetry:
+          exporters:
+            otlp:
+              host: otel-collector.nsm-monitoring.svc
+              port: 4317
+          samplerRatio: 1
+        tracing: {} 
+        # 'allow' or 'deny'
+        accessControlMode: {{ env "NSM_ACCESS_CONTROL_MODE" | default "allow" }}
+        mtls:
+          # 'strict' or 'permissive'
+          mode: {{ env "NSM_MTLS_MODE" | default "strict" }}
+        autoInjection:
+          {{- if eq (env "NSM_AUTO_INJECTION") "true" }}
+          disable: false
+          disabledNamespaces:
+            - nsm-monitoring
+          {{- else }}
+          disable: true
+          {{- end }}

@@ -1,0 +1,6 @@
+{
+    "op": "replace",
+    "field": {
+        "accessControlMode": "deny"
+    }
+}

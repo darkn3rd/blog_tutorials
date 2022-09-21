@@ -1,0 +1,73 @@
+repositories:
+  # https://artifacthub.io/packages/helm/cert-manager/cert-manager
+  - name: jetstack
+    url: https://charts.jetstack.io
+  # https://artifacthub.io/packages/helm/bitnami/external-dns
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  # https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+
+releases:
+  - name: external-dns
+    namespace: kube-addons
+    chart: bitnami/external-dns
+    version: 6.8.1
+    values:
+      - provider: google
+        google:
+          zoneVisibility: public
+          project: {{ env "DNS_PROJECT_ID" }}
+        serviceAccount:
+          annotations:
+            # google workgroup identity annotation
+            iam.gke.io/gcp-service-account: {{ requiredEnv "DNS_SA_EMAIL" }}
+        nodeSelector:
+          # deploy on nodes that support workgroup identity
+          iam.gke.io/gke-metadata-server-enabled: "true"
+        logLevel: {{ env "EXTERNALDNS_LOG_LEVEL" | default "debug" }}
+        domainFilters:
+          - {{ requiredEnv "DNS_DOMAIN" }}
+        txtOwnerId: external-dns
+        rbac:
+          create: true
+          apiVersion: v1
+        policy: upsert-only
+
+  - name: cert-manager
+    namespace: kube-addons
+    chart: jetstack/cert-manager
+    version: 1.9.1
+    values:
+      - installCRDs: true
+        extraArgs:
+          - --cluster-resource-namespace=kube-addons
+        global:
+          logLevel: 2
+        serviceAccount:
+          annotations:
+            # google workgroup identity annotation
+            iam.gke.io/gcp-service-account: {{ requiredEnv "DNS_SA_EMAIL" }}
+        nodeSelector:
+          # deploy on nodes that support workgroup identity
+          iam.gke.io/gke-metadata-server-enabled: "true"
+
+  - name: ingress-nginx
+    namespace: kube-addons
+    chart: ingress-nginx/ingress-nginx
+    version: 4.2.3
+    values:
+      - controller:
+          replicaCount: 1
+          nodeSelector:
+            kubernetes.io/os: linux
+          admissionWebhooks:
+            patch:
+              nodeSelector:
+                kubernetes.io/os: linux
+          service:
+            externalTrafficPolicy: Local
+        defaultBackend:
+          nodeSelector:
+            kubernetes.io/os: linux

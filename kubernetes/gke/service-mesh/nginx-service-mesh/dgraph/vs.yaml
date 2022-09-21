@@ -1,0 +1,108 @@
+repositories:
+  # https://artifacthub.io/packages/helm/itscontained/raw
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+  - name: dgraph-virtualservers
+    chart: itscontained/raw
+    namespace: dgraph
+    version:  0.2.5
+    disableValidation: true
+    values:
+      - resources:
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-http
+            spec:
+              host: dgraph.{{ requiredEnv "DNS_DOMAIN" }}
+              {{- if eq (env "NGINX_APP_PROTECT") "true" }}
+              policies:
+                - name: dgraph-policy
+              {{- end }}
+              tls:
+                secret: dgraph-tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+                - name: dgraph
+                  # Name of Service is '${RELEASE}-dgraph-alpha'
+                  service: dgraph-dgraph-alpha
+                  port: 8080
+              routes:
+                - path: /
+                  action:
+                    pass: dgraph
+
+          - apiVersion: k8s.nginx.org/v1
+            kind: VirtualServer
+            metadata:
+              name: dgraph-grpc
+              namespace: dgraph
+            spec:
+              host: grpc.{{ requiredEnv "DNS_DOMAIN" }}
+              {{- if eq (env "NGINX_APP_PROTECT") "true" }}
+              policies:
+                - name: dgraph-policy
+              {{- end }}
+              tls:
+                secret: grpc-tls-secret
+                cert-manager:
+                  cluster-issuer: {{ requiredEnv "ACME_ISSUER_NAME" }}
+              externalDNS:
+                enable: true
+              upstreams:
+                - name: grpc
+                  # Name of Service is '${RELEASE}-dgraph-alpha'
+                  service: dgraph-dgraph-alpha
+                  port: 9080
+                  type: grpc
+              routes:
+                - path: /
+                  action:
+                    pass: grpc
+
+          {{- if eq (env "NGINX_APP_PROTECT") "true" }}
+          - apiVersion: k8s.nginx.org/v1
+            kind: Policy
+            metadata:
+              name: dgraph-policy
+            spec:
+              accessControl:
+                allow:
+                  - {{ env "MY_IP_ADDRESS" | default "0.0.0.0/0" | quote }}
+          {{- end }}
+
+          {{- if eq (env "NSM_ACCESS_CONTROL_MODE") "deny" }}
+          - apiVersion: specs.smi-spec.io/v1alpha3
+            kind: HTTPRouteGroup
+            metadata:
+              name: dgraph-route-group
+            spec:
+              matches:
+                - name: destination-traffic
+                  methods: ["*"]
+                  pathRegex: ".*"
+
+          - apiVersion: access.smi-spec.io/v1alpha2
+            kind: TrafficTarget
+            metadata:
+              name: dgraph-traffic-target
+            spec:
+              destination:
+                kind: ServiceAccount
+                name: dgraph
+                namespace: dgraph
+              rules:
+                - kind: HTTPRouteGroup
+                  name: dgraph-route-group
+                  matches:
+                    - destination-traffic
+              sources:
+                - kind: ServiceAccount
+                  name: nginx-ingress-nginx-ingress
+                  namespace: kube-addons
+          {{- end }}

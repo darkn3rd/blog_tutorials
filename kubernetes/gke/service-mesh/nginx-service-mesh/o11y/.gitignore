@@ -1,0 +1,4 @@
+grafana.yaml
+jaeger.yaml
+otel-collector.yaml
+prometheus.yaml
