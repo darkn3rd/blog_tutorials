@@ -1,0 +1,32 @@
+repositories:
+  # https://artifacthub.io/packages/helm/hashicorp/consul
+  - name: hashicorp
+    url: https://helm.releases.hashicorp.com
+
+releases:
+  - name: consul
+    namespace: consul
+    chart: hashicorp/consul
+    version: 0.48.0
+    values:
+      - global:
+          name: consul
+        connectInject:
+          enabled: true
+          # enable service mesh on select namespaces
+          default: true
+          # limit name spaces with designated label
+          namespaceSelector: |
+            matchLabels:
+              connect-inject : enabled
+        controller:
+          enabled: true
+        # enable the Consul CNI plugin
+        # https://www.consul.io/docs/k8s/installation/install#enable-the-consul-cni-plugin
+        {{- if eq (env "CONSUL_ENABLE_CNI") "true" }}
+        cni:
+          enabled: true
+          logLevel: info
+          cniBinDir: "/home/kubernetes/bin"
+          cniNetDir: "/etc/cni/net.d"
+        {{- end}}
