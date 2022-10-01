@@ -1,0 +1,22 @@
+openapi: "3.0.0"
+
+info:
+  title: Pydgraph Client
+  version: "1.0"
+servers:
+  - url: http://localhost:5000/
+
+paths:
+  /health:
+    get:
+      summary: Health
+      description: Returns ok if the server is running
+      operationId: greeter_server.health
+      responses:
+        200:
+          description: health response
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "ok"

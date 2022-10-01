@@ -1,0 +1,4 @@
+certifi==2022.6.15
+grpcio==1.47.2
+grpcio-reflection==1.47.2
+protobuf==3.20.1
