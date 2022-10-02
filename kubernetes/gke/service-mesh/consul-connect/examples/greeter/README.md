@@ -2,13 +2,15 @@
 
 This code is based on example from gRPC's [Python/Getting Started](https://grpc.io/docs/languages/python/quickstart/) and Connexion’s [Quickstart](https://connexion.readthedocs.io/en/latest/quickstart.html).  The gRPC example supports reflection and HTTP example support's the Swagger UI.
 
-## Running
+## Running the Server
 
 ### Pyenv + Virtualenv
 
 ```bash
 pyenv virtualenv $PYTHON_VERSION greeter-$PYTHON_VERSION
 pyenv shell greeter-$PYTHON_VERSION
+pip install -r requirements.txt
+python greeter_server.py
 ```
 
 ### Docker
@@ -27,15 +29,9 @@ docker tag greeter-server:latest ${DOCKER_REGISTRY}/greeter-server:latest
 docker push ${DOCKER_REGISTRY}/greeter-server:latest
 ```
 
+## Testing the client
 
-
-# Running the Server
-
-```bash
-python greeter_server.py
-```
-
-# Testing the client
+### Pyenv + Virtualenv
 
 ```bash
 grpcurl -plaintext -d '{ "name": "Michihito" }' localhost:9080 helloworld.Greeter/SayHello
@@ -44,12 +40,20 @@ grpcurl -plaintext -d '{ "name": "Michihito" }' localhost:9080 helloworld.Greete
 # }
 
 curl localhost:8080/SayHello/Michihito
-# Hello, Michihito!(
+# Hello, Michihito!
 ```
 
-# Getting Information on API
+### Docker
 
-## gRPC Reflectoin
+```bash
+docker run -t --name greeter_client greeter-server:latest \
+  curl localhost:8080/SayHello/Michihito
+```
+
+
+# Getting Information about API
+
+## gRPC Reflection
 
 ```bash
 grpcurl -plaintext localhost:9080 list
@@ -65,3 +69,36 @@ grpcurl -plaintext localhost:9080 describe .helloworld.HelloRequest
 #   string name = 1;
 # }
 ```
+
+## OpenAPI
+
+```bash
+curl localhost:8080/ui
+```
+
+
+# Testing on Kubernetes
+
+1. Deploy Server and Client:
+   ```bash
+   helmfile --file deploy/deploy.yaml apply
+   ```
+2. Exec into container:
+   ```bash
+   GREETER_CLIENT_POD=$(kubectl get pods \
+     --selector app=greeter-client \
+     --namespace greeter-client \
+     --output name
+   )
+   kubectl exec --tty --stdin \
+     --container "greeter-client" \
+     --namespace "greeter-client" \
+     $GREETER_CLIENT_POD \
+     -- bash
+   ```
+3. Run test:
+   ```bash
+   SERVER="greeter-server.greeter-server.svc.cluster.local"
+   grpcurl -plaintext -d '{ "name": "Michihito" }' $SERVER:9080 helloworld.Greeter/SayHello
+   curl $SERVER:8080/SayHello/Michihito
+   ```
