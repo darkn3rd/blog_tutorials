@@ -15,13 +15,30 @@ releases:
           extraAnnotations:
             consul.hashicorp.com/connect-inject: 'true'
             consul.hashicorp.com/transparent-proxy: 'true'
+            consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "5080,7080"
+            consul.hashicorp.com/transparent-proxy-exclude-outbound-ports: "5080,7080"
         alpha:
           extraAnnotations:
             consul.hashicorp.com/connect-inject: 'true'
             consul.hashicorp.com/transparent-proxy: 'true'
+            consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "5080,7080"
+            consul.hashicorp.com/transparent-proxy-exclude-outbound-ports: "5080,7080"
           configFile:
             config.yaml: |
               security:
                 whitelist: {{ env "DG_ACCEPT_LIST" | default "0.0.0.0/0" | quote }}
           service:
             type: ClusterIP
+    strategicMergePatches:
+      - apiVersion: v1
+        kind: Service
+        metadata:
+          name: dgraph-dgraph-alpha-headless
+          labels:
+            consul.hashicorp.com/service-ignore: 'true'
+      - apiVersion: v1
+        kind: Service
+        metadata:
+          name: dgraph-dgraph-zero-headless
+          labels:
+            consul.hashicorp.com/service-ignore: 'true'
