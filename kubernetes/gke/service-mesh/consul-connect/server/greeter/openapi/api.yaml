@@ -4,7 +4,7 @@ info:
   title: Pydgraph Client
   version: "1.0"
 servers:
-  - url: http://localhost:5000/
+  - url: http://localhost:8080/
 
 paths:
   /health:
@@ -20,3 +20,23 @@ paths:
               schema:
                 type: string
                 example: "ok"
+  /SayHello/{name}:
+      get:
+        summary: Says Hello Name
+        description: Returns Hello, {name}!
+        operationId: greeter_server.SayHello
+        parameters:
+          - name: name
+            in: path
+            description: Name to return
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: successful operation
+            content:
+              text/plain:
+                schema:
+                  type: string
+                  example: "Hello {Name}!"

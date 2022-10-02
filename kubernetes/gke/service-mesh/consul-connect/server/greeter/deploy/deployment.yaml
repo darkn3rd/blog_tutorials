@@ -1,0 +1,95 @@
+repositories:
+  - name: itscontained
+    url: https://charts.itscontained.io
+
+releases:
+
+  - name: greeter-server
+    chart: itscontained/raw
+    namespace: greeter-server
+    version:  0.2.5
+    values:
+      - resources:
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              # This name will be the service name in Consul.
+              name: greeter-server
+            spec:
+              selector:
+                app: greeter-server
+              ports:
+                - protocol: TCP
+                  port: 8080
+                  targetPort: 8080
+                - protocol: TCP
+                  port: 9080
+                  targetPort: 9080
+
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: greeter-server
+            spec:
+              replicas: {{ env "GREETER_REPLICAS" | default 1 }}
+              selector:
+                matchLabels:
+                  app: greeter-server
+              template:
+                metadata:
+                  name: greeter-server
+                  labels:
+                    app: greeter-server
+                  annotations:
+                    'consul.hashicorp.com/connect-inject': 'true'
+                spec:
+                  containers:
+                    - name: greeter-server
+                      image: {{ requiredEnv "DOCKER_REGISTRY" }}/greeter-server
+                      ports:
+                        - containerPort: 9080
+                          name: grpc
+                        - containerPort: 8080
+                          name: http
+
+
+  - name: greeter-client
+    chart: itscontained/raw
+    namespace: greeter-client
+    version:  0.2.5
+    values:
+      - resources:
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              # This name will be the service name in Consul.
+              name: greeter-client
+            spec:
+              selector:
+                app: greeter-client
+              ports:
+                - port: 80
+
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: greeter-client
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: greeter-client
+              template:
+                metadata:
+                  name: greeter-client
+                  labels:
+                    app: greeter-client
+                  annotations:
+                    'consul.hashicorp.com/connect-inject': 'true'
+                spec:
+                  containers:
+                    - name: greeter-client
+                      image: {{ requiredEnv "DOCKER_REGISTRY" }}/greeter-server
+                      # Just spin & wait forever, we'll use `kubectl exec` to demo
+                      command: ['/bin/sh', '-c', '--']
+                      args: ['while true; do sleep 30; done;']

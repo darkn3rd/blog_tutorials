@@ -25,6 +25,11 @@ import connexion
 def health() -> str:
     return 'ok\n'
 
+
+def SayHello(name) -> str:
+    return 'Hello, %s!\n' % name
+
+
 app = connexion.FlaskApp(__name__, specification_dir='openapi/')
 @app.route('/')
 def default() -> str:
