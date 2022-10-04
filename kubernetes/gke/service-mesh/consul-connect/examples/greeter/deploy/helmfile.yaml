@@ -123,8 +123,10 @@ releases:
                   name: greeter-client
                   labels:
                     app: greeter-client
+                  {{- if eq (env "CCSM_ENABLED") "true" }}
                   annotations:
                     'consul.hashicorp.com/connect-inject': 'true'
+                  {{- end }}
                 spec:
                   containers:
                     - name: greeter-client
