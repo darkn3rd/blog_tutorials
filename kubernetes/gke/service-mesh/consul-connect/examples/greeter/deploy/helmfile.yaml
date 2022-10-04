@@ -10,6 +10,24 @@ releases:
     version:  0.2.5
     values:
       - resources:
+          # - apiVersion: v1
+          #   kind: Service
+          #   metadata:
+          #     # This name will be the service name in Consul.
+          #     name: greeter-server
+          #   spec:
+          #     selector:
+          #       app: greeter-server
+          #     ports:
+          #       - protocol: TCP
+          #         port: 8080
+          #         targetPort: 8080
+          #         name: http
+          #       - protocol: TCP
+          #         port: 9080
+          #         targetPort: 9080
+          #         name: grpc
+
           - apiVersion: v1
             kind: Service
             metadata:
@@ -23,10 +41,30 @@ releases:
                   port: 8080
                   targetPort: 8080
                   name: http
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              # This name will be the service name in Consul.
+              name: greeter-server-grpc
+            spec:
+              selector:
+                app: greeter-server
+              ports:
                 - protocol: TCP
                   port: 9080
                   targetPort: 9080
                   name: grpc
+
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: greeter-server
+
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: greeter-server-grpc
 
           - apiVersion: apps/v1
             kind: Deployment
@@ -42,8 +80,13 @@ releases:
                   name: greeter-server
                   labels:
                     app: greeter-server
+                  # https://github.com/hashicorp/consul-k8s/releases/tag/v0.41.0
+                  # https://www.consul.io/docs/k8s/connect#kubernetes-pods-with-multiple-ports
                   annotations:
                     'consul.hashicorp.com/connect-inject': 'true'
+                    'consul.hashicorp.com/connect-service': 'greeter-server,greeter-server-grpc'
+                    'consul.hashicorp.com/connect-service-port': '8080,9080'
+                    'consul.hashicorp.com/transparent-proxy': 'false'
                 spec:
                   containers:
                     - name: greeter-server
@@ -53,7 +96,7 @@ releases:
                           name: grpc
                         - containerPort: 8080
                           name: http
-
+                  serviceAccountName: greeter-server
 
   - name: greeter-client
     chart: itscontained/raw
@@ -71,6 +114,11 @@ releases:
                 app: greeter-client
               ports:
                 - port: 80
+
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: greeter-client
 
           - apiVersion: apps/v1
             kind: Deployment
@@ -95,3 +143,4 @@ releases:
                       # Just spin & wait forever, we'll use `kubectl exec` to demo
                       command: ['/bin/sh', '-c', '--']
                       args: ['while true; do sleep 30; done;']
+                  serviceAccountName: greeter-client
