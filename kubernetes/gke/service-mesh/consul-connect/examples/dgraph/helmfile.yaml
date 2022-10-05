@@ -2,12 +2,39 @@ repositories:
   # https://artifacthub.io/packages/helm/dgraph/dgraph/0.0.19
   - name: dgraph
     url: https://charts.dgraph.io
+  - name: itscontained
+    url: https://charts.itscontained.io
 
 releases:
+  - name: dgraph-extra
+    chart: itscontained/raw
+    namespace: dgraph
+    version:  0.2.5
+    values:
+      - resources:
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: dgraph-dgraph-alpha-grpc
+            spec:
+              ports:
+              - name: grpc-alpha
+                port: 9080
+              publishNotReadyAddresses: true
+              selector:
+                app: dgraph
+                chart: dgraph-0.0.19
+                component: alpha
+                release: dgraph
+              type: ClusterIP
+
+
   - name: dgraph
     namespace: dgraph
     chart: dgraph/dgraph
     version: 0.0.19
+    needs:
+      - dgraph/dgraph-extra
     values:
       - image:
           tag: v21.03.2
@@ -42,3 +69,22 @@ releases:
           name: dgraph-dgraph-zero-headless
           labels:
             consul.hashicorp.com/service-ignore: 'true'
+    jsonPatches:
+      - target:
+          version: v1
+          kind: Service
+          name: dgraph-dgraph-alpha
+          # namespace: dgraph
+        patch:
+          - op: remove
+            path: /spec/ports/1
+
+      # - apiVersion: v1
+      #   kind: Service
+      #   metadata:
+      #     name: dgraph-dgraph-alpha
+      #   spec:
+      #     ports:
+      #     - name: http-alpha
+      #       port: 8080
+      #       targetPort: 8080
