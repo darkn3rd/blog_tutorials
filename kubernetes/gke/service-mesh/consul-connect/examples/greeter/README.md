@@ -81,6 +81,7 @@ curl localhost:8080/ui
 
 1. Deploy Server and Client:
    ```bash
+   export CCSM_ENABLED=true
    helmfile --file deploy/deploy.yaml apply
    ```
 2. Exec into container:
@@ -98,7 +99,10 @@ curl localhost:8080/ui
    ```
 3. Run test:
    ```bash
-   SERVER="greeter-server.greeter-server.svc.cluster.local"
-   grpcurl -plaintext -d '{ "name": "Michihito" }' $SERVER:9080 helloworld.Greeter/SayHello
-   curl $SERVER:8080/SayHello/Michihito
+   NS="greeter_server"
+   HTTP_SERVER="greeter-server.$NS.svc.cluster.local"
+   GRPC_SERVER="greeter-server-grpc.$NS.svc.cluster.local"
+
+   grpcurl -plaintext -d '{ "name": "Michihito" }' $GRPC_SERVER:9080 helloworld.Greeter/SayHello
+   curl $HTTP_SERVER:8080/SayHello/Michihito
    ```

@@ -125,7 +125,9 @@ releases:
                     app: greeter-client
                   {{- if eq (env "CCSM_ENABLED") "true" }}
                   annotations:
-                    'consul.hashicorp.com/connect-inject': 'true'
+                    consul.hashicorp.com/connect-inject: 'true'
+                    consul.hashicorp.com/connect-service-upstreams: >-
+                      greeter-server:8080,greeter-server-grpc:9080
                   {{- end }}
                 spec:
                   containers:
