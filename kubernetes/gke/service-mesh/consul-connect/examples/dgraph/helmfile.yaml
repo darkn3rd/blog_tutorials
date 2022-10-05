@@ -28,7 +28,6 @@ releases:
                 release: dgraph
               type: ClusterIP
 
-
   - name: dgraph
     namespace: dgraph
     chart: dgraph/dgraph
@@ -41,15 +40,16 @@ releases:
         zero:
           extraAnnotations:
             consul.hashicorp.com/connect-inject: 'true'
-            consul.hashicorp.com/transparent-proxy: 'true'
+            consul.hashicorp.com/transparent-proxy: 'false'
             consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "5080,7080"
             consul.hashicorp.com/transparent-proxy-exclude-outbound-ports: "5080,7080"
         alpha:
           extraAnnotations:
             consul.hashicorp.com/connect-inject: 'true'
-            consul.hashicorp.com/transparent-proxy: 'true'
+            consul.hashicorp.com/transparent-proxy: 'false'
             consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "5080,7080"
             consul.hashicorp.com/transparent-proxy-exclude-outbound-ports: "5080,7080"
+            consul.hashicorp.com/connect-service: 'dgraph-dgraph-alpha,dgraph-dgraph-alpha-grpc'
           configFile:
             config.yaml: |
               security:
@@ -74,17 +74,6 @@ releases:
           version: v1
           kind: Service
           name: dgraph-dgraph-alpha
-          # namespace: dgraph
         patch:
           - op: remove
             path: /spec/ports/1
-
-      # - apiVersion: v1
-      #   kind: Service
-      #   metadata:
-      #     name: dgraph-dgraph-alpha
-      #   spec:
-      #     ports:
-      #     - name: http-alpha
-      #       port: 8080
-      #       targetPort: 8080
