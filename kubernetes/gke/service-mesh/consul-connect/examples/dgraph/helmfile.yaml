@@ -2,6 +2,7 @@ repositories:
   # https://artifacthub.io/packages/helm/dgraph/dgraph/0.0.19
   - name: dgraph
     url: https://charts.dgraph.io
+  # https://artifacthub.io/packages/helm/itscontained/raw
   - name: itscontained
     url: https://charts.itscontained.io
 
