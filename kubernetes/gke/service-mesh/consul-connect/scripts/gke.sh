@@ -23,10 +23,13 @@ done
 
 #######################
 # GKE with least priv. GSA + Workgroup Identity
+# NOTES: e2-medium = max 6 injected pods
 ##########################################
 gcloud container clusters create $GKE_CLUSTER_NAME \
   --project $GKE_PROJECT_ID --region $GKE_REGION --num-nodes 1 \
   --service-account "$GKE_SA_EMAIL" \
+  --machine-type "e2-standard-2" \
+  --enable-ip-alias \
   --workload-pool "$GKE_PROJECT_ID.svc.id.goog"
 
 #######################

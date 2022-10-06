@@ -1,0 +1,87 @@
+repositories:
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+
+releases:
+  - name: grafana
+    namespace: grafana
+    chart: grafana/grafana
+    version: 6.23.1
+    values:
+      - adminPassword: password
+        rbac:
+          create: false
+          pspEnabled: false
+        # Disable test pods
+        testFramework:
+          enabled: false
+        podLabels:
+          app: grafana
+        podAnnotations:
+          "consul.hashicorp.com/connect-inject": "false"
+        service:
+          port: 3000
+        # Configure the prometheus data source. We expect prometheus:9090 in the same namespace.
+        datasources:
+          datasources.yaml:
+            apiVersion: 1
+            datasources:
+              - name: Prometheus
+                type: prometheus
+                orgId: 1
+                url: http://prometheus-server.prometheus.svc.cluster.local
+                access: proxy
+                isDefault: true
+                jsonData:
+                  timeInterval: 5s
+                editable: true
+
+
+  - name: prometheus
+    namespace: prometheus
+    chart: prometheus-community/prometheus
+    version: 15.5.3
+    values:
+      - global:
+          scrape_interval:  5s
+          scrape_timeout: 3s
+        server:
+          podAnnotations:
+            "consul.hashicorp.com/connect-inject": "false"
+          readinessProbeInitialDelay: 0
+          securityContext:
+            runAsUser: 65534
+            runAsNonRoot: true
+            runAsGroup: 655
+          persistentVolume:
+            enabled: false
+        alertmanager:
+          enabled: false
+        nodeExporter:
+          podAnnotations:
+            "consul.hashicorp.com/connect-inject": "false"
+        pushgateway:
+          podAnnotations:
+            "consul.hashicorp.com/connect-inject": "false"
+        kube-state-metrics:
+          podAnnotations:
+            "consul.hashicorp.com/connect-inject": "false"
+        serviceAccounts:
+          alertmanager:
+            create: true
+            name:
+            annotations: {}
+          nodeExporter:
+            create: true
+            name:
+            annotations: {}
+          pushgateway:
+            create: true
+            name:
+            annotations: {}
+          server:
+            create: true
+            name:
+            annotations: {}

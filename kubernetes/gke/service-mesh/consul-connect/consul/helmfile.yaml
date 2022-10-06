@@ -11,11 +11,22 @@ releases:
     values:
       - global:
           name: consul
+          datacenter: dc1
+          {{- if eq (env "CCSM_METRICS_ENABLED") "true" }}
+          metrics:
+            enabled: true
+            enableAgentMetrics: true
+            agentMetricsRetentionTime: "1m"
+          {{- end }}
         connectInject:
           enabled: true
         controller:
           enabled: true
         ui:
           enabled: true
-          service:
-            type: LoadBalancer
+          {{- if eq (env "CCSM_METRICS_ENABLED") "true" }}
+          metrics:
+            enabled: true
+            provider: prometheus
+            baseURL: http://prometheus-server.prometheus.svc.cluster.local
+          {{- end }}
