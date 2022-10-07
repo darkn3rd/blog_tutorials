@@ -12,7 +12,7 @@ gsutil iam ch \
 
 # deploy ccsm
 helmfile --file ./consul/helmfile.yaml apply
-helmfile --file ./o11y/helmfile.yaml apply
+#helmfile --file ./o11y/helmfile.yaml apply
 
 # deploy dgraph
 helmfile --file ./examples/dgraph/helmfile.yaml apply
@@ -22,7 +22,7 @@ git clone --depth 1 --branch "consul" git@github.com:darkn3rd/pydgraph-client.gi
 popd
 
 # deploy negative test
-unset CSM_ENABLED
+unset CCSM_ENABLED
 helmfile --file ./examples/pydgraph-client/helmfile.yaml --namespace pydgraph-no-mesh apply
 
 # deploy pydgraph-client
@@ -72,8 +72,8 @@ kubectl delete pvc --selector app=dgraph --namespace "dgraph"
 helmfile --file ./consul/helmfile.yaml delete
 kubectl delete pvc --selector app=consul --namespace "consul"
 
-helmfile --file ./client/examples/pydgraph/helmfile.yaml --namespace "pydgraph-no-mesh" delete
-helmfile --file ./clients/examples/pydgraph/helmfile.yaml delete
+helmfile --file ./examples/pydgraph-client/helmfile.yaml --namespace "pydgraph-no-mesh" delete
+helmfile --file ./examples/pydgraph-client/helmfile.yaml delete
 
 # cloud resources
 gcloud container clusters delete $GKE_CLUSTER_NAME \

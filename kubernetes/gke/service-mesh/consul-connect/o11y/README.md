@@ -1,3 +1,6 @@
+# Observability
+
+Currently observability will not work with multi-port services.
 
 # Grafana
 

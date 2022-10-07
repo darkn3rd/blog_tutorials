@@ -12,12 +12,24 @@ releases:
       - global:
           name: consul
           datacenter: dc1
+          tls:
+            enabled: true
+            enableAutoEncrypt: true
+            verify: true
+          gossipEncryption:
+            autoGenerate: true
+          acls:
+            manageSystemACLs: true
           {{- if eq (env "CCSM_METRICS_ENABLED") "true" }}
           metrics:
             enabled: true
             enableAgentMetrics: true
             agentMetricsRetentionTime: "1m"
           {{- end }}
+        server:
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
         connectInject:
           enabled: true
         controller:
