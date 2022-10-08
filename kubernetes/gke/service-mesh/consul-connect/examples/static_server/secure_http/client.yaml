@@ -1,0 +1,46 @@
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: static-client
+spec:
+  protocol: 'http'
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: static-client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: static-client
+spec:
+  selector:
+    app: static-client
+  ports:
+    - port: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: static-client
+  name: static-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: static-client
+  template:
+    metadata:
+      annotations:
+        consul.hashicorp.com/connect-inject: 'true'
+      labels:
+        app: static-client
+    spec:
+      serviceAccountName: static-client
+      containers:
+        - name: static-client
+          image: rancher/curlimages-curl:7.73.0
+          command: ['/bin/sh', '-c', '--']
+          args: ['while true; do sleep 30; done;']
