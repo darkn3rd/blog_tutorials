@@ -1,13 +1,13 @@
 repositories:
-  # https://artifacthub.io/packages/helm/itscontained/raw
-  - name: itscontained
-    url: https://charts.itscontained.io
+  # https://artifacthub.io/packages/helm/main/raw
+  - name: bedag
+    url: https://bedag.github.io/helm-charts/
 
 releases:
   - name: pydgraph-client
-    chart: itscontained/raw
+    chart: bedag/raw
     namespace: pydgraph-client
-    version:  0.2.5
+    version:  1.1.0
     values:
       - resources:
           - apiVersion: v1
@@ -35,11 +35,14 @@ releases:
                     ports:
                       - containerPort: 5000
                     env:
+                      {{- if eq (env "CCSM_ENABLED") "true" }}
+                      - name: DGRAPH_ALPHA_SERVER
+                        value: localhost
+                      - name: DGRAPH_GRPC_SERVER
+                        value: localhost
+                      {{- else }}
                       - name: DGRAPH_ALPHA_SERVER
                         value: {{ env "DGRAPH_RELEASE" | default "dgraph" }}-dgraph-alpha.{{ env "DGRAPH_NS" | default "dgraph" }}.svc.cluster.local
-                      {{- if eq (env "CCSM_ENABLED") "true" }}
-                      - name: DGRAPH_GRPC_SERVER
-                        value: {{ env "DGRAPH_RELEASE" | default "dgraph" }}-dgraph-alpha-grpc.{{ env "DGRAPH_NS" | default "dgraph" }}.svc.cluster.local
                       {{- end }}
                     resources:
                       requests:

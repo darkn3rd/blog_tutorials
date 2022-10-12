@@ -2,16 +2,16 @@ repositories:
   # https://artifacthub.io/packages/helm/dgraph/dgraph/0.0.19
   - name: dgraph
     url: https://charts.dgraph.io
-  # https://artifacthub.io/packages/helm/itscontained/raw
-  - name: itscontained
-    url: https://charts.itscontained.io
+  # https://artifacthub.io/packages/helm/main/raw
+  - name: bedag
+    url: https://bedag.github.io/helm-charts/
 
 releases:
   # Dgraph additional resources required to support Consul
   - name: dgraph-extra
-    chart: itscontained/raw
+    chart: bedag/raw
     namespace: dgraph
-    version:  0.2.5
+    version:  1.1.0
     values:
       - resources:
           - apiVersion: v1
@@ -69,6 +69,7 @@ releases:
             consul.hashicorp.com/transparent-proxy: 'false'
             # use these registered consul services for different ports
             consul.hashicorp.com/connect-service: 'dgraph-dgraph-alpha,dgraph-dgraph-alpha-grpc'
+            consul.hashicorp.com/connect-service-port: '8080,9080'
             consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "5080,7080"
             consul.hashicorp.com/transparent-proxy-exclude-outbound-ports: "5080,7080"
           configFile:
