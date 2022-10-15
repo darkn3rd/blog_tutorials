@@ -84,6 +84,9 @@ These are code related to tutorials created.
               * PodSubnet preview w/ Azure CNI plugin (`az`) - https://joachim8675309.medium.com/aks-with-azure-cni-ae36712b1e8c
           * Terraform
               * Basic AKS (`terraform`) - https://joachim8675309.medium.com/building-aks-with-terraform-662a61acb59c
+      * External DNS + Security
+          * ExternalDNS/AzureDNS 1 (kubelet identity) - https://joachim8675309.medium.com/externaldns-with-aks-azure-dns-941a1804dc88
+          * ExternalDNS/AzureDNS 2 (static credentials)- https://joachim8675309.medium.com/externaldns-w-aks-azure-dns-2-316142fa006f
       * Managing Endpoints: service and ingress
           * external-dns - https://joachim8675309.medium.com/extending-aks-with-external-dns-3da2703b9d52
           * ingress-nginx - https://joachim8675309.medium.com/aks-with-ingress-nginx-7c51da500f69
@@ -101,14 +104,32 @@ These are code related to tutorials created.
       * Terraform with K8S Provider - https://joachim8675309.medium.com/deploy-kubernetes-apps-w-terraform-266f3e8028d2
       * Nginx Ingress - https://joachim8675309.medium.com/adding-ingress-with-amazon-eks-6c4379803b2
       * ALB Ingress - https://joachim8675309.medium.com/alb-ingress-with-amazon-eks-3d84cf822c85
+      * External DNS + Security
+        * ExternalDNS/Route53 1 (EC2 IAM Role)- https://joachim8675309.medium.com/externaldns-with-eks-and-route53-90aa23fa3aba
+        * ExternalDNS/Route53 2 (static credentials) - https://joachim8675309.medium.com/externaldns-w-eks-and-route53-pt2-e94c705f62ae
+        * ExternalDNS/Route53 3 (IAM Role to Service Account) - https://joachim8675309.medium.com/externaldns-w-eks-and-route53-pt3-9a71ab08c6bb
   * GKE
-      * GKE with Gcloud SDK (`gcloud`) - https://medium.com/swlh/building-a-gke-with-cloud-sdk-99fee12bf0a6
-      * GKE with Terraform (`terraform`) - https://joachim8675309.medium.com/building-gke-with-terraform-869df1cd3f41
-      * Enpoint with Service or Ingress (`kubectl`) - https://medium.com/google-cloud/deploying-service-or-ingress-on-gke-59a49b134e3b
-      * Managed SSL (`kubectl`) - https://joachim8675309.medium.com/securing-gke-with-managed-ssl-4261ce2d5228
-      * ExternalDNS (`helm`) - https://medium.com/swlh/extending-gke-with-externaldns-d02c09157793
-      * Terraform with K8S Provider - https://joachim8675309.medium.com/deploy-kubernetes-apps-with-terraform-5b74e5891958
-      * Terraform with Helm Provider - https://medium.com/swlh/deploying-helm-charts-w-terraform-58bd3a690e55
+      * Early Articles
+        * GKE with Gcloud SDK (`gcloud`) - https://medium.com/swlh/building-a-gke-with-cloud-sdk-99fee12bf0a6
+        * GKE with Terraform (`terraform`) - https://joachim8675309.medium.com/building-gke-with-terraform-869df1cd3f41
+        * Endpoint with Service or Ingress (`kubectl`) - https://medium.com/google-cloud/deploying-service-or-ingress-on-gke-59a49b134e3b
+        * Managed SSL (`kubectl`) - https://joachim8675309.medium.com/securing-gke-with-managed-ssl-4261ce2d5228
+        * ExternalDNS (`helm`) - https://medium.com/swlh/extending-gke-with-externaldns-d02c09157793
+        * Terraform with K8S Provider - https://joachim8675309.medium.com/deploy-kubernetes-apps-with-terraform-5b74e5891958
+        * Terraform with Helm Provider - https://medium.com/swlh/deploying-helm-charts-w-terraform-58bd3a690e55
+      * Continuous Integration
+        * TeamCity Server (`gcloud`) - https://joachim8675309.medium.com/teamcity-on-google-cloud-b6d61eb0902d
+      * External DNS + Security
+        * ExternalDNS/CloudDNS 1 (worker node GSA) -https://joachim8675309.medium.com/externaldns-with-gke-cloud-dns-38a174fdced7
+        * ExternalDNS/CloudDNS 2 (static credentials): https://joachim8675309.medium.com/externaldns-w-gke-cloud-dns-2-1226a00d01c0
+      * Ingress Controller (north-south traffic)
+        * NGINX Kubernetes Ingress Controller w gRPC - https://faun.pub/extending-gke-with-nginx-ic-2ae86a96de18
+        * ingress-nginx w gRPC - https://joachim8675309.medium.com/gke-with-grpc-and-ingress-nginx-644730915677
+        * gce-ingress w cert-manager - https://joachim8675309.medium.com/gke-with-certmanager-9bc00b086b73
+      * Service Mesh (east-west traffic)
+        * Consul Service Mesh - https://joachim8675309.medium.com/gke-with-consul-service-mesh-36598242d278
+        * NGINX Service Mesh + NGINX Kubernetes Ingress Controller - https://joachim8675309.medium.com/gke-with-nginx-service-mesh-2-57bb2e6f823a
+        * NGINX Service Mesh - https://joachim8675309.medium.com/gke-with-nginx-service-mesh-8b1073af07bf
 
 * O11Y or Observability (Visualization, Alerting, Metrics, Logs, Traces)
     * Logs
