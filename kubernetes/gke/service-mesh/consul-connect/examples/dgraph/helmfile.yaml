@@ -1,0 +1,127 @@
+repositories:
+  # https://artifacthub.io/packages/helm/dgraph/dgraph/0.0.19
+  - name: dgraph
+    url: https://charts.dgraph.io
+  # https://artifacthub.io/packages/helm/main/raw
+  - name: bedag
+    url: https://bedag.github.io/helm-charts/
+
+releases:
+  # Dgraph additional resources required to support Consul
+  - name: dgraph-extra
+    chart: bedag/raw
+    namespace: dgraph
+    version:  1.1.0
+    values:
+      - resources:
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: dgraph-dgraph-zero
+
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: dgraph-dgraph-alpha
+
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: dgraph-dgraph-alpha-grpc
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: dgraph-dgraph-alpha-grpc
+            spec:
+              ports:
+              - name: grpc-alpha
+                port: 9080
+              publishNotReadyAddresses: true
+              selector:
+                app: dgraph
+                chart: dgraph-0.0.19
+                component: alpha
+                release: dgraph
+              type: ClusterIP
+
+  # Dgraph cluster with 2 x StatefulSet (3 Zero pods, 3 Alpha pods)
+  - name: dgraph
+    namespace: dgraph
+    chart: dgraph/dgraph
+    version: 0.0.19
+    needs:
+      - dgraph/dgraph-extra
+    values:
+      - image:
+          tag: v21.03.2
+        zero:
+          extraAnnotations:
+            consul.hashicorp.com/connect-inject: 'true'
+            # disable transparent-proxy for multi-port services
+            consul.hashicorp.com/transparent-proxy: 'false'
+            consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "5080,7080"
+            consul.hashicorp.com/transparent-proxy-exclude-outbound-ports: "5080,7080"
+        alpha:
+          extraAnnotations:
+            consul.hashicorp.com/connect-inject: 'true'
+            # disable transparent-proxy for multi-port services
+            consul.hashicorp.com/transparent-proxy: 'false'
+            # use these registered consul services for different ports
+            consul.hashicorp.com/connect-service: 'dgraph-dgraph-alpha,dgraph-dgraph-alpha-grpc'
+            consul.hashicorp.com/connect-service-port: '8080,9080'
+            consul.hashicorp.com/transparent-proxy-exclude-inbound-ports: "5080,7080"
+            consul.hashicorp.com/transparent-proxy-exclude-outbound-ports: "5080,7080"
+          configFile:
+            config.yaml: |
+              security:
+                whitelist: {{ env "DG_ACCEPT_LIST" | default "0.0.0.0/0" | quote }}
+
+    # patch existing resources using merge patches
+    strategicMergePatches:
+      # add serviceAccountName to Alpha StatefulSet
+      - apiVersion: apps/v1
+        kind: StatefulSet
+        metadata:
+          name: dgraph-dgraph-alpha
+        spec:
+          template:
+            spec:
+              serviceAccountName: dgraph-dgraph-alpha
+
+      # add serviceAccountName to Zero StatefulSet
+      - apiVersion: apps/v1
+        kind: StatefulSet
+        metadata:
+          name: dgraph-dgraph-zero
+        spec:
+          template:
+            spec:
+              serviceAccountName: dgraph-dgraph-zero
+
+      # add label to Alpha headless service
+      - apiVersion: v1
+        kind: Service
+        metadata:
+          name: dgraph-dgraph-alpha-headless
+          labels:
+            consul.hashicorp.com/service-ignore: 'true'
+
+      # add label to Zero headless service
+      - apiVersion: v1
+        kind: Service
+        metadata:
+          name: dgraph-dgraph-zero-headless
+          labels:
+            consul.hashicorp.com/service-ignore: 'true'
+
+    # patch existing resource using jsonPatches
+    jsonPatches:
+      # remove existing grpc port from serivce
+      - target:
+          version: v1
+          kind: Service
+          name: dgraph-dgraph-alpha
+        patch:
+          - op: remove
+            path: /spec/ports/1

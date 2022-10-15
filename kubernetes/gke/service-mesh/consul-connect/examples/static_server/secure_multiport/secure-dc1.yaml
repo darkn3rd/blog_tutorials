@@ -1,0 +1,21 @@
+global:
+  name: consul
+  enabled: true
+  datacenter: dc1
+  gossipEncryption:
+    autoGenerate: true
+  tls:
+    enabled: true
+    enableAutoEncrypt: true
+    verify: true
+  acls:
+    manageSystemACLs: true
+server:
+  replicas: 1
+  securityContext:
+    runAsNonRoot: false
+    runAsUser: 0
+connectInject:
+  enabled: true
+controller:
+  enabled: true

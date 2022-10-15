@@ -1,0 +1,14 @@
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: dgraph-dgraph-alpha
+spec:
+  protocol: 'http'
+---
+apiVersion: consul.hashicorp.com/v1alpha1
+kind: ServiceDefaults
+metadata:
+  name: dgraph-dgraph-alpha-grpc
+spec:
+  protocol: 'grpc'

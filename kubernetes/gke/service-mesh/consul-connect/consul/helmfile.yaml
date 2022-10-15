@@ -1,0 +1,46 @@
+repositories:
+  # https://artifacthub.io/packages/helm/hashicorp/consul
+  - name: hashicorp
+    url: https://helm.releases.hashicorp.com
+
+releases:
+  - name: consul
+    namespace: consul
+    chart: hashicorp/consul
+    version: 0.48.0
+    values:
+      - global:
+          name: consul
+          datacenter: dc1
+          {{- if eq (env "CCSM_SECURITY_ENABLED") "true" }}
+          tls:
+            enabled: true
+            enableAutoEncrypt: true
+            verify: true
+          gossipEncryption:
+            autoGenerate: true
+          acls:
+            manageSystemACLs: true
+          {{- end }}
+          {{- if eq (env "CCSM_METRICS_ENABLED") "true" }}
+          metrics:
+            enabled: true
+            enableAgentMetrics: true
+            agentMetricsRetentionTime: "1m"
+          {{- end }}
+        server:
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+        connectInject:
+          enabled: true
+        controller:
+          enabled: true
+        ui:
+          enabled: true
+          {{- if eq (env "CCSM_METRICS_ENABLED") "true" }}
+          metrics:
+            enabled: true
+            provider: prometheus
+            baseURL: http://prometheus-server.prometheus.svc.cluster.local
+          {{- end }}

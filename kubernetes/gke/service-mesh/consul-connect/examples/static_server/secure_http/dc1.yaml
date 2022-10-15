@@ -1,0 +1,13 @@
+global:
+  name: consul
+  enabled: true
+  datacenter: dc1
+server:
+  replicas: 1
+  securityContext:
+    runAsNonRoot: false
+    runAsUser: 0
+connectInject:
+  enabled: true
+controller:
+  enabled: true

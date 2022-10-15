@@ -1,0 +1,80 @@
+repositories:
+  # https://artifacthub.io/packages/helm/main/raw
+  - name: bedag
+    url: https://bedag.github.io/helm-charts/
+
+releases:
+  - name: pydgraph-client
+    chart: bedag/raw
+    namespace: pydgraph-client
+    version:  1.1.0
+    values:
+      - resources:
+          - apiVersion: v1
+            kind: ServiceAccount
+            metadata:
+              name: pydgraph-client
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: pydgraph-client
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: pydgraph-client
+              template:
+                metadata:
+                  labels:
+                    app: pydgraph-client
+                spec:
+                  serviceAccountName: pydgraph-client
+                  containers:
+                  - name: pydgraph-client
+                    image: {{ requiredEnv "DOCKER_REGISTRY" }}/pydgraph-client:{{ env "BUILD_VERSION" | default "latest" }}
+                    ports:
+                      - containerPort: 5000
+                    env:
+                      {{- if eq (env "CCSM_ENABLED") "true" }}
+                      - name: DGRAPH_ALPHA_SERVER
+                        value: localhost
+                      - name: DGRAPH_GRPC_SERVER
+                        value: localhost
+                      {{- else }}
+                      - name: DGRAPH_ALPHA_SERVER
+                        value: {{ env "DGRAPH_RELEASE" | default "dgraph" }}-dgraph-alpha.{{ env "DGRAPH_NS" | default "dgraph" }}.svc.cluster.local
+                      {{- end }}
+                    resources:
+                      requests:
+                        memory: "64Mi"
+                        cpu: "8m"
+                      limits:
+                        memory: "128Mi"
+                        cpu: "25m"
+
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: pydgraph-client
+            spec:
+              type: ClusterIP
+              ports:
+              - port: 80
+                targetPort: 5000
+              selector:
+                app: pydgraph-client
+    {{- if eq (env "CCSM_ENABLED") "true" }}
+    strategicMergePatches:
+      - apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: pydgraph-client
+        spec:
+          template:
+            metadata:
+              annotations:
+                consul.hashicorp.com/connect-inject: "true"
+                consul.hashicorp.com/transparent-proxy: "false"
+                consul.hashicorp.com/connect-service-upstreams: >-
+                  {{ env "DGRAPH_RELEASE" | default "dgraph" }}-dgraph-alpha:8080,{{ env "DGRAPH_RELEASE" | default "dgraph" }}-dgraph-alpha-grpc:9080
+    {{- end }}
