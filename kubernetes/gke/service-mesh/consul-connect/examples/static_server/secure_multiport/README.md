@@ -23,6 +23,8 @@ helm upgrade consul hashicorp/consul \
 
 ## Test Security
 
+Currently, with multi-port configuration, transparent-proxy no longer works, and you must setup upstream ports.  This means that security will only work through the mesh tunnel through localhost.  This also means that direct communication through the service DNS name will not only bypass the service mesh completely, and thus will not have encrypted traffic, but it will also not be denied when appropriate.
+
 ```bash
 kubectl apply -f server.yaml
 kubectl apply -f client.yaml
