@@ -1,12 +1,24 @@
 # Secure HTTP Server
 
-
+These are examples from the tutorials using the static server application.
 
 # Consul service mesh install
 
 ```bash
-helm upgrade install hashicorp/consul \
-  --namespace consul\
+helm repo add hashicorp https://helm.releases.hashicorp.com && helm repo update
+
+# Delete namespace if it exists
+kubectl delete namespace consul
+
+helm install consul hashicorp/consul \
+  --values dc1.yaml \
+  --create-namespace \
+  --namespace consul \
+  --version "0.43.0" \
+  --wait
+
+helm upgrade consul hashicorp/consul \
+  --namespace consul \
   --version "0.43.0" \
   --values ./secure-dc1.yaml \
   --wait
@@ -17,9 +29,12 @@ helm upgrade install hashicorp/consul \
 ```bash
 kubectl apply -f server.yaml
 kubectl apply -f client.yaml
-watch kubectl get pods
+watch kubectl get pods # CTRL-C when all pods are up
+
+# test through transparent proxy tunnel (NEGATIVE TEST, should fail)
 kubectl exec deploy/static-client -c static-client -- curl -s http://static-server
 kubectl apply -f client-to-server-intention.yaml
+# test through transparent proxy tunnel (POSITIVE TEST, should succeed)
 kubectl exec deploy/static-client -c static-client -- curl -s http://static-server
 ```
 
