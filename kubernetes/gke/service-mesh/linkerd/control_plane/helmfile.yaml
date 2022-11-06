@@ -1,20 +1,48 @@
 repositories:
   # https://artifacthub.io/packages/helm/linkerd2/linkerd-control-plane
-  - name: linkerd2
+  - name: linkerd
     url: https://helm.linkerd.io/stable
+  # https://artifacthub.io/packages/helm/main/raw
+  - name: bedag
+    url: https://bedag.github.io/helm-charts/
 
 releases:
+  # - name: linkerd-namespace
+  #   chart: bedag/raw
+  #   version:  1.1.0
+  #   values:
+  #     - resources:
+  #         - kind: Namespace
+  #           apiVersion: v1
+  #           metadata:
+  #             name: linkerd
+  #             annotations:
+  #               linkerd.io/inject: disabled
+  #             labels:
+  #               linkerd.io/is-control-plane: "true"
+  #               config.linkerd.io/admission-webhooks: disabled
+  #               linkerd.io/control-plane-ns: linkerd
+
+  - name: linkerd-crds
+    namespace: linkerd
+    createNamespace: true
+    chart: linkerd/linkerd-crds
+
   - name: linkerd-control-plane
     namespace: linkerd
-    chart: inkerd2/linkerd-control-plane
+    createNamespace: false
+    chart: linkerd/linkerd-control-plane
     version: 1.9.4
+    needs:
+      - linkerd/linkerd-crds
     set:
-    - name: identityTrustAnchorsPEM
-      file: cert/ca.crt
-    - name: identity.issuer.tls.crtPEM
-      file: cert/issuer.crt
-    - name: dentity.issuer.tls.keyPEM
-      file: cert/issuer.key
+      - name: identityTrustAnchorsPEM
+        file: ./certs/ca.crt
+      - name: identity.issuer.tls.crtPEM
+        file: ./certs/issuer.crt
+      - name: identity.issuer.tls.keyPEM
+        file: ./certs/issuer.key
+    {{- if eq (env "LINKERD_HA") "true" }}
     values:
         # -- Create PodDisruptionBudget resources for each control plane workload
       - enablePodDisruptionBudget: true
@@ -56,3 +84,4 @@ releases:
         webhookFailurePolicy: Fail
         # service profile validator configuration
         spValidatorResources: *controller_resources
+    {{- end }}
