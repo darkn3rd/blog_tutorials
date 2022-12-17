@@ -1,0 +1,32 @@
+repositories:
+  # https://artifacthub.io/packages/helm/istio-official/base
+  - name: istio
+    url: https://istio-release.storage.googleapis.com/charts
+
+releases:
+  - name: istio-base
+    namespace: istio-system
+    chart: istio/base
+
+  - name: istiod
+    namespace: istio-system
+    chart: istio/istiod
+
+  - name: istio-ingress-ns
+    chart: bedag/raw
+    version:  1.1.0
+    values:
+      - resources:
+          - apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: istio-ingress
+              labels:
+                name: istio-ingress
+                istio-injection: enabled
+
+  - name: istio-ingress
+    namespace: istio-ingress
+    chart: istio/gateway
+    needs:
+      - istio-ingress/istio-ingress-ns
