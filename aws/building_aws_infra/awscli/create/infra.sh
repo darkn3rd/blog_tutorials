@@ -81,7 +81,12 @@ aws ec2 attach-internet-gateway \
 ################
 # Route Table
 ############################
-JSON_DATA=$(aws ec2 create-route-table --vpc-id $VPC_ID)
+JSON_DATA=$(aws ec2 create-route-table \
+  --vpc-id $VPC_ID \
+  --tag-specifications \
+   "ResourceType=route-table,Tags=[{Key=Name,Value=$USER-rt},{Key=Site,Value=$USER-web-site}]"
+)
+
 RT_ID=$(jq -r .RouteTable.RouteTableId <<< $JSON_DATA)
 
 aws ec2 create-route \
