@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
 PRIV1_SUBNET_ID=$(aws ec2 describe-subnets \
-  --filter "Name=vpc-id,Values=$VPC_ID" \
-  --filter "Name=tag:Name,Values=$USER-private1" \
+  --filter "Name=vpc-id,Values=$VPC_ID" "Name=tag:Name,Values=$USER-private1" \
   --query 'Subnets[0].SubnetId' \
   --output text
 )
 
 PRIV2_SUBNET_ID=$(aws ec2 describe-subnets \
-  --filter "Name=vpc-id,Values=$VPC_ID" \
-  --filter "Name=tag:Name,Values=$USER-private2" \
+  --filter "Name=vpc-id,Values=$VPC_ID" "Name=tag:Name,Values=$USER-private2" \
   --query 'Subnets[0].SubnetId' \
   --output text
 )

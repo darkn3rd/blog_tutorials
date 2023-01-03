@@ -90,8 +90,7 @@ aws ec2 create-route \
   --gateway-id $IGW_ID
 
 SUBNET_ID=$(aws ec2 describe-subnets \
-  --filter "Name=vpc-id,Values=$VPC_ID" \
-  --filter "Name=tag:Name,Values=$USER-public1" \
+  --filter "Name=vpc-id,Values=$VPC_ID" "Name=tag:Name,Values=$USER-public1" \
   --query 'Subnets[0].SubnetId' \
   --output text
 )
@@ -101,8 +100,7 @@ aws ec2 associate-route-table \
   --subnet-id $SUBNET_ID
 
 SUBNET_ID=$(aws ec2 describe-subnets \
-  --filter "Name=vpc-id,Values=$VPC_ID" \
-  --filter "Name=tag:Name,Values=$USER-public2" \
+  --filter "Name=vpc-id,Values=$VPC_ID" "Name=tag:Name,Values=$USER-public2" \
   --query 'Subnets[0].SubnetId' \
   --output text
 )
