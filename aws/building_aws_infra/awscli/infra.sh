@@ -3,7 +3,7 @@
 JSON_DATA=$(aws ec2 create-vpc \
   --cidr-block "10.0.0.0/16" \
   --tag-specifications \
-    "ResourceType=vpc,Tags=[{Key=Name,Value=$USER-vpc},{Key=Sitetring,Value=$USER-web-site}]"
+    "ResourceType=vpc,Tags=[{Key=Name,Value=$USER-vpc},{Key=Site,Value=$USER-web-site}]"
 )
 
 VPC_ID=$(jq .Vpc.VpcId -r <<< $JSON_DATA)
@@ -24,7 +24,7 @@ JSON_DATA=$(aws ec2 create-subnet \
   --vpc-id $VPC_ID \
   --availability-zone ${AZ_ZONES[0]} \
   --cidr-block "10.0.1.0/24" \
-  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-public1},{Key=Sitetring,Value=$USER-web-site}]"
+  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-public1},{Key=Site,Value=$USER-web-site}]"
 )
 
 SUBNET_ID=$(jq -r .Subnet.SubnetId -r <<< $JSON_DATA)
@@ -36,7 +36,7 @@ JSON_DATA=$(aws ec2 create-subnet \
   --vpc-id $VPC_ID \
   --availability-zone ${AZ_ZONES[1]} \
   --cidr-block "10.0.2.0/24" \
-  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-public2},{Key=Sitetring,Value=$USER-web-site}]"
+  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-public2},{Key=Site,Value=$USER-web-site}]"
 )
 
 SUBNET_ID=$(jq -r .Subnet.SubnetId -r <<< $JSON_DATA)
@@ -51,17 +51,17 @@ aws ec2 create-subnet \
   --vpc-id $VPC_ID \
   --availability-zone ${AZ_ZONES[0]} \
   --cidr-block "10.0.3.0/24" \
-  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-private1},{Key=Sitetring,Value=$USER-web-site}]"
+  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-private1},{Key=Site,Value=$USER-web-site}]"
 
 aws ec2 create-subnet \
   --vpc-id $VPC_ID \
   --availability-zone ${AZ_ZONES[1]} \
   --cidr-block "10.0.4.0/24" \
-  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-private2},{Key=Sitetring,Value=$USER-web-site}]"
+  --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=$USER-private2},{Key=Site,Value=$USER-web-site}]"
 
 
 JSON_DATA=$(aws ec2 create-internet-gateway \
-  --tag-specifications" ResourceType=internet-gateway,Tags=[{Key=Name,Value=$USER-igw},{Key=Sitetring,Value=$USER-web-site}]"
+  --tag-specifications" ResourceType=internet-gateway,Tags=[{Key=Name,Value=$USER-igw},{Key=Site,Value=$USER-web-site}]"
 )
 
 ################
@@ -69,7 +69,7 @@ JSON_DATA=$(aws ec2 create-internet-gateway \
 ############################
 JSON_DATA=$(aws ec2 create-internet-gateway \
   --tag-specifications \
-   "ResourceType=internet-gateway,Tags=[{Key=Name,Value=$USER-igw},{Key=Sitetring,Value=$USER-web-site}]"
+   "ResourceType=internet-gateway,Tags=[{Key=Name,Value=$USER-igw},{Key=Site,Value=$USER-web-site}]"
 )
 
 IGW_ID=$(jq -r .InternetGateway.InternetGatewayId <<< $JSON_DATA)
