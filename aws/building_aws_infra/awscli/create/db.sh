@@ -12,6 +12,25 @@ PRIV2_SUBNET_ID=$(aws ec2 describe-subnets \
   --output text
 )
 
+SUBNET_IDS=()
+for IDX in {1..2}; do
+  PRIV1_SUBNET_ID=$(aws ec2 describe-subnets \
+    --filter "Name=vpc-id,Values=$VPC_ID" "Name=tag:Name,Values=$USER-private$IDX" \
+    --query 'Subnets[0].SubnetId' \
+    --output text
+  )
+
+  SUBNET_IDS+=("\"$PRIV1_SUBNET_ID\"")
+done
+
+aws rds create-db-subnet-group \
+  --db-subnet-group-name "$USER-dbsg" \
+  --db-subnet-group-description "$USER-dbsg" \
+  --subnet-ids "[$(tr ' ' ',' <<< ${SUBNET_IDS[@]})]" \
+  --tags "Key=Name,Value=$USER-dbsg" \
+  --tags "Key=Site,Value=$USER-web-site"
+
+
 aws rds create-db-subnet-group \
   --db-subnet-group-name "$USER-dbsg" \
   --db-subnet-group-description "$USER-dbsg" \
