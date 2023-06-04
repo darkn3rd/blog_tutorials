@@ -7,5 +7,5 @@ helm repo update
 helm upgrade \
   --install aws-ebs-csi-driver \
   --namespace kube-system \
-  --set controller.serviceAccount.annotations.$IRSA_KEY=$ACCOUNT_ROLE_ARN_ECSI \
+  --set "controller.serviceAccount.annotations.$IRSA_KEY=$ACCOUNT_ROLE_ARN_ECSI" \
   aws-ebs-csi-driver/aws-ebs-csi-driver
