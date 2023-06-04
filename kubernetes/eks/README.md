@@ -9,7 +9,9 @@
 ./clients/get_kubectl_latest.sh
 ./clients/get_kubectl_ver.sh
 
+###########################################
 # install aws_load_balancer_controller
+###########################################
 pushd ./addons/aws_load_balancer_controller
 ./get_policy.json
 ./create_albc_policy.sh
@@ -22,17 +24,28 @@ kubectl get all \
   --namespace "kube-system" \
   --selector "app.kubernetes.io/name=aws-load-balancer-controller"
 
+###########################################
 # install aws_ebs_csi_driver
+###########################################
 pushd ./addons/aws_ebs_csi_driver/
 ./install_esci_irsa.sh
 ./install_esci_helm.sh # no snapshotter
 ./create_storage_class.sh
 ./set_default_storage_class.sh
 popd
-# verify
+# verify annotation looks correct
+kubectl get sa ebs-csi-controller-sa --namespace "kube-system" \
+  --output jsonpath='{.metadata.annotations.eks\.amazonaws\.com/role-arn}'
+# verify pods are running 
 kubectl get pods \
   --namespace "kube-system" \
   --selector "app.kubernetes.io/name=aws-ebs-csi-driver"
+POD_NAME=$(kubectl get pods --namespace "kube-system" \
+  --selector "app=ebs-csi-controller" \
+  --output name \
+  | tail -1
+)
+kubectl logs $POD_NAME --namespace "kube-system"
 ```
 
 ## Examples
