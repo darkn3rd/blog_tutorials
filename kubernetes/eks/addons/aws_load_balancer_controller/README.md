@@ -12,7 +12,6 @@ export POLICY_ARN_ALBC="arn:aws:iam::$ACCOUNT_ID:policy/$POLICY_NAME_ALBC"
 ## Verify
 
 ```bash
-
 # verify role is created
 aws iam get-role --role-name "$ROLE_NAME_ALBC"
 # verify policy is attached to the role
@@ -21,9 +20,7 @@ aws iam list-attached-role-policies --role-name "$ROLE_NAME_ALBC"
 # verify service account has annotation pointing to role
 kubectl get sa aws-load-balancer-controller --namespace "kube-system" \
   --output jsonpath='{.metadata.annotations.eks\.amazonaws\.com/role-arn}'
-
 ```
-
 
 ## Manual IRSA Process
 
@@ -64,4 +61,27 @@ aws iam create-role \
 aws iam attach-role-policy \
   --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/$POLICY_NAME_ALBC \
   --role-name $ROLE_NAME_ALBC
+```
+
+
+## Delete
+
+```bash 
+helm delete -n kube-system aws-load-balancer-controller
+eksctl delete iamserviceaccount \
+  --name "aws-load-balancer-controller" \
+  --namespace "kube-system" \
+  --cluster $EKS_CLUSTER_NAME \
+  --region $EKS_REGION
+
+# Verify IAM Role deletion
+aws iam get-role --role-name "$ROLE_NAME_ALBC"
+# Verify IAM Policy detached
+aws iam list-attached-role-policies --role-name "$ROLE_NAME_ALBC"
+# Detach policy if attached
+aws iam  detach-role-policy --role-name "$ROLE_NAME_ALBC" --policy-arn $POLICY_ARN_ALBC
+# Delete role
+aws iam delete-role --role-name "$ROLE_NAME_ALBC"
+# Delete servcie account
+kubectl delete sa aws-load-balancer-controller --namespace "kube-system"
 ```
