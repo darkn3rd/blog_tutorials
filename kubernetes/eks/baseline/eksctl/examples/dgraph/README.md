@@ -2,35 +2,33 @@
 
 Dgraph is a highly distributed graph database.
 
-
 ## Deploying Dgraph
-
 
 ### Allow List (aka Whitelist)
 
-Below is an example how you can filter in the subnet CIDRs used for GKE and local VPC, and well as any remote office location.
+Below is an example how you can filter in the subnet CIDRs used for the VPC subnets, and well as any remote office location.
 
 ```bash
-SUBNET_CIDR=$(gcloud compute networks subnets describe $GKE_SUBNET_NAME \
-  --project $GKE_PROJECT_ID \
-  --region $GKE_REGION \
-  --format json \
-  | jq -r '.ipCidrRange'
+VPC_ID=$(aws eks describe-cluster \
+  --name $EKS_CLUSTER_NAME \
+  --region $EKS_REGION \
+  --query 'cluster.resourcesVpcConfig.vpcId' \
+  --output text
 )
 
-GKE_POD_CIDR=$(gcloud container clusters describe $GKE_CLUSTER_NAME \
-  --project $GKE_PROJECT_ID \
-  --region $GKE_REGION \
-  --format json \
-  | jq -r '.clusterIpv4Cidr'
+EKS_CIDR=$(aws ec2 describe-vpcs \
+  --vpc-ids $VPC_ID \
+  --region $EKS_REGION \
+  --query 'Vpcs[0].CidrBlock' \
+  --output text
 )
 
 # get the current outbound IP from your current location
-# this will simulate the remote offic IP address
+# this will simulate the remote offic IP addresss
 MY_IP_ADDRESS=$(curl --silent ifconfig.me)
 
 # set env var to use later
-export DG_ALLOW_LIST="${SUBNET_CIDR},${GKE_POD_CIDR},${MY_IP_ADDRESS}/32"
+export DG_ALLOW_LIST="${EKS_CIDR},${MY_IP_ADDRESS}/32"
 ```
 
 ### Dgraph
@@ -41,24 +39,20 @@ export DG_ALLOW_LIST="${SUBNET_CIDR},${GKE_POD_CIDR},${MY_IP_ADDRESS}/32"
 
 ### Verify External Load Balancer
 
-
 ```bash
 export DG_LB=$(kubectl get service dg-dgraph-alpha \
   --namespace dgraph \
-  --output jsonpath='{.status.loadBalancer.ingress[0].ip}'
+  --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 )
 
-# verify forwarding rules
-gcloud compute forwarding-rules list \
-  --filter $DG_LB \
-  --format "table[box](name,IPAddress,target.segment(-2):label=TARGET_TYPE)"
+# Get information using LB DNS Name
+aws elbv2 describe-load-balancers --region $EKS_REGION --query "LoadBalancers[?DNSName==\`$DG_LB\`]" | jq
 
 # test connectivity
 curl --silent $DG_LB:8080/state | jq -r '.groups."1".members'
 ```
 
 ### Test Dgraph
-
 
 #### Upload dataset
 
@@ -174,18 +168,10 @@ curl "$DG_LB:8080/query" --silent --request POST \
 Dgraph is accessible from an external load balancer, and Ratel is accesible through the ingress (L7 reverse proxy).  These commands will echo out the URLs that can be used to access Ratel and Dgraph.
 
 ```bash
-RATEL_LB=$(kubectl get ing ratel \
-  --namespace "ratel" \
-  --output jsonpath='{.status.loadBalancer.ingress[0].ip}'
-)
-
+RATEL_LB=$(kubectl get ing ratel --namespace "ratel" --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 echo "http://$RATEL_LB"
 
-DGRAPH_LB=$(kubectl get service dg-dgraph-alpha \
-  --namespace dgraph \
-  --output jsonpath='{.status.loadBalancer.ingress[0].ip}'
-)
-
+DGRAPH_LB=$(kubectl get service dg-dgraph-alpha --namespace dgraph --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 echo "http://$DGRAPH_LB:8080"
 ```
 
@@ -242,11 +228,44 @@ wget -q -O- dg-dgraph-alpha-0.dg-dgraph-alpha-headless.dgraph:8080/health
 
 ### Dgraph database
 
+#### Setup Ingress Addresses
+
+If Dgraph was deployed and configured with the `preserve_client_ip.enabled=true` NLB attribute, then you can setup use this to set up the filtered addresses:
+
 ```bash
+export INGRESS_ADDRS=($(curl --silent ifconfig.me))
+./scripts/deploy_netpol_dgraph.sh
+```
+
+If the attribute is not configured, then you need to filter in the private IP address of the load balancers that are deployed.  You can do this with the following:
+
+```bash
+# fetch DNS name of the load balancer
+export DG_LB=$(kubectl get service dg-dgraph-alpha --namespace dgraph \
+  --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+)
+
+# get ELB name from ARN
+ELB_NAME=$(aws elbv2 describe-load-balancers --region $EKS_REGION \
+  --query "LoadBalancers[?DNSName==\`$DG_LB\`].LoadBalancerArn" \
+  --output text | cut -d/ -f2-4
+)
+
+# get network interface of the NLB usign ELB name
+ELB_PRIVATE_ADDRS=($(aws ec2 describe-network-interfaces \
+  --region $EKS_REGION \
+  --filters Name=description,Values="ELB $ELB_NAME" \
+  --query 'NetworkInterfaces[*].PrivateIpAddresses[*].PrivateIpAddress' \
+  --output text
+))
+
 # setup IP address for filtering supported IP addresses
 # NOTE: This configures your current outbound IP address.  
 #       Dgraph itself should be configured to whitelist this IP address.
-export INGRESS_ADDRS=($(curl --silent ifconfig.me))
+MY_IP_ADDRESS=$(curl --silent ifconfig.me)
+
+# create new array with client source IP + private LB 
+export INGRESS_ADDRS=(${ELB_PRIVATE_ADDRS[@]} $MY_IP_ADDRESS)
 ./scripts/deploy_netpol_dgraph.sh
 ```
 

@@ -15,17 +15,20 @@ helm install dg dgraph/dgraph \
   --values -  <<EOF
 zero:
   persistence:
-    storageClass: premium-rwo
-    size: 10Gi
+    storageClass: ebs-sc
 alpha:
   configFile:
     config.yaml: |
       security:
         whitelist: ${DG_ALLOW_LIST}
   persistence:
-    storageClass: premium-rwo
-    size: 30Gi
+    storageClass: ebs-sc
   service:
     type: LoadBalancer
-    externalTrafficPolicy: Local
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: external
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+      service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+      service.beta.kubernetes.io/aws-load-balancer-target-group-attributes: preserve_client_ip.enabled=true
 EOF
