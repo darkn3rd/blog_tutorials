@@ -207,7 +207,6 @@ When browsing the visualization applicaiton, you can run this query and see the 
 
 ## Securing Dgraph
 
-
 ### Ratel Visualization Application
 
 Ratel is a small web service that hosts the client application.  The security policy will prevent this web service from accessing anything within the cluster.
@@ -247,7 +246,7 @@ wget -q -O- dg-dgraph-alpha-0.dg-dgraph-alpha-headless.dgraph:8080/health
 # setup IP address for filtering supported IP addresses
 # NOTE: This configures your current outbound IP address.  
 #       Dgraph itself should be configured to whitelist this IP address.
-export INGRESS_ADDRS=$(curl --silent ifconfig.me)
+export INGRESS_ADDRS=($(curl --silent ifconfig.me))
 ./scripts/deploy_netpol_dgraph.sh
 ```
 

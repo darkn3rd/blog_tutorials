@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## Check for required commands
-command -v kubectl > /dev/null || { echo "'helm' command not not found" 1>&2; exit 1; }
+command -v kubectl > /dev/null || { echo "'kubectl' command not not found" 1>&2; exit 1; }
 
 ## Check for required variables
 [[ -z "${INGRESS_ADDRS}" ]] && { echo 'INGRESS_ADDRS not specified. Aborting' 1>&2 ; exit 1; }

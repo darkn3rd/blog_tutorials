@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## Check for required commands
-command -v kubectl > /dev/null || { echo "'helm' command not not found" 1>&2; exit 1; }
+command -v kubectl > /dev/null || { echo "'kubectl' command not not found" 1>&2; exit 1; }
 
 kubectl apply --namespace ratel --filename - <<EOF
 apiVersion: networking.k8s.io/v1
