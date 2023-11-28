@@ -1,7 +1,8 @@
+# Emissary-Ingress (previously known as Ambassador)
 
 Originally, there was a popular ingress called **Ambassador**, but this has been been renamed to **emissary-ingress**.  **Ambassador** (not to be confused with **Ambassador**) has a enterprise version of this called **Ambassador Edge Stack**.  The enterprise product requires contacting the sales department to get a license, while the OSS is available without any hassle.  Given this, the OSS **emissary-ingress** will be covered in this area. 
 
-Emissary-Ingress is built around the Envoy Proxy as its core proxy.  Envoy was build and open source in 2016 by Lyft. 
+Emissary-Ingress is built around the [Envoy Proxy](https://www.envoyproxy.io/) as its core proxy.  [Envoy Proxy](https://www.envoyproxy.io/) was built and open sourced in 2016 by Lyft. 
 
 ## Installation
 
@@ -11,7 +12,7 @@ helm repo add datawire https://app.getambassador.io && helm repo update
  
 # Create Namespace and Install:
 kubectl create namespace emissary && \
-  kubectl apply -f https://app.getambassador.io/yaml/emissary/3.9.0/emissary-crds.yaml
+  kubectl apply --filename https://app.getambassador.io/yaml/emissary/3.9.0/emissary-crds.yaml
  
 kubectl wait --timeout=90s --for=condition=available deployment emissary-apiext --namespace emissary-system
  
@@ -20,6 +21,13 @@ helm install emissary-ingress --namespace emissary datawire/emissary-ingress
 kubectl --namespace emissary wait --for condition=available --timeout=90s deploy --selector app.kubernetes.io/instance=emissary-ingress
 ```
 
+## Clean
+
+```bash
+helm delete emissary-ingress --namespace emissary
+kubectl delete --filename https://app.getambassador.io/yaml/emissary/3.9.0/emissary-crds.yaml
+kubectl delete ns emissary
+```
 
 ## Articles 
 
