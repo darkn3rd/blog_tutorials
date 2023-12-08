@@ -73,7 +73,6 @@ curl "$DGRAPH_HTTP/mutate?commitNow=true" --silent --request POST \
 ' | jq
 ```
 
-
 ### Upload Data using JSON
 
 ```bash
