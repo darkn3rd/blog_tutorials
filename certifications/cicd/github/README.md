@@ -1,21 +1,22 @@
 # GitHub Actions
 
-[https://examregistration.github.com/certification/ACTIONS](https://examregistration.github.com/certification/ACTIONS)
 
-[https://examregistration.github.com/exam/ACTIONS](https://examregistration.github.com/exam/ACTIONS)
+* [Certification: GitHub Actions](https://examregistration.github.com/certification/ACTIONS)- $99 USD
+* [EXAM: ACTIONS](https://examregistration.github.com/exam/ACTIONS) - $99
+* [Blog GitHub Certifications are generally available](https://github.blog/2024-01-08-github-certifications-are-generally-available/)
 
-[https://github.blog/2024-01-08-github-certifications-are-generally-available/](https://github.blog/2024-01-08-github-certifications-are-generally-available/)
+## Content
 
 - Author and maintain workflows (40%)
 - Consume workflows (20%)
 - Author and maintain actions (25%)
 - Manage GitHub Actions for the enterprise (15%)
 
-Learning Paths
+## Learning Paths
 
-- [https://learn.microsoft.com/en-us/collections/n5p4a5z7keznp5](https://learn.microsoft.com/en-us/collections/n5p4a5z7keznp5)
+- [Collection: GitHub Actions](https://learn.microsoft.com/en-us/collections/n5p4a5z7keznp5)
 
-## Items in this collection
+### Items in this collection
 
 - Module [Automate development tasks by using GitHub Actions](https://learn.microsoft.com/en-us/training/modules/github-actions-automate-tasks/?ns-enrollment-type=Collection&ns-enrollment-id=n5p4a5z7keznp5) 49 min
 - Module [Build continuous integration (CI) workflows by using GitHub Actions](https://learn.microsoft.com/en-us/training/modules/github-actions-ci/?ns-enrollment-type=Collection&ns-enrollment-id=n5p4a5z7keznp5) 1 hr 7 min

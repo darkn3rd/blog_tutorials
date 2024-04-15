@@ -6,11 +6,11 @@
 
 ### Funadamentals
 
-* [Azure Fundamentals](fundamentals.md) (AZ-900)
+* [Azure Fundamentals](fundamentals.md) (AZ-900) - $99
 
 ### Associate
 
-* [Azure Administrator](administrator.md) (AZ-104)
+* [Azure Administrator](administrator.md) (AZ-104)- $165
   * [Microsoft Certified: Azure Administrator Associate](https://learn.microsoft.com/en-us/credentials/certifications/azure-administrator/)
   * [Study guide for Exam AZ-104: Microsoft Azure Administrator](https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/az-104)
 

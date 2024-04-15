@@ -1,14 +1,11 @@
 # Puppet Certified Professional
 
-
-Exam content and objectives
-
 ## Information
 
 * [Puppet Certified Professional Exam Details](https://www.puppet.com/learning-training/certification/exam-details)
+  Exam Fee: $200 USD
 
 ## Contents
-
 
 ### Classification
 

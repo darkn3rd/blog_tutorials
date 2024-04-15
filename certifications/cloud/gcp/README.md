@@ -4,9 +4,9 @@
 
 ## Certifications
 
-* [Digital Leader](leader.md)
-* [Cloud Engineer](engineer.md)
-* [Cloud Architect](architect.md)
+* [Digital Leader](leader.md)- $99
+* [Cloud Engineer](engineer.md)- $125
+* [Cloud Architect](architect.md)- $200
 
 ## External (non-Google) Links
 

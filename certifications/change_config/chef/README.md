@@ -32,7 +32,7 @@ Course Training: $199.00
 
 ## Executive Chef Certification
 
-Course Fee: USD 1499.00
+Course Fee: USD $1499.00
 
 ### **Phase 1- Multiple Choice Exam**
 

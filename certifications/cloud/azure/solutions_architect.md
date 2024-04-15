@@ -6,6 +6,7 @@
 ## Information
 
 * [Study guide for Exam AZ-305: Designing Microsoft Azure Infrastructure Solutions](https://learn.microsoft.com/credentials/certifications/resources/study-guides/az-305)
+* [Exam AZ-305: Designing Microsoft Azure Infrastructure Solutions](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/)
 
 ## Content
 
