@@ -6,6 +6,6 @@
 
 ## Certifications
 
-* [Cloud Practioner](practitioner.md)
-* [Solutions Architect (Associate)](solutions_architect_associate.md)
-* [Solutions Architect (Professional)](solutions_architect_professional.md)
+* [Cloud Practioner](practitioner.md)- $100
+* [Solutions Architect (Associate)](solutions_architect_associate.md) - $150
+* [Solutions Architect (Professional)](solutions_architect_professional.md) - $300

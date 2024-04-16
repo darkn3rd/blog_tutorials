@@ -16,7 +16,7 @@
 
 ### Expert
 
-* [Azure Solutions Architect](solutions_architect.md) (AZ-305)
+* [Azure Solutions Architect](solutions_architect.md) (AZ-305)- $165
   * [Exam AZ-305: Designing Microsoft Azure Infrastructure Solutions](https://learn.microsoft.com/en-us/credentials/certifications/exams/az-305/)
   * [Microsoft Certified: Azure Solutions Architect Expert](https://learn.microsoft.com/en-us/credentials/certifications/azure-solutions-architect/)
 
