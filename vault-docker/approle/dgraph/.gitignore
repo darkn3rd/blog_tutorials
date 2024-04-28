@@ -6,3 +6,5 @@ dgraph/vault_role_id
 dgraph/vault_secret_id
 dgraph/export
 dgraph/backups
+
+logs

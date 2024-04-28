@@ -59,6 +59,7 @@ docker exec -ti vault vault operator unseal
 # export the results for use in other steps
 export VAULT_ROOT_TOKEN="<root-token>"
 export VAULT_ADDRESS="127.0.0.1:8200"
+export VAULT_ADDR='http://127.0.0.1:8200'
 ```
 
 
