@@ -7,7 +7,7 @@ command -v curl > /dev/null || \
 export DGRAPH_HTTP=${DGRAPH_HTTP:"http://localhost:8080"}
 
 # Construct export mutation query
-cat << EOF > ./dgraph/export.graphql
+cat << EOF > ./export.graphql
 mutation {
   export(input: { format: "json" }) {
     response {
@@ -23,5 +23,5 @@ curl --silent \
   --header "Content-Type: application/graphql" \
   --header "X-Dgraph-AccessToken: $DGRAPH_TOKEN" \
   --request POST \
-  --upload-file ./dgraph/export.graphql \
+  --upload-file ./export.graphql \
   http://$DGRAPH_HTTP/admin | jq

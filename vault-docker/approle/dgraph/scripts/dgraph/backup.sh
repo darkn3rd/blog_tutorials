@@ -7,7 +7,7 @@ command -v curl > /dev/null || \
 export DGRAPH_HTTP=${DGRAPH_HTTP:"http://localhost:8080"}
 
 # Construct backup mutation query
-cat << EOF > ./dgraph/backup.graphql
+cat << EOF > ./backup.graphql
 mutation {
   backup(input: {
     destination: "/dgraph/backups"
@@ -26,5 +26,5 @@ curl --silent \
   --header "Content-Type: application/graphql" \
   --header "X-Dgraph-AccessToken: $DGRAPH_TOKEN" \
   --request POST \
-  --upload-file ./dgraph/backup.graphql \
+  --upload-file ./backup.graphql \
   http://$DGRAPH_HTTP/admin | jq
