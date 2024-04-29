@@ -7,8 +7,11 @@ dgraph/vault_secret_id
 dgraph/export
 dgraph/backups
 
-logs
 # ignore any script generated json/hcl/graphql
 scripts/**/*.json
 scripts/**/*.hcl
 scripts/**/*.graphql
+
+# Misc
+unseal.creds
+logs
