@@ -30,6 +30,9 @@ Once [msys2](https://www.msys2.org/) is installed and setup, you can run the fol
 ## Part A: Launch Vault Server
 
 ```bash
+unset VAULT_ROOT_TOKEN
+unset VAULT_ADDR
+
 ## launch vault server
 docker compose up --detach "vault"
 
@@ -38,6 +41,14 @@ VAULT_SCRIPTS=./scripts/vault_cli
 VAULT_SCRIPTS=./scripts/vault_api 
 
 $VAULT_SCRIPTS/1.unseal.sh
+
+export VAULT_ROOT_TOKEN="$(
+  grep -oP "(?<=Initial Root Token: ).*" unseal.creds
+)"
+
+export VAULT_ADDR="http://localhost:8200"
+
+
 ```
 
 ## Part B: Setup Vault Server
@@ -51,6 +62,8 @@ $VAULT_SCRIPTS/4.roles.sh
 ## Part C: Create Secrets Using Admin Role
 
 ```bash
+export ENC_KEY=$(./scripts/randpasswd.sh)
+export HMAC_SECRET=$(./scripts/randpasswd.sh)
 $VAULT_SCRIPTS/5.secrets_dgraph_create.sh
 $VAULT_SCRIPTS/6.secrets_dgraph_read.sh
 ```

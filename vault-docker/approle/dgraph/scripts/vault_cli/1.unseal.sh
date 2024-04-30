@@ -4,7 +4,7 @@ command -v grep > /dev/null || \
 command -v vault > /dev/null || \
   { echo "[ERROR]: 'vault' command not not found" 1>&2; exit 1; }
 
-export VAULT_ADDR=${VAULT_ADDR:"http://localhost:8200"}
+export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 
 ## unseal
 vault operator init | tee -a unseal.creds
