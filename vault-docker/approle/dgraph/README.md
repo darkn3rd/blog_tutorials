@@ -11,7 +11,6 @@ This is an example of using HashiCorp Vault AppRole with from the application Dg
 * [`jq`](https://stedolan.github.io/jq/)
 * POSIX Shell with either `zsh` or GNU `bash`
 * GNU `grep`
-* 
 
 ### Install Notes
 
@@ -47,8 +46,6 @@ export VAULT_ROOT_TOKEN="$(
 )"
 
 export VAULT_ADDR="http://localhost:8200"
-
-
 ```
 
 ## Part B: Setup Vault Server
@@ -91,7 +88,7 @@ curl --silent http://$DGRAPH_HTTP/health \
   | grep --color --extended-regexp 'acl|encrypt.*|$'
 ```
 
-## Part E: Testing Dgraph Services
+## Part E: Testing vvvDgraph Services
 
 ```bash
 export DGRAPH_ADMIN_USER="groot"
@@ -133,6 +130,6 @@ find ./dgraph/backups/ -name '*.backup' | xargs -n 1 file
 ## Cleanup
 
 ```bash
-docker compose stop
-docker compose rm
+docker compose stop && docker compose rm
+rm -rf ./vault/data/*
 ```

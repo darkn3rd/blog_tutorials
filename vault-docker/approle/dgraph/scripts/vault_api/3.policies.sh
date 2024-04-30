@@ -3,13 +3,13 @@ command -v vault > /dev/null || \
   { echo "[ERROR]: 'vault' command not not found" 1>&2; exit 1; }
 
 [[ -z "$VAULT_ROOT_TOKEN" ]] && { echo 'VAULT_ROOT_TOKEN not specified. Aborting' 2>&1 ; exit 1; }
-export VAULT_ADDR=${VAULT_ADDR:"http://localhost:8200"}
+export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 
 
 ############################################
 ## Dgraph Policy
 ############################################
-cat << EOF > policy_dgraph.hcl
+cat << EOF > ./vault/policy_dgraph.hcl
 path "secret/data/dgraph/*" {
   capabilities = [ "read", "update" ]
 }
@@ -26,7 +26,7 @@ EOF
 ############################################
 ## Admin Policy
 ############################################
-cat << EOF > policy_admin.hcl
+cat << EOF > ./vault/policy_admin.hcl
 # kv2 secret/dgraph/*
 path "secret/data/dgraph/*" {
    capabilities = [ "create", "read", "update", "delete", "list" ]
@@ -57,7 +57,7 @@ path "sys/policies/acl/*" {
 }
 EOF
 
-cat << EOF > policy_admin.json
+cat << EOF > ./vault/policy_admin.json
 {
   "policy": "$(sed -e ':a;N;$!ba;s/\n/\\n/g' \
                    -e 's/"/\\"/g' \

@@ -7,7 +7,7 @@ command -v vault > /dev/null || \
 export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 
 ## unseal
-vault operator init | tee -a unseal.creds
+vault operator init | tee unseal.creds
 for NUM in {1..3}; do
   vault operator unseal \
     $(grep -oP "(?<=Unseal Key $NUM: ).*" unseal.creds)

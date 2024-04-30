@@ -3,7 +3,7 @@ command -v vault > /dev/null || \
   { echo "[ERROR]: 'vault' command not not found" 1>&2; exit 1; }
 
 [[ -z "$VAULT_ROOT_TOKEN" ]] && { echo 'VAULT_ROOT_TOKEN not specified. Aborting' 2>&1 ; exit 1; }
-export VAULT_ADDR=${VAULT_ADDR:"http://localhost:8200"}
+export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 
 export ENC_KEY=${ENC_KEY:-"12345678901234567890123456789012"}
 export HMAC_SECRET=${HMAC_SECRET:-"12345678901234567890123456789012"}
@@ -46,7 +46,7 @@ export VAULT_ADMIN_TOKEN=$(curl --silent \
 ##############
 # write dgraph secrets using admin role
 ############################
-cat << EOF > payload_alpha_secrets.json
+cat << EOF > ./vault/payload_alpha_secrets.json
 {
   "options": {
     "cas": 0
@@ -61,6 +61,6 @@ EOF
 curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
   --request POST \
-  --data @./payload_alpha_secrets.json \
+  --data @./vault/payload_alpha_secrets.json \
   http://$VAULT_ADDR/v1/secret/data/dgraph/alpha | jq
 

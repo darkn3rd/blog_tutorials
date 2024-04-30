@@ -25,8 +25,4 @@ export HMAC_SECRET=$(../randpasswd.sh)
 ./5.secrets_dgraph_create.sh
 # Verify Secrets
 ./6.secrets_dgraph_read.sh
-
-# Save Secrets into Dgraph Config
-echo $DGRAPH_ROLE_ID > ./dgraph/vault_role_id
-echo $DGRAPH_SECRET_ID > ./dgraph/vault_secret_id
 ```

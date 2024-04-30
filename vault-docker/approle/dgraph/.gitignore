@@ -1,5 +1,4 @@
-vault/policy_admin.json
-vault/policy_dgraph.json
+vault/*.json
 vault/data
 
 dgraph/vault_role_id
