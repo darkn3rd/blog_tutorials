@@ -14,7 +14,7 @@ path "secret/data/dgraph/*" {
 EOF
 
 # Admin Policy
-cat << EOF > ./data/policy_admin.hcl
+cat << EOF > ./vault/policy_admin.hcl
 # kv2 secret/dgraph/*
 path "secret/data/dgraph/*" {
    capabilities = [ "create", "read", "update", "delete", "list" ]
@@ -46,6 +46,6 @@ path "sys/policies/acl/*" {
 EOF
 
 # Upload Policies
-vault policy write admin policy_admin.hcl
-vault policy write dgraph policy_dgraph.hcl
+vault policy write admin ./vault/policy_admin.hcl
+vault policy write dgraph ./vault/policy_dgraph.hcl
 

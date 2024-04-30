@@ -129,3 +129,10 @@ $DGRAPH_SCRIPTS/backup.sh
 ## NOTE: results should be 'data', not 'snappy framed data'
 find ./dgraph/backups/ -name '*.backup' | xargs -n 1 file  
 ```
+
+## Cleanup
+
+```bash
+docker compose stop
+docker compose rm
+```
