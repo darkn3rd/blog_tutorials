@@ -69,10 +69,10 @@ EOF
 # Upload Policies
 curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
-  --request PUT --data @$VAULT_CONFIG_DIR/policy_admin.json \
-  http://$VAULT_ADDR/v1/sys/policies/acl/admin
+  --request PUT --data @${VAULT_CONFIG_DIR}/policy_admin.json \
+  $VAULT_ADDR/v1/sys/policies/acl/admin
   
 curl --silent \
-  --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
-  --request PUT --data @$VAULT_CONFIG_DIR/policy_dgraph.json \
-  http://$VAULT_ADDR/v1/sys/policies/acl/dgraph
+  --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
+  --request PUT --data @${VAULT_CONFIG_DIR}/policy_dgraph.json \
+  $VAULT_ADDR/v1/sys/policies/acl/dgraph

@@ -89,6 +89,12 @@ $VAULT_SCRIPTS/2.configure.sh
 # Setup Policies
 ################
 $VAULT_SCRIPTS/3.policies.sh
+curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
+  $VAULT_ADDR/v1/sys/policies/acl/admin | jq .data.policy \
+  | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/'
+curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
+  $VAULT_ADDR/v1/sys/policies/acl/dgraph | jq .data.policy \
+  | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/'
 
 #######
 # Setup Roles

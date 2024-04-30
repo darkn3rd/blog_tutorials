@@ -19,7 +19,7 @@ curl --silent \
     "token_ttl": "1h",
     "token_max_ttl": "4h"
 }' \
-  http://$VAULT_ADDR/v1/auth/approle/role/admin
+  $VAULT_ADDR/v1/auth/approle/role/admin
 
 
 ##############
@@ -34,4 +34,4 @@ curl --silent \
     "token_ttl": "1h",
     "token_max_ttl": "4h"
 }' \
-  http://$VAULT_ADDR/v1/auth/approle/role/dgraph
+  $VAULT_ADDR/v1/auth/approle/role/dgraph

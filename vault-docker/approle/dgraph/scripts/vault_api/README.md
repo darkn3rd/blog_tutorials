@@ -13,11 +13,11 @@ export VAULT_ADDR="http://localhost:8200"
 curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
   --request GET \
-  http://$VAULT_ADDR/v1/sys/policies/acl/admin | jq
+  VAULT_ADDR/v1/sys/policies/acl/admin | jq
 curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
   --request GET \
-  http://$VAULT_ADDR/v1/sys/policies/acl/dgraph | jq
+  $VAULT_ADDR/v1/sys/policies/acl/dgraph | jq
 
 # Create Roles
 ./4.roles.sh
@@ -25,11 +25,11 @@ curl --silent \
 curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   --request GET \
-  http://$VAULT_ADDR/v1/auth/approle/role/admin | jq
+  $VAULT_ADDR/v1/auth/approle/role/admin | jq
 curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
   --request GET \
-  http://$VAULT_ADDR/v1/auth/approle/role/dgraph | jq
+  $VAULT_ADDR/v1/auth/approle/role/dgraph | jq
 
 # Create Secrets
 export ENC_KEY=$(../randpasswd.sh)

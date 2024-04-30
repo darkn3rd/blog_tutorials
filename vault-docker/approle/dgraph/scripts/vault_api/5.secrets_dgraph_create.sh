@@ -16,25 +16,18 @@ mkdir -p $VAULT_CONFIG_DIR
 ############################
 ROLE_ID=$(curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
-  http://$VAULT_ADDR/v1/auth/approle/role/admin/role-id \
+  $VAULT_ADDR/v1/auth/approle/role/admin/role-id \
     | jq -r '.data.role_id'
 )
 
 SECRET_ID=$(curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   --request POST \
-  http://$VAULT_ADDR/v1/auth/approle/role/admin/secret-id \
+  $VAULT_ADDR/v1/auth/approle/role/admin/secret-id \
   | jq -r '.data.secret_id'
 )
 
 # generate token for admin role
-VAULT_ADMIN_TOKEN=$(vault write auth/approle/login \
-  role_id="$ROLE_ID" \
-  secret_id="$SECRET_ID" \
-  --format=json \
-  | jq -r .auth.client_token
-)
-
 export VAULT_ADMIN_TOKEN=$(curl --silent \
   --request POST \
   --data \
@@ -42,7 +35,7 @@ export VAULT_ADMIN_TOKEN=$(curl --silent \
     \"role_id\": \"$VAULT_ADMIN_ROLE_ID\",
     \"secret_id\": \"$VAULT_ADMIN_SECRET_ID\"
 }" \
-  http://$VAULT_ADDR/v1/auth/approle/login \
+  VAULT_ADDR/v1/auth/approle/login \
   | jq -r '.auth.client_token'
 )
 
@@ -65,5 +58,5 @@ curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
   --request POST \
   --data @$VAULT_CONFIG_DIR/payload_alpha_secrets.json \
-  http://$VAULT_ADDR/v1/secret/data/dgraph/alpha | jq
+  $VAULT_ADDR/v1/secret/data/dgraph/alpha | jq
 

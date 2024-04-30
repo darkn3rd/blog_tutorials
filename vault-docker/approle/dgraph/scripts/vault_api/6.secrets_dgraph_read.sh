@@ -14,21 +14,21 @@ mkdir -p $VAULT_CONFIG_DIR
 ############################
 ROLE_ID=$(curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
-  http://$VAULT_ADDR/v1/auth/approle/role/dgraph/role-id \
+  $VAULT_ADDR/v1/auth/approle/role/dgraph/role-id \
     | jq -r '.data.role_id'
 )
 
 SECRET_ID=$(curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
   --request POST \
-  http://$VAULT_ADDR/v1/auth/approle/role/dgraph/secret-id \
+  $VAULT_ADDR/v1/auth/approle/role/dgraph/secret-id \
     | jq -r '.data.secret_id'
 )
 
 export VAULT_DGRAPH_TOKEN=$(curl --silent \
   --request POST \
   --data "{ \"role_id\": \"$ROLE_ID\", \"secret_id\": \"$SECRET_ID\" }" \
-  http://$VAULT_ADDR/v1/auth/approle/login \
+  $VAULT_ADDR/v1/auth/approle/login \
     | jq -r '.auth.client_token'
 )
 
@@ -38,13 +38,13 @@ export VAULT_DGRAPH_TOKEN=$(curl --silent \
 curl --silent \
   --header "X-Vault-Token: $VAULT_DGRAPH_TOKEN" \
   --request GET \
-  http://$VAULT_ADDR/v1/secret/data/dgraph/alpha | jq
+  $VAULT_ADDR/v1/secret/data/dgraph/alpha | jq
 
 
 ##############
 # save credentials for Dgraph
 ############################
 if [[ $? == 0 ]]; then
-  export DGRAPH_ROLE_ID=$ROLE_ID
-  export DGRAPH_SECRET_ID=$SECRET_ID
+  echo $ROLE_ID > ./dgraph/vault_role_id
+  echo $SECRET_ID > ./dgraph/vault_secret_id
 fi
