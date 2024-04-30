@@ -8,6 +8,9 @@ export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 export ENC_KEY=${ENC_KEY:-"12345678901234567890123456789012"}
 export HMAC_SECRET=${HMAC_SECRET:-"12345678901234567890123456789012"}
 
+export VAULT_CONFIG_DIR=${VAULT_CONFIG_DIR:-"./vault"}
+mkdir -p $VAULT_CONFIG_DIR
+
 ##############
 # login using admin role
 ############################
@@ -46,7 +49,7 @@ export VAULT_ADMIN_TOKEN=$(curl --silent \
 ##############
 # write dgraph secrets using admin role
 ############################
-cat << EOF > ./vault/payload_alpha_secrets.json
+cat << EOF > $VAULT_CONFIG_DIR/payload_alpha_secrets.json
 {
   "options": {
     "cas": 0
@@ -61,6 +64,6 @@ EOF
 curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
   --request POST \
-  --data @./vault/payload_alpha_secrets.json \
+  --data @$VAULT_CONFIG_DIR/payload_alpha_secrets.json \
   http://$VAULT_ADDR/v1/secret/data/dgraph/alpha | jq
 

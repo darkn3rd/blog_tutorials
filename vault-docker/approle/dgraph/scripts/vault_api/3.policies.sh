@@ -4,18 +4,19 @@ command -v vault > /dev/null || \
 
 [[ -z "$VAULT_ROOT_TOKEN" ]] && { echo 'VAULT_ROOT_TOKEN not specified. Aborting' 2>&1 ; exit 1; }
 export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
-
+export VAULT_CONFIG_DIR=${VAULT_CONFIG_DIR:-"./vault"}
+mkdir -p $VAULT_CONFIG_DIR
 
 ############################################
 ## Dgraph Policy
 ############################################
-cat << EOF > ./vault/policy_dgraph.hcl
+cat << EOF > $VAULT_CONFIG_DIR/policy_dgraph.hcl
 path "secret/data/dgraph/*" {
   capabilities = [ "read", "update" ]
 }
 EOF
 
-cat <<EOF > ./vault/policy_dgraph.json
+cat <<EOF > $VAULT_CONFIG_DIR/policy_dgraph.json
 {
   "policy": "$(sed -e ':a;N;$!ba;s/\n/\\n/g' \
                    -e 's/"/\\"/g' \
@@ -26,7 +27,7 @@ EOF
 ############################################
 ## Admin Policy
 ############################################
-cat << EOF > ./vault/policy_admin.hcl
+cat << EOF > $VAULT_CONFIG_DIR/policy_admin.hcl
 # kv2 secret/dgraph/*
 path "secret/data/dgraph/*" {
    capabilities = [ "create", "read", "update", "delete", "list" ]
@@ -57,7 +58,7 @@ path "sys/policies/acl/*" {
 }
 EOF
 
-cat << EOF > ./vault/policy_admin.json
+cat << EOF > $VAULT_CONFIG_DIR/policy_admin.json
 {
   "policy": "$(sed -e ':a;N;$!ba;s/\n/\\n/g' \
                    -e 's/"/\\"/g' \
@@ -68,10 +69,10 @@ EOF
 # Upload Policies
 curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
-  --request PUT --data @./vault/policy_admin.json \
+  --request PUT --data @$VAULT_CONFIG_DIR/policy_admin.json \
   http://$VAULT_ADDR/v1/sys/policies/acl/admin
   
 curl --silent \
   --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
-  --request PUT --data @./vault/policy_dgraph.json \
+  --request PUT --data @$VAULT_CONFIG_DIR/policy_dgraph.json \
   http://$VAULT_ADDR/v1/sys/policies/acl/dgraph

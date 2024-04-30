@@ -4,6 +4,7 @@ command -v vault > /dev/null || \
 
 [[ -z "$VAULT_ROOT_TOKEN" ]] && { echo 'VAULT_ROOT_TOKEN not specified. Aborting' 2>&1 ; exit 1; }
 export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
+
 vault login $VAULT_ROOT_TOKEN
 
 ##############
@@ -24,11 +25,6 @@ curl --silent \
 ##############
 # create dgraph role
 ############################
-vault write auth/approle/role/dgraph \
-  policies="dgraph" \
-  token_ttl="1h" \
-  token_max_ttl="4h"
-
 curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   --request POST \

@@ -6,6 +6,9 @@ command -v vault > /dev/null || \
 export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 vault login $VAULT_ROOT_TOKEN
 
+export VAULT_CONFIG_DIR=${VAULT_CONFIG_DIR:-"./vault"}
+mkdir -p $VAULT_CONFIG_DIR
+
 ##############
 # login using dgraph role
 ############################
