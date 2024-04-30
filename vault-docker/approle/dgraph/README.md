@@ -32,7 +32,28 @@ You can get the tools using [Chocolatey](https://chocolatey.org/): make any desi
 
 Once [msys2](https://www.msys2.org/) is installed and setup, you can run the following to get `jq` and `curl`: `pacman -Syu && pacman -S jq curl`
 
-## Part 1: Setup Vault
+## Overview
+
+You can choose whether to use RESTful API or use the Vault CLI.  Follow Part1A or Part1B depending on your preference. 
+
+A summary of the steps below are:
+
+1. Launch, Unseal, Login to Vault
+2. Configure Vault: Enable AppRole and KV (ver 2)
+3. Setup Policies: `dgraph` and `admin` policies
+4. Setup Roles: `dgraph` and `admin` roles
+5. Create Secrets: using `admin` role, create secrets
+6. Read Secrets: using `dgraph` role to test access to the secrets
+
+After this, we can test out an example application Dgraph:
+
+1. Launch Dgraph
+2. Login to Dgraph 
+3. (optional) Getting Started tutorial to upload data and schema
+4. Test an Export operation
+5. Test a Backup operation
+
+### Part 1: Setup Vault
 
 After the Docker environment is running and the necessary client tools are installed, we can launch the Vault server and unseal it. 
 
@@ -57,41 +78,31 @@ export VAULT_ROOT_TOKEN="$(
 export VAULT_ADDR="http://localhost:8200"
 ```
 
-From here, you can choose whether to use RESTful API or use the Vault CLI.  Follow Part1A or Part1B depending on your preference. 
-
-A summary of the steps below are:
-
-1. Launch, Unseal, Login to Vault
-2. Configure Vault: Enable AppRole and KV (ver 2)
-3. Setup Policies: `dgraph` and `admin` policies
-4. Setup Roles: `dgraph` and `admin` roles
-5. Create Secrets: using `admin` role, create secrets
-6. Read Secrets: using `dgraph` role to test access to the secrets
-
-After this, we can test out an example application
-
-1. Launch Dgraph
-2. Login to Dgraph 
-3. (optional) Getting Started tutorial to upload data and schema
-4. Test an Export operation
-5. Test a Backup operation
 
 
-## Part 1A: Vault Managed through RESTful API
+### Part 1A: Vault API
 
 ```bash
 #######
 # Enable Auth and KVv2
 ################
 $VAULT_SCRIPTS/2.configure.sh
+# verify auth enabled at approle/
+curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
+  $VAULT_ADDR/v1/sys/auth | jq -r '.data'
+# verify kv-v2 enabled at secret/
+curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
+  $VAULT_ADDR/v1/sys/mounts | jq -r '.data'
 
 #######
 # Setup Policies
 ################
 $VAULT_SCRIPTS/3.policies.sh
+# verify admin policy
 curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   $VAULT_ADDR/v1/sys/policies/acl/admin | jq .data.policy \
   | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/'
+# verify dgraph polich
 curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   $VAULT_ADDR/v1/sys/policies/acl/dgraph | jq .data.policy \
   | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/'
@@ -100,6 +111,12 @@ curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
 # Setup Roles
 ################
 $VAULT_SCRIPTS/4.roles.sh
+# verify admin role
+curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
+  $VAULT_ADDR/v1/auth/approle/role/admin | jq .data
+# verify dgraph role
+curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
+  $VAULT_ADDR/v1/auth/approle/role/dgraph | jq .data
 
 #######
 # Creates Secrets
@@ -114,7 +131,7 @@ $VAULT_SCRIPTS/5.secrets_dgraph_create.sh
 $VAULT_SCRIPTS/6.secrets_dgraph_read.sh
 ```
 
-## Part 1B: Vault Managed through Vault CLI
+### Part 1B: Vault CLI
 
 ```bash
 #######
@@ -153,9 +170,12 @@ $VAULT_SCRIPTS/6.secrets_dgraph_read.sh
 ```
 
 
-## Part D: Start Dgraph Service
+### Part 2: Dgraph
 
 ```bash
+export DGRAPH_CONFIG_DIR=$TEMP_DIR/dgraph
+mkdir -p $DGRAPH_CONFIG_DIR
+
 ## Start Dgraph Zero and Dgraph Alpha
 docker compose up --detach "zero1"
 if [[ -f "./dgraph/vault_role_id" && -f "./dgraph/vault_secret_id" ]]; then
@@ -174,20 +194,16 @@ curl --silent http://$DGRAPH_HTTP/health \
   | jq -r '.[].ee_features | .[]' \
   | sed 's/^/* /' \
   | grep --color --extended-regexp 'acl|encrypt.*|$'
-```
 
-## Part E: Testing vvvDgraph Services
-
-```bash
+############################################
+## ACL Feature - login operation
+############################################
 export DGRAPH_ADMIN_USER="groot"
 export DGRAPH_ADMIN_PSWD="password"
 export DGRAPH_HTTP="localhost:8080"
 DGRAPH_SCRIPTS=./scripts/dgraph
-export DGRAPH_TOKEN=$(cat .dgraph.token)
-############################################
-## ACL Feature
-############################################
 $DGRAPH_SCRIPTS/login.sh
+export DGRAPH_TOKEN=$(cat $DGRAPH_CONFIG_DIR/.dgraph.token)
 
 ############################################
 ## Getting Started (optional)

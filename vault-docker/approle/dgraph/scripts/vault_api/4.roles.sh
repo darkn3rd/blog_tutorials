@@ -5,8 +5,6 @@ command -v vault > /dev/null || \
 [[ -z "$VAULT_ROOT_TOKEN" ]] && { echo 'VAULT_ROOT_TOKEN not specified. Aborting' 2>&1 ; exit 1; }
 export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 
-vault login $VAULT_ROOT_TOKEN
-
 ##############
 # create admin role
 ############################

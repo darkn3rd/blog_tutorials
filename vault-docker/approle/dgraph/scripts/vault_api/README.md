@@ -25,11 +25,11 @@ curl --silent \
 curl --silent \
   --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   --request GET \
-  $VAULT_ADDR/v1/auth/approle/role/admin | jq
+  $VAULT_ADDR/v1/auth/approle/role/admin | jq .data
 curl --silent \
-  --header "X-Vault-Token: $VAULT_ADMIN_TOKEN" \
+  --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   --request GET \
-  $VAULT_ADDR/v1/auth/approle/role/dgraph | jq
+  $VAULT_ADDR/v1/auth/approle/role/dgraph | jq .data
 
 # Create Secrets
 export ENC_KEY=$(../randpasswd.sh)

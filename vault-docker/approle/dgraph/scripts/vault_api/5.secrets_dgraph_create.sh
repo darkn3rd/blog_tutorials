@@ -32,10 +32,10 @@ export VAULT_ADMIN_TOKEN=$(curl --silent \
   --request POST \
   --data \
 "{
-    \"role_id\": \"$VAULT_ADMIN_ROLE_ID\",
-    \"secret_id\": \"$VAULT_ADMIN_SECRET_ID\"
+    \"role_id\": \"$ROLE_ID\",
+    \"secret_id\": \"$SECRET_ID\"
 }" \
-  VAULT_ADDR/v1/auth/approle/login \
+  $VAULT_ADDR/v1/auth/approle/login \
   | jq -r '.auth.client_token'
 )
 
