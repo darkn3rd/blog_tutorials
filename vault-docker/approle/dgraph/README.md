@@ -87,7 +87,8 @@ docker logs alpha1 2>&1 | grep --color -E 'ACL secret key|Encryption feature|$'
 export DGRAPH_HTTP="localhost:8080"
 curl --silent http://$DGRAPH_HTTP/health \
   | jq -r '.[].ee_features | .[]' \
-  | sed 's/^/* /'
+  | sed 's/^/* /' \
+  | grep --color --extended-regexp 'acl|encrypt.*|$'
 ```
 
 ## Part E: Testing Dgraph Services
@@ -97,11 +98,19 @@ export DGRAPH_ADMIN_USER="groot"
 export DGRAPH_ADMIN_PSWD="password"
 export DGRAPH_HTTP="localhost:8080"
 DGRAPH_SCRIPTS=./scripts/dgraph
-
+export DGRAPH_TOKEN=$(cat .dgraph.token)
 ############################################
 ## ACL Feature
 ############################################
 $DGRAPH_SCRIPTS/login.sh
+
+############################################
+## Getting Started (optional)
+############################################
+$DGRAPH_SCRIPTS/getting_started/1.data_json.sh
+$DGRAPH_SCRIPTS/getting_started/2.schema.sh
+$DGRAPH_SCRIPTS/getting_started/3.query_starring_edge.sh
+$DGRAPH_SCRIPTS/getting_started/4.query_movies_after_1980.sh
 
 ############################################
 ## Export Feature w/ Encryption + ACL Login

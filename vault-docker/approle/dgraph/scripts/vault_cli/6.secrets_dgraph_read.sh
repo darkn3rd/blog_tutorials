@@ -34,6 +34,6 @@ vault kv get secret/dgraph/alpha
 # save credentials for Dgraph
 ############################
 if [[ $? == 0 ]]; then
-  export DGRAPH_ROLE_ID=$ROLE_ID
-  export DGRAPH_SECRET_ID=$SECRET_ID
+  echo $ROLE_ID > ./dgraph/vault_role_id
+  echo $SECRET_ID > ./dgraph/vault_secret_id
 fi

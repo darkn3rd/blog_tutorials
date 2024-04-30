@@ -7,14 +7,14 @@ export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 vault login $VAULT_ROOT_TOKEN
 
 # Dgraph Policy
-cat << EOF > policy_dgraph.hcl
+cat << EOF > ./vault/policy_dgraph.hcl
 path "secret/data/dgraph/*" {
   capabilities = [ "read", "update" ]
 }
 EOF
 
 # Admin Policy
-cat << EOF > policy_admin.hcl
+cat << EOF > ./data/policy_admin.hcl
 # kv2 secret/dgraph/*
 path "secret/data/dgraph/*" {
    capabilities = [ "create", "read", "update", "delete", "list" ]
