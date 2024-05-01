@@ -20,7 +20,7 @@ cat <<EOF > $VAULT_CONFIG_DIR/policy_dgraph.json
 {
   "policy": "$(sed -e ':a;N;$!ba;s/\n/\\n/g' \
                    -e 's/"/\\"/g' \
-                   vault/policy_dgraph.hcl)"
+                   $VAULT_CONFIG_DIR/policy_dgraph.hcl)"
 }
 EOF
 
@@ -62,7 +62,7 @@ cat << EOF > $VAULT_CONFIG_DIR/policy_admin.json
 {
   "policy": "$(sed -e ':a;N;$!ba;s/\n/\\n/g' \
                    -e 's/"/\\"/g' \
-                   vault/policy_admin.hcl)"
+                   $VAULT_CONFIG_DIR/policy_admin.hcl)"
 }
 EOF
 
