@@ -30,6 +30,10 @@ VAULT_ADMIN_TOKEN=$(vault write auth/approle/login \
 # login using admin token
 vault login $VAULT_ADMIN_TOKEN
 
+if ! [[ -z $VAULT_ADMIN_TOKEN ]]; then
+  echo ${VAULT_ADMIN_TOKEN} > $VAULT_CONFIG_DIR/.admin.token
+fi
+
 ##############
 # write dgraph secrets using admin role
 ############################

@@ -243,7 +243,7 @@ find ./dgraph/backups/ -name '*.backup' | xargs -n 1 file
 
 ```bash
 # Remove resources used in compose environment
-docker compose stop && docker compose rm
+docker compose stop && docker compose rm --force
 PATHS=(
   ./vault/data/*
   ./dgraph/{backups,export}/*
