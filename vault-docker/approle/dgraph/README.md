@@ -153,7 +153,9 @@ export VAULT_SCRIPTS=./scripts/vault_cli
 ################
 $VAULT_SCRIPTS/2.configure.sh
 vault login $VAULT_ROOT_TOKEN
+# verify auth enabled at approle/
 vault auth list
+# verify kv-v2 enabled at secret/
 vault secrets list
 
 #######
