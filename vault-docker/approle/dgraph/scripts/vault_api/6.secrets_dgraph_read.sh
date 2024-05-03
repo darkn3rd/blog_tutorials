@@ -2,11 +2,10 @@
 command -v vault > /dev/null || \
   { echo "[ERROR]: 'vault' command not not found" 1>&2; exit 1; }
 
-[[ -z "$VAULT_ROOT_TOKEN" ]] && { echo 'VAULT_ROOT_TOKEN not specified. Aborting' 2>&1 ; exit 1; }
-export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
-
 export VAULT_CONFIG_DIR=${VAULT_CONFIG_DIR:-"./vault"}
-mkdir -p $VAULT_CONFIG_DIR
+export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
+[[ -f "$VAULT_CONFIG_DIR/.admin.token" ]] || { echo "'$VAULT_CONFIG_DIR/.admin.token' is not found. Aborting" 2>&1 ; exit 1; }
+export VAULT_ADMIN_TOKEN=$(cat $VAULT_CONFIG_DIR/.admin.token)
 
 ##############
 # login using dgraph role
