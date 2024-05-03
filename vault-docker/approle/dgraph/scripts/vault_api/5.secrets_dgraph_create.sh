@@ -39,7 +39,9 @@ export VAULT_ADMIN_TOKEN=$(curl --silent \
   | jq -r '.auth.client_token'
 )
 
-echo ${VAULT_ADMIN_TOKEN} $VAULT_CONFIG_DIR/.admin.token
+if ! [[ -z $VAULT_ADMIN_TOKEN ]]; then
+  echo ${VAULT_ADMIN_TOKEN} > $VAULT_CONFIG_DIR/.admin.token
+fi
 
 ##############
 # write dgraph secrets using admin role
