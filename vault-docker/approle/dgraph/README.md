@@ -1,26 +1,32 @@
 # AppRole using Dgraph
 
-This is an example of using HashiCorp Vault AppRole with from the application Dgraph.
+This is an example of using [HashiCorp Vault AppRole](https://www.vaultproject.io/) with from the application Dgraph.  This content is related to blogs written here:
 
-## Prerequisites
+* [Vault AppRole Auth: The Hard Way: Securely Storing Secrets using HashiCorp Vault REST API](https://medium.com/@joachim8675309/vault-approle-auth-the-hard-way-0a24a208a252)
+* [Vault AppRole Auth: The Easy Way: Securely Storing Secrets with HashiCorp Vault](https://joachim8675309.medium.com/vault-approle-auth-the-easy-way-15b4861810c7)
 
-* [`docker`](https://docs.docker.com/engine/reference/commandline/cli/) with the [Compose](https://docs.docker.com/compose/) plugin. 
-  * [Docker Desktop](https://docs.docker.com/desktop/) (Windows or macOS) is a docker environment that manages a virtual machine running Linux (Hyper/V or WSL on Windows, and Hypervisor Framework on macOS)
-  * [Docker Engine](https://docs.docker.com/engine/install/) (Linux) is the docker engine, no virtualization is needed when running on Linux. 
-* [`vault`](https://www.vaultproject.io/) - client used to interact with a Vault server
-* [`curl`](https://curl.se/) - required to interact with REST API or GraphQL API
-* [`jq`](https://stedolan.github.io/jq/) - required to work with JSON from the shell
-* POSIX Shell
+## Required Tools
+
+* Container Platform
+   * [`docker`](https://docs.docker.com/engine/reference/commandline/cli/) with the [Compose](https://docs.docker.com/compose/) plugin. Linux can run the the [Docker Engine](https://docs.docker.com/engine/install/), but macOS and Windows need to use a virtual machine that runs Linux, such as [Docker Desktop](https://docs.docker.com/desktop/).
+      * [Docker Desktop](https://docs.docker.com/desktop/) (Windows or macOS) is a docker environment that manages a virtual machine running Linux (Hyper/V or WSL on Windows, and Hypervisor Framework on macOS)
+      * [Docker Engine](https://docs.docker.com/engine/install/) (Linux) is the docker engine, no virtualization is needed when running on Linux. 
+* Client CLI Tools
+    * [`vault`](https://www.vaultproject.io/) - client used to interact with a Vault server
+    * [`curl`](https://curl.se/) - required to interact with REST API or GraphQL API
+    * [`jq`](https://stedolan.github.io/jq/) - required to work with JSON from the shell
+* POSIX Shell Environment
     * [`zsh`](https://www.zsh.org/) or 
     * [GNU `bash`](https://www.gnu.org/software/bash/)
-* [GNU `grep`](https://www.gnu.org/software/grep/) - required matching with PCRE 
-* [GNU `sed`](https://www.gnu.org/software/sed/) - required for Vault with REST API
+* GNU Tools
+    * [GNU `grep`](https://www.gnu.org/software/grep/) - required matching with PCRE 
+    * [GNU `sed`](https://www.gnu.org/software/sed/) - required for Vault with REST API
 
 ### Install Notes
 
 Below are some notes to get started quickly. 
 
-**NOTE**: As `docker-compose` is now deprecated, Python environment and the `docker-compose` python module is no longer needed.
+**NOTE**: As `docker-compose` is now deprecated, Python environment and the `docker-compose` python module is no longer needed.  Instructions for this have been removed. 
 
 #### macOS (aka MacOS X)
 
@@ -53,7 +59,7 @@ After this, we can test out an example application Dgraph:
 4. Test an Export operation
 5. Test a Backup operation
 
-### Part 1: Setup Vault
+### Part 1: Launch and Unseal Vault
 
 After the Docker environment is running and the necessary client tools are installed, we can launch the Vault server and unseal it. 
 
@@ -68,21 +74,22 @@ mkdir -p $VAULT_CONFIG_DIR
 
 # Launch Vault
 docker compose up --detach "vault"
-VAULT_SCRIPTS=./scripts/vault_api
 
 # Unseal vault
-$VAULT_SCRIPTS/1.unseal.sh
+./scripts/unseal.sh
 export VAULT_ROOT_TOKEN="$(
   grep -oP "(?<=Initial Root Token: ).*" $VAULT_CONFIG_DIR/unseal.creds
 )"
 export VAULT_ADDR="http://localhost:8200"
 ```
 
-
+From this point, chose whether you wish to use the Vault REST API using `curl` or using the `vault` CLI to interact with the Vault server.
 
 ### Part 1A: Vault API
 
 ```bash
+export VAULT_SCRIPTS=./scripts/vault_api
+
 #######
 # Enable Auth and KVv2
 ################
@@ -134,6 +141,8 @@ $VAULT_SCRIPTS/6.secrets_dgraph_read.sh
 ### Part 1B: Vault CLI
 
 ```bash
+export VAULT_SCRIPTS=./scripts/vault_cli
+
 #######
 # Enable Auth and KVv2
 ################
@@ -168,7 +177,6 @@ $VAULT_SCRIPTS/5.secrets_dgraph_create.sh
 ################
 $VAULT_SCRIPTS/6.secrets_dgraph_read.sh
 ```
-
 
 ### Part 2: Dgraph
 
@@ -239,3 +247,44 @@ docker compose stop && docker compose rm
 rm -rf ./vault/data/*
 rm $TEMP_DIR/vault/*
 ```
+
+## Tested Environments
+
+These are the environments that were tested on April, 2024.
+
+### macOS Monterey 12.6.3 build 21G419
+--------------------------------------------------
+* **Docker Desktop for macOS** 4.29.0
+  * **Docker Engine** 26.0.0
+    * Plugin: **Compose** v2.26.1
+* **zsh** 5.9 (arm-apple-darwin21.3.0)
+* **GNU bash**, version 5.2.21(1)-release (aarch64-apple-darwin21.6.0)
+* grep (**GNU grep**) 3.11
+* sed (**GNU sed**) 4.9
+* **jq** 1.7.1
+* **Vault** v1.16.2
+
+Windows 11 Home [WinNT 10.0.22631.34467] with MSYS
+--------------------------------------------------
+* **Docker Desktop for Windows** 4.29.0
+  * **Docker Engine** 26.0.0
+    * Plugin: **Compose**: v2.26.1
+* MSYS
+  * **zsh** 5.9 (x86_64-pc-msys)
+  * **GNU bash**, version 5.2.26(1)-release (x86_64-pc-msys)
+  * grep (**GNU grep**) 3.0
+  * sed (**GNU sed**) 4.9
+  * **jq** 1.7.1
+* **Vault** v1.16.1
+
+Pop!_OS 22.04 LTS (Ubuntu Jammy)
+--------------------------------------------------
+* **Docker Engine** version 26.1.0, build 9714adc
+  * Plugin: **Compose** version v2.26.1
+* **zsh** 5.8.1 (x86_64-ubuntu-linux-gnu)
+* **GNU bash**, version 5.1.16(1)-release (x86_64-pc-linux-gnu)
+* grep (**GNU grep**) 3.7
+* sed (**GNU sed**) 4.8                                 
+* **jq** 1.6
+* **Vault** v1.16.2
+
