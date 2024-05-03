@@ -22,6 +22,10 @@ This is an example of using [HashiCorp Vault AppRole](https://www.vaultproject.i
     * [GNU `grep`](https://www.gnu.org/software/grep/) - required matching with PCRE 
     * [GNU `sed`](https://www.gnu.org/software/sed/) - required for Vault with REST API
 
+## Optional Tools
+
+* [`bat`](https://github.com/sharkdp/bat) - useful for color syntax-highlighting of Vault policies (HCL)
+
 ### Install Notes
 
 Below are some notes to get started quickly. 
@@ -105,23 +109,24 @@ curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
 # Setup Policies
 ################
 $VAULT_SCRIPTS/3.policies.sh
-# verify admin policy
+# verify  policies
+BAT_CMD=$(command -v bat > /dev/null && echo "$(command -v bat) --language hcl")
 curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   $VAULT_ADDR/v1/sys/policies/acl/admin | jq .data.policy \
-  | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/'
-# verify dgraph polich
+  | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/' \
+  | $BAT_CMD
 curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   $VAULT_ADDR/v1/sys/policies/acl/dgraph | jq .data.policy \
-  | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/'
+  | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/' \
+  | $BAT_CMD
 
 #######
 # Setup Roles
 ################
 $VAULT_SCRIPTS/4.roles.sh
-# verify admin role
+# verify roles
 curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   $VAULT_ADDR/v1/auth/approle/role/admin | jq .data
-# verify dgraph role
 curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   $VAULT_ADDR/v1/auth/approle/role/dgraph | jq .data
 
@@ -155,13 +160,16 @@ vault secrets list
 # Setup Policies
 ################
 $VAULT_SCRIPTS/3.policies.sh
-vault policy read admin
-vault policy read dgraph
+# verify  policies
+BAT_CMD=$(command -v bat > /dev/null && echo "$(command -v bat) --language hcl")
+vault policy read admin | $BAT_CMD
+vault policy read dgraph | $BAT_CMD
 
 #######
 # Setup Roles
 ################
 $VAULT_SCRIPTS/4.roles.sh
+# verify roles
 vault read auth/approle/role/admin
 vault read auth/approle/role/dgraph
 
@@ -252,8 +260,8 @@ PATHS=(
 )
 for P in ${PATHS[@]}; do rm -rf $P; done
 
-unset VAULT_ROOT_TOKEN VAULT_ADDR VAULT_SCRIPTS VAULT_CONFIG_DIR \
-  DGRAPH_HTTP DGRAPH_CONFIG_DIR TEMP_DIR ENC_KEY HMAC_SECRET
+unset VAULT_ROOT_TOKEN VAULT_ADDR VAULT_SCRIPTS VAULT_CONFIG_DIR TEMP_DIR \
+  DGRAPH_HTTP DGRAPH_CONFIG_DIR ENC_KEY HMAC_SECRET DGRAPH_ADMIN_USER DGRAPH_ADMIN_PSWD DGRAPH_TOKEN
 ```
 
 
