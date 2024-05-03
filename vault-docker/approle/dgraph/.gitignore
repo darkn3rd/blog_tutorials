@@ -1,8 +1,17 @@
-vault/policy_admin.json
-vault/policy_dgraph.json
+vault/*.json
 vault/data
 
 dgraph/vault_role_id
 dgraph/vault_secret_id
 dgraph/export
 dgraph/backups
+
+# ignore any script generated json/hcl/graphql
+scripts/**/*.json
+scripts/**/*.hcl
+scripts/**/*.graphql
+
+# Misc
+unseal.creds
+logs
+.dgraph.token
