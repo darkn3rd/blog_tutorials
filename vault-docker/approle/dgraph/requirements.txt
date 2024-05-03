@@ -9,7 +9,7 @@ docker==5.0.0
 docker-compose==1.29.1
 dockerpty==0.4.1
 docopt==0.6.2
-idna==2.10
+idna==3.7
 jsonschema==3.2.0
 paramiko==2.10.1
 pycparser==2.20
