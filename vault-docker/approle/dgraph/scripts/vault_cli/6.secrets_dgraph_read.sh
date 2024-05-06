@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 command -v vault > /dev/null || \
   { echo "[ERROR]: 'vault' command not not found" 1>&2; exit 1; }
-
+command -v jq > /dev/null || \
+  { echo "[ERROR]: 'jq' command not not found" 1>&2; exit 1; }
 export VAULT_ADDR=${VAULT_ADDR:-"http://localhost:8200"}
 [[ -f "$VAULT_CONFIG_DIR/.admin.token" ]] || { echo "'$VAULT_CONFIG_DIR/.admin.token' is not found. Aborting" 2>&1 ; exit 1; }
 export VAULT_ADMIN_TOKEN=$(cat $VAULT_CONFIG_DIR/.admin.token)
