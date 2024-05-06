@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-command -v grep > /dev/null || \
-  { echo "[ERROR]: 'grep' command not not found" 1>&2; exit 1; }
+grep --version | grep -q GNU  || \
+  { echo "[ERROR]: GNU grep command not not found" 1>&2; exit 1; }
 command -v curl > /dev/null || \
   { echo "[ERROR]: 'curl' command not not found" 1>&2; exit 1; }
 

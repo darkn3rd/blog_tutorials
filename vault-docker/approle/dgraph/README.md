@@ -80,11 +80,13 @@ mkdir -p $VAULT_CONFIG_DIR
 docker compose up --detach "vault"
 
 # Unseal vault
+export VAULT_ADDR="http://localhost:8200"
 ./scripts/unseal.sh
+
+
 export VAULT_ROOT_TOKEN="$(
   grep -oP "(?<=Initial Root Token: ).*" $VAULT_CONFIG_DIR/unseal.creds
 )"
-export VAULT_ADDR="http://localhost:8200"
 ```
 
 From this point, chose whether you wish to use the Vault REST API using `curl` or using the `vault` CLI to interact with the Vault server.
@@ -110,7 +112,7 @@ curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
 ################
 $VAULT_SCRIPTS/3.policies.sh
 # verify  policies
-BAT_CMD=$(command -v bat > /dev/null && echo "$(command -v bat) --language hcl")
+BAT_CMD=$(command -v bat > /dev/null && echo "$(command -v bat) --language hcl --paging=never" )
 curl --silent --header "X-Vault-Token: $VAULT_ROOT_TOKEN" \
   $VAULT_ADDR/v1/sys/policies/acl/admin | jq .data.policy \
   | sed -r -e 's/\\n/\n/g' -e 's/\\"/"/g' -e 's/^"(.*)"$/\1/' \
@@ -163,7 +165,7 @@ vault secrets list
 ################
 $VAULT_SCRIPTS/3.policies.sh
 # verify  policies
-BAT_CMD=$(command -v bat > /dev/null && echo "$(command -v bat) --language hcl")
+BAT_CMD=$(command -v bat > /dev/null && echo "$(command -v bat) --language hcl --paging=never")
 vault policy read admin | $BAT_CMD
 vault policy read dgraph | $BAT_CMD
 
@@ -220,7 +222,9 @@ export DGRAPH_ADMIN_USER="groot"
 export DGRAPH_ADMIN_PSWD="password"
 export DGRAPH_HTTP="localhost:8080"
 DGRAPH_SCRIPTS=./scripts/dgraph
+
 $DGRAPH_SCRIPTS/login.sh
+
 export DGRAPH_TOKEN=$(cat $DGRAPH_CONFIG_DIR/.dgraph.token)
 
 ############################################
@@ -228,6 +232,7 @@ export DGRAPH_TOKEN=$(cat $DGRAPH_CONFIG_DIR/.dgraph.token)
 ############################################
 $DGRAPH_SCRIPTS/getting_started/1.data_json.sh
 $DGRAPH_SCRIPTS/getting_started/2.schema.sh
+
 $DGRAPH_SCRIPTS/getting_started/3.query_starring_edge.sh
 $DGRAPH_SCRIPTS/getting_started/4.query_movies_after_1980.sh
 
@@ -271,13 +276,25 @@ unset VAULT_ROOT_TOKEN VAULT_ADDR VAULT_SCRIPTS VAULT_CONFIG_DIR TEMP_DIR \
 
 These are the environments that were tested on April, 2024.
 
-### macOS Monterey 12.6.3 build 21G419
+### macOS Monterey 12.6.3 build 21G419 (Apple M1 Max)
 --------------------------------------------------
 * **Docker Desktop for macOS** 4.29.0
   * **Docker Engine** 26.0.0
     * Plugin: **Compose** v2.26.1
 * **zsh** 5.9 (arm-apple-darwin21.3.0)
 * **GNU bash**, version 5.2.21(1)-release (aarch64-apple-darwin21.6.0)
+* grep (**GNU grep**) 3.11
+* sed (**GNU sed**) 4.9
+* **jq** 1.7.1
+* **Vault** v1.16.2
+
+### macOS Monterey 12.2.1 build 21D62 (Intel Core i5)
+--------------------------------------------------
+* **Docker Desktop for macOS** 4.12.0
+  * **Docker Engine** 20.10.17
+    * Plugin: **Compose** v2.10.2
+* **zsh** 5.9 (x86_64-apple-darwin21.3.0)
+* **GNU bash**, version 5.2.26(1)-release (x86_64-apple-darwin21.6.0)
 * grep (**GNU grep**) 3.11
 * sed (**GNU sed**) 4.9
 * **jq** 1.7.1
