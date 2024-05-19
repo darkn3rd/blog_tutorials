@@ -1,17 +1,22 @@
 Vagrant.configure("2") do |config|
-  HOMEBREW_PREFIX = ENV['HOMEBREW_PREFIX'] || '/usr/local'
-  puts "HOMEBREW_PREFIX=#{HOMEBREW_PREFIX}"
   puts "RUBY_PLATFORM=#{RUBY_PLATFORM}"
-  # RUBY_PLATFORM=x86_64-darwin
   # lsof -nP -iTCP:3000
   if RUBY_PLATFORM == "x86_64-darwin"
+    HOMEBREW_PREFIX = ENV['HOMEBREW_PREFIX'] || '/usr/local'
     config.vm.box = "generic/ubuntu2204"
     config.vm.provider "qemu" do |qe|
       qe.ssh_port = "50025" # change ssh port as needed
-      qe.qemu_dir = "/usr/local/share/qemu"
+      qe.qemu_dir = "#{HOMEBREW_PREFIX}/share/qemu"
       qe.arch = "x86_64"
       qe.machine = "q35,accel=hvf"
       qe.net_device = "virtio-net-pci"
+    end
+  elsif  RUBY_PLATFORM == "arm64-darwin"
+    HOMEBREW_PREFIX = ENV['HOMEBREW_PREFIX'] || '/opt/homebrew'
+    config.vm.box = "perk/ubuntu-2204-arm64"
+    config.vm.provider "qemu" do |qe|
+      qe.ssh_port = "50025" # change ssh port as needed
+      qe.qemu_dir = "#{HOMEBREW_PREFIX}/share/qemu"
     end
   end
   config.vm.network "forwarded_port", guest: 3000, host: 3000
