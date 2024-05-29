@@ -9,10 +9,25 @@ These were tested in the following environments:
       * `qemu` (vagrant-qemu 0.3.6): QEMU 9.0.0
     * Box
       * `generic/ubuntu2204` (`virtualbox`, 4.3.12, (amd64))
-
+* Lenovo Thinkpad X1 Carbon
+  **Processor**: Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz
+  **Operating System**: Pop!_OS 22.04 LTS (6.5.6-76060506-generic)
+  * Varant 2.4.1
+    * Provider: 
+      * `virtualbox`: Virtualbox 7.0.10
+    * Box
+      * `generic/ubuntu2204` (`virtualbox`, 4.2.16)
 
 
 ## Notes
+
+### Ubuntu
+
+```bash
+lscpu | grep 'Model name'
+cat /etc/os-release
+
+```
 
 
 ### macOS
