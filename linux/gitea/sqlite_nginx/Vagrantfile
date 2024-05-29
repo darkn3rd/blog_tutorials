@@ -1,8 +1,9 @@
 Vagrant.configure("2") do |config|
-  puts "RUBY_PLATFORM=#{RUBY_PLATFORM}"
-  if RUBY_PLATFORM =~ /^x86_64/
+  if RUBY_PLATFORM =~ "^x86_64"
+    # use qemu/virtualbox image for x86_64
     config.vm.box = "generic/ubuntu2204"
     if RUBY_PLATFORM =~ /darwin$/
+      # configure QEMU/HVF if qemu provider
       config.vm.provider "qemu" do |qe|
         qe.ssh_port = "50025" # change ssh port as needed
         qe.qemu_dir = "/usr/local/share/qemu"
@@ -12,17 +13,11 @@ Vagrant.configure("2") do |config|
       end
     end
   elsif RUBY_PLATFORM =~ /arm64.-darwin\d\d$/
+    # arm64 image for macOS on Apple Silicon
     config.vm.box = "perk/ubuntu-2204-arm64"
-    # use defaults except for ssh_port
+    # configure QEMU/HVF if qemu provider
     config.vm.provider "qemu" do |qe|
       qe.ssh_port = "50026" # change ssh port as needed
-    end
-  elsif  RUBY_PLATFORM == "arm64-darwin"
-    HOMEBREW_PREFIX = ENV['HOMEBREW_PREFIX'] || '/opt/homebrew'
-    config.vm.box = "perk/ubuntu-2204-arm64"
-    config.vm.provider "qemu" do |qe|
-      qe.ssh_port = "50025" # change ssh port as needed
-      qe.qemu_dir = "#{HOMEBREW_PREFIX}/share/qemu"
     end
   end
   config.vm.network "forwarded_port", guest: 3000, host: 3000
