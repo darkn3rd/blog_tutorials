@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
   
     ####### Provision #######
     config.vm.provision :puppet do |puppet|
-      puppet.module_path = "./site"
+      puppet.module_path = "../site"
       puppet.options = "--verbose --debug"
     end
   end

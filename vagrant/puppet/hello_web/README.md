@@ -2,23 +2,6 @@
 
 This tutorial covers how to get started with Puppet using Vagrant for automation some basic modules of your design.
 
-Alternatively, you can run this manually from within the virtual machine. You would run this:
-
-```shell
-vagrant --no-provision
-vagrant --provision-with "bootstrap" # install puppet agent
-vagrant ssh # log into VM
-
-# Inside VM
-MODULES=$(mount | grep -o '/tmp/vagrant-puppet/modules-[^ ]*')
-MANIFESTS=$(mount | grep -o '/tmp/vagrant-puppet/manifests-[^ ]*' | uniq)
-puppet apply --verbose --debug \
-  --modulepath "$MODULES:/etc/puppet/modules" \
- --detailed-exitcodes \
- "$MANIFESTS/default.pp"
-```
-
-
 # Directory Structure
 
 You can create a similar directory structure with the following commands:
