@@ -58,8 +58,8 @@ vagrant up
 Alternatively, you can run this manually from within the virtual machine. You would run this.
 
 ```shell
-vagrant --no-provision
-vagrant --provision-with "bootstrap" # install puppet agent
+vagrant up --no-provision
+vagrant provision --provision-with "bootstrap" # install puppet agent
 vagrant ssh # log into VM
 ```
 
