@@ -31,22 +31,26 @@ These are code related to tutorials created.
          * [TestKitchen with Chef: How to Test and Configure a system using Chef](https://joachim8675309.medium.com/testkitchen-with-chef-and-serverspec-2ac0cd938e5) on Aug 28, 2018
     * Ansible, Busser/TestInfra, Shell/TestInfra
          * [TestKitchen with Ansible and TestInfra: Testing Ansible provisioned systems with Test Kitchen](https://joachim8675309.medium.com/testkitchen-with-ansible-and-testinfra-e3fc4320ced) on Sep 6, 2018
-* **Change Configuration** - automate the management/deployment of infrastructure by defining the desired state of systems through code
-  * **Chef**
-      * [Vagrant Provisioning with Chef: Provisioning Systems with Vagrant and Chef-Zero](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018
-      * [Testing on the Chef Platform: Overview: Introduction to Test Automation with Chef](https://joachim8675309.medium.com/testing-on-the-chef-platform-overview-8e29b4f050ca) on Aug 23, 2018
-      * [Testing Chef Cookbooks with InSpec: Integration Testing using Test Kitchen and Inspec](https://joachim8675309.medium.com/testing-chef-cookbooks-with-inspec-c18ec1119c94) on Aug 31, 2018
-  * **Puppet** 
-      * [Vagrant Provisioning with Puppet: Provisioning Virtual System using Puppet Apply](https://joachim8675309.medium.com/vagrant-provisioning-with-puppet-553a59f0c48e) on Aug 12, 2018 - Puppet 5
-      * [Master of Puppets with Vagrant: Streamlining development using Puppet Agent provisioning](https://joachim8675309.medium.com/master-of-puppets-with-vagrant-b29be7858b28) on Sep 2024 - Puppet 8
-      * [Puppetry with Vagrant: Streamlining Puppet Development with Vagrant](https://joachim8675309.medium.com/puppetry-with-vagrant-1b5e0613672a) on Sep 2024 - Puppet 8
-  * **Salt Stack (Salt Project)**
-      * [Vagrant Provisioning with SaltStack: Provisioning Virtual System using Masterless Salt Stack](https://joachim8675309.medium.com/vagrant-provisioning-with-saltstack-50dab12ce6c7) on Aug 12, 2018
-      * [Salt DevKit with External Formulas: Local Development with Vagrant using external Salt formulas](https://joachim8675309.medium.com/salt-devkit-with-external-formulas-9e38d8b90cd7) on Feb 6, 2020
-      * [Salt DevKit: Developing Formulas: Developing Salt Formulas on a Salt Stack Dev Environment](https://joachim8675309.medium.com/salt-devkit-developing-formulas-e8b500d6b970) on Feb 10, 2020
-      * [Adding Salt to Vagrant: Rapidly Develop and Test using the Vagrant Salt provisioner](https://medium.com/@joachim8675309/adding-salt-to-vagrant-43c162e67008) on Aug 6, 2024 - `salt 3007.1`
 
-### Language Platforms
+## **Change Configuration** 
+
+Aautomate the management/deployment of infrastructure by defining the desired state of systems through code
+
+* **Chef**
+    * [Vagrant Provisioning with Chef: Provisioning Systems with Vagrant and Chef-Zero](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018
+    * [Testing on the Chef Platform: Overview: Introduction to Test Automation with Chef](https://joachim8675309.medium.com/testing-on-the-chef-platform-overview-8e29b4f050ca) on Aug 23, 2018
+    * [Testing Chef Cookbooks with InSpec: Integration Testing using Test Kitchen and Inspec](https://joachim8675309.medium.com/testing-chef-cookbooks-with-inspec-c18ec1119c94) on Aug 31, 2018
+* **Puppet** 
+    * [Vagrant Provisioning with Puppet: Provisioning Virtual System using Puppet Apply](https://joachim8675309.medium.com/vagrant-provisioning-with-puppet-553a59f0c48e) on Aug 12, 2018 - Puppet 5
+    * [Master of Puppets with Vagrant: Streamlining development using Puppet Agent provisioning](https://joachim8675309.medium.com/master-of-puppets-with-vagrant-b29be7858b28) on Sep 2024 - Puppet 8
+    * [Puppetry with Vagrant: Streamlining Puppet Development with Vagrant](https://joachim8675309.medium.com/puppetry-with-vagrant-1b5e0613672a) on Sep 2024 - Puppet 8
+* **Salt Stack (Salt Project)**
+    * [Vagrant Provisioning with SaltStack: Provisioning Virtual System using Masterless Salt Stack](https://joachim8675309.medium.com/vagrant-provisioning-with-saltstack-50dab12ce6c7) on Aug 12, 2018
+    * [Salt DevKit with External Formulas: Local Development with Vagrant using external Salt formulas](https://joachim8675309.medium.com/salt-devkit-with-external-formulas-9e38d8b90cd7) on Feb 6, 2020
+    * [Salt DevKit: Developing Formulas: Developing Salt Formulas on a Salt Stack Dev Environment](https://joachim8675309.medium.com/salt-devkit-developing-formulas-e8b500d6b970) on Feb 10, 2020
+    * [Adding Salt to Vagrant: Rapidly Develop and Test using the Vagrant Salt provisioner](https://medium.com/@joachim8675309/adding-salt-to-vagrant-43c162e67008) on Aug 6, 2024 - `salt 3007.1`
+
+### åLanguage Platforms
 
 * Getting Compilers - https://joachim8675309.medium.com/getting-compilers-d4819d95942a
 * Python
