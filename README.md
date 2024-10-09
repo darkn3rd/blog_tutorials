@@ -137,7 +137,10 @@ These are code related to tutorials created.
 
 * Security
     * Vault
-        * AppRole (`docker-compose`) - https://joachim8675309.medium.com/hashicorp-vault-with-approle-auth-724178503903
+        * [HashiCorp Vault with AppRole: Securing Secrets using Vault and AppRole Auth](https://joachim8675309.medium.com/hashicorp-vault-with-approle-auth-724178503903) on Apr 19, 2021
+        * [Vault AppRole Auth: The Easy Way: Securely Storing Secrets with HashiCorp Vault](https://joachim8675309.medium.com/vault-approle-auth-the-easy-way-15b4861810c7) on Apr 28, 2024 - Vault v1.16.2
+        * [Vault AppRole Auth: The Hard Way: Securely Storing Secrets using HashiCorp Vault REST API](https://joachim8675309.medium.com/vault-approle-auth-the-hard-way-0a24a208a252) on Apr 30, 2024 - Vault v1.16.2 
+
 
 
 ## License
