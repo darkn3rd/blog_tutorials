@@ -1,0 +1,14 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "generic/rocky9"
+    config.vm.network "forwarded_port", guest: 80, host: 8083  
+
+    ####### Install Puppet Agent #######
+    config.vm.provision "bootstrap", before: :all, type: "shell", path: "../bootstrap.sh"
+  
+    ####### Provision #######
+    config.vm.provision :puppet do |puppet|
+      puppet.module_path = "../site"
+      puppet.options = "--verbose --debug"
+    end
+  end
+  

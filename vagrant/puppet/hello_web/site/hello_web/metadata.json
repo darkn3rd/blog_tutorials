@@ -1,0 +1,33 @@
+{
+    "name": "joachim8675309-hello_web",
+    "version": "0.1.0",
+    "author": "joachim8675309",
+    "summary": "Hello World Tutorial",
+    "license": "Apache-2.0",
+    "source": "https://github.com/darkn3rd/blog_tutorials",
+    "dependencies": [],
+    "operatingsystem_support": [
+      {
+        "operatingsystem": "RedHat",
+        "operatingsystemrelease": ["9"]
+      },
+      {
+        "operatingsystem": "Rocky",
+        "operatingsystemrelease": ["9"]
+      },
+      {
+        "operatingsystem": "Debian",
+        "operatingsystemrelease": ["12"]
+      },
+      {
+        "operatingsystem": "Ubuntu",
+        "operatingsystemrelease": ["22.04"]
+      }
+    ],
+    "requirements": [
+      {
+        "name": "puppet",
+        "version_requirement": ">= 7.24 < 9.0.0"
+      }
+    ]
+  }
