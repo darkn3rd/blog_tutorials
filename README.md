@@ -6,9 +6,14 @@ These are code related to tutorials created.
 
 ### General
 
+#### **Containerization**
+
 * Docker
     * Docker Command vs Ansible - https://medium.com/@Joachim8675309/docker-using-shell-or-docker-compose-4ab8ea8ae801
     * Docker Command vs. Docker Compose - https://medium.com/@Joachim8675309/docker-using-shell-or-ansible-7cdceb646d3
+
+#### **Virtualization**
+
 * Virtual Box
     * Windows
          * Windows 8.1 - https://medium.com/@Joachim8675309/virtualbox-and-friends-on-windows-8-1-3c691460698f
@@ -32,7 +37,7 @@ These are code related to tutorials created.
     * Ansible, Busser/TestInfra, Shell/TestInfra
          * [TestKitchen with Ansible and TestInfra](https://joachim8675309.medium.com/testkitchen-with-ansible-and-testinfra-e3fc4320ced) on Sep 6, 2018
 
-## **Change Configuration** 
+#### **Change Configuration** 
 
 Aautomate the management/deployment of infrastructure by defining the desired state of systems through code
 
@@ -50,7 +55,7 @@ Aautomate the management/deployment of infrastructure by defining the desired st
     * [Salt DevKit: Developing Formulas](https://joachim8675309.medium.com/salt-devkit-developing-formulas-e8b500d6b970) on Feb 10, 2020
     * [Adding Salt to Vagrant](https://medium.com/@joachim8675309/adding-salt-to-vagrant-43c162e67008) on Aug 6, 2024 - `salt 3007.1`
 
-### åLanguage Platforms
+### Language Platforms
 
 * Getting Compilers - https://joachim8675309.medium.com/getting-compilers-d4819d95942a
 * Python
