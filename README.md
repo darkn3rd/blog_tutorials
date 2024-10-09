@@ -19,18 +19,18 @@ These are code related to tutorials created.
 * **Vagrant**: manage dev environments through automatic provisioning and configuration of virtual machines or containers.
     * **Providers**
          * Virtualbox
-             * [Vagrant with Macbook (intel): Managing VMs with Vagrant + Virtualbox on intel Macbooks](https://joachim8675309.medium.com/vagrant-with-macbook-intel-dfc8efffe148) on May 7, 2024 - example of using Virtualbox to run Windows, macOS, FreeBSD, ArchLinux, FreeBSD on Intel Macbook. 
+             * [Vagrant with Macbook (intel)](https://joachim8675309.medium.com/vagrant-with-macbook-intel-dfc8efffe148) on May 7, 2024 - example of using Virtualbox to run Windows, macOS, FreeBSD, ArchLinux, FreeBSD on Intel Macbook. 
          * QEMU (`vagrant-qemu`)
-             * [Vagrant with Macbook Mx (arm64): Managing VMs with Vagrant + QEMU on arm64 Macbooks](https://joachim8675309.medium.com/vagrant-with-macbook-mx-arm64-0f590fd7e48a) on March 14, 2024: demonstrate how to run arm64 based VMs (Hyperkit) and Intel based VMs (Q35 emulator) using `vagrant-qemu` plugin on arm64-based Macbook M-Series. 
+             * [Vagrant with Macbook Mx (arm64)](https://joachim8675309.medium.com/vagrant-with-macbook-mx-arm64-0f590fd7e48a) on March 14, 2024: demonstrate how to run arm64 based VMs (Hyperkit) and Intel based VMs (Q35 emulator) using `vagrant-qemu` plugin on arm64-based Macbook M-Series. 
     * **Provisioners**
          * Shell (`shell`) - https://medium.com/@Joachim8675309/vagrant-provisioning-e4c9fd57968d
          * Ansible (`ansible_local`) - https://medium.com/@Joachim8675309/vagrant-provisioning-with-ansible-6dba6bca6290
          * Docker (`docker`) - https://medium.com/@Joachim8675309/vagrant-provisioning-with-docker-3621df12092a
 * **Test Kitchen** - automates the process of creating, configuring, and testing systems
     * Chef, ServerSpec, Busser/ServerSpec
-         * [TestKitchen with Chef: How to Test and Configure a system using Chef](https://joachim8675309.medium.com/testkitchen-with-chef-and-serverspec-2ac0cd938e5) on Aug 28, 2018
+         * [TestKitchen with Chef](https://joachim8675309.medium.com/testkitchen-with-chef-and-serverspec-2ac0cd938e5) on Aug 28, 2018
     * Ansible, Busser/TestInfra, Shell/TestInfra
-         * [TestKitchen with Ansible and TestInfra: Testing Ansible provisioned systems with Test Kitchen](https://joachim8675309.medium.com/testkitchen-with-ansible-and-testinfra-e3fc4320ced) on Sep 6, 2018
+         * [TestKitchen with Ansible and TestInfra](https://joachim8675309.medium.com/testkitchen-with-ansible-and-testinfra-e3fc4320ced) on Sep 6, 2018
 
 ## **Change Configuration** 
 
@@ -42,7 +42,7 @@ Aautomate the management/deployment of infrastructure by defining the desired st
     * [Testing Chef Cookbooks with InSpec](https://joachim8675309.medium.com/testing-chef-cookbooks-with-inspec-c18ec1119c94) on Aug 31, 2018
 * **Puppet** 
     * [Vagrant Provisioning with Puppet](https://joachim8675309.medium.com/vagrant-provisioning-with-puppet-553a59f0c48e) on Aug 12, 2018 - Puppet 5, Provisioner: `puppet`
-    * [Master of Puppets with Vagrant: Streamlining development using Puppet Agent provisioning](https://joachim8675309.medium.com/master-of-puppets-with-vagrant-b29be7858b28) on Sep 2024 - Puppet 8, Provisioner: `puppet_server`
+    * [Master of Puppets with Vagrant](https://joachim8675309.medium.com/master-of-puppets-with-vagrant-b29be7858b28) on Sep 2024 - Puppet 8, Provisioner: `puppet_server`
     * [Puppetry with Vagrant](https://joachim8675309.medium.com/puppetry-with-vagrant-1b5e0613672a) on Sep 2024 - Puppet 8, Provisioner: `puppet`
 * **Salt Stack (Salt Project)**
     * [Vagrant Provisioning with SaltStack](https://joachim8675309.medium.com/vagrant-provisioning-with-saltstack-50dab12ce6c7) on Aug 12, 2018
