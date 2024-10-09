@@ -37,18 +37,18 @@ These are code related to tutorials created.
 Aautomate the management/deployment of infrastructure by defining the desired state of systems through code
 
 * **Chef**
-    * [Vagrant Provisioning with Chef: Provisioning Systems with Vagrant and Chef-Zero](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018
-    * [Testing on the Chef Platform: Overview: Introduction to Test Automation with Chef](https://joachim8675309.medium.com/testing-on-the-chef-platform-overview-8e29b4f050ca) on Aug 23, 2018
-    * [Testing Chef Cookbooks with InSpec: Integration Testing using Test Kitchen and Inspec](https://joachim8675309.medium.com/testing-chef-cookbooks-with-inspec-c18ec1119c94) on Aug 31, 2018
+    * [Vagrant Provisioning with Chef](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018 - `chef-zero`
+    * [Testing on the Chef Platform: Overview](https://joachim8675309.medium.com/testing-on-the-chef-platform-overview-8e29b4f050ca) on Aug 23, 2018
+    * [Testing Chef Cookbooks with InSpec](https://joachim8675309.medium.com/testing-chef-cookbooks-with-inspec-c18ec1119c94) on Aug 31, 2018
 * **Puppet** 
-    * [Vagrant Provisioning with Puppet: Provisioning Virtual System using Puppet Apply](https://joachim8675309.medium.com/vagrant-provisioning-with-puppet-553a59f0c48e) on Aug 12, 2018 - Puppet 5
-    * [Master of Puppets with Vagrant: Streamlining development using Puppet Agent provisioning](https://joachim8675309.medium.com/master-of-puppets-with-vagrant-b29be7858b28) on Sep 2024 - Puppet 8
-    * [Puppetry with Vagrant: Streamlining Puppet Development with Vagrant](https://joachim8675309.medium.com/puppetry-with-vagrant-1b5e0613672a) on Sep 2024 - Puppet 8
+    * [Vagrant Provisioning with Puppet](https://joachim8675309.medium.com/vagrant-provisioning-with-puppet-553a59f0c48e) on Aug 12, 2018 - Puppet 5, Provisioner: `puppet`
+    * [Master of Puppets with Vagrant: Streamlining development using Puppet Agent provisioning](https://joachim8675309.medium.com/master-of-puppets-with-vagrant-b29be7858b28) on Sep 2024 - Puppet 8, Provisioner: `puppet_server`
+    * [Puppetry with Vagrant](https://joachim8675309.medium.com/puppetry-with-vagrant-1b5e0613672a) on Sep 2024 - Puppet 8, Provisioner: `puppet`
 * **Salt Stack (Salt Project)**
-    * [Vagrant Provisioning with SaltStack: Provisioning Virtual System using Masterless Salt Stack](https://joachim8675309.medium.com/vagrant-provisioning-with-saltstack-50dab12ce6c7) on Aug 12, 2018
-    * [Salt DevKit with External Formulas: Local Development with Vagrant using external Salt formulas](https://joachim8675309.medium.com/salt-devkit-with-external-formulas-9e38d8b90cd7) on Feb 6, 2020
-    * [Salt DevKit: Developing Formulas: Developing Salt Formulas on a Salt Stack Dev Environment](https://joachim8675309.medium.com/salt-devkit-developing-formulas-e8b500d6b970) on Feb 10, 2020
-    * [Adding Salt to Vagrant: Rapidly Develop and Test using the Vagrant Salt provisioner](https://medium.com/@joachim8675309/adding-salt-to-vagrant-43c162e67008) on Aug 6, 2024 - `salt 3007.1`
+    * [Vagrant Provisioning with SaltStack](https://joachim8675309.medium.com/vagrant-provisioning-with-saltstack-50dab12ce6c7) on Aug 12, 2018
+    * [Salt DevKit with External Formulas](https://joachim8675309.medium.com/salt-devkit-with-external-formulas-9e38d8b90cd7) on Feb 6, 2020
+    * [Salt DevKit: Developing Formulas](https://joachim8675309.medium.com/salt-devkit-developing-formulas-e8b500d6b970) on Feb 10, 2020
+    * [Adding Salt to Vagrant](https://medium.com/@joachim8675309/adding-salt-to-vagrant-43c162e67008) on Aug 6, 2024 - `salt 3007.1`
 
 ### åLanguage Platforms
 
