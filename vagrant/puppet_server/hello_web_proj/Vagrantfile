@@ -1,0 +1,35 @@
+Vagrant.configure("2") do |config| 
+  config.vm.provision "bootstrap", before: :all, 
+    type: "shell", path: "./bootstrap.sh"
+
+  # Puppet Master node
+  config.vm.define "puppetserver01" do |puppetserver|
+    puppetserver.vm.box = "generic/ubuntu2204"
+    puppetserver.vm.hostname = "puppetserver01.local"
+    puppetserver.vm.network "private_network", ip: "192.168.50.4"
+    puppetserver.vm.synced_folder "site", 
+      "/etc/puppetlabs/code/environments/production"
+  end
+
+  # Node 1
+  config.vm.define "node01" do |node01|
+    node01.vm.box = "generic/ubuntu2204"
+    node01.vm.hostname = "node01.local"
+    node01.vm.network "private_network", ip: "192.168.50.5"
+    node01.vm.provision "puppet_server" do |puppet|
+      puppet.puppet_server = "puppetserver01.local"
+      puppet.options = "--verbose --debug"
+    end
+  end
+
+  # Node 2
+  config.vm.define "node02" do |node02|
+    node02.vm.box = "generic/ubuntu2204"
+    node02.vm.hostname = "node02.local"
+    node02.vm.network "private_network", ip: "192.168.50.6"
+    node02.vm.provision "puppet_server" do |puppet|
+      puppet.puppet_server = "puppetserver01.local"
+      puppet.options = "--verbose --debug"
+    end
+  end
+end
