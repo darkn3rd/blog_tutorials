@@ -6,9 +6,14 @@ These are code related to tutorials created.
 
 ### General
 
+#### **Containerization**
+
 * Docker
     * Docker Command vs Ansible - https://medium.com/@Joachim8675309/docker-using-shell-or-docker-compose-4ab8ea8ae801
     * Docker Command vs. Docker Compose - https://medium.com/@Joachim8675309/docker-using-shell-or-ansible-7cdceb646d3
+
+#### **Virtualization**
+
 * Virtual Box
     * Windows
          * Windows 8.1 - https://medium.com/@Joachim8675309/virtualbox-and-friends-on-windows-8-1-3c691460698f
@@ -16,25 +21,39 @@ These are code related to tutorials created.
          * macOS 10.13.5 - https://medium.com/@Joachim8675309/virtualbox-and-friends-on-macos-fd0b78c71a32
     * Linux
          * Fedora 28 - https://medium.com/@Joachim8675309/vagrant-and-friends-on-fedora-28-37b8cbc47e47
-* Vagrant
-    * Provisioners
+* **Vagrant**: manage dev environments through automatic provisioning and configuration of virtual machines or containers.
+    * **Providers**
+         * Virtualbox
+             * [Vagrant with Macbook (intel)](https://joachim8675309.medium.com/vagrant-with-macbook-intel-dfc8efffe148) on May 7, 2024 - example of using Virtualbox to run Windows, macOS, FreeBSD, ArchLinux, FreeBSD on Intel Macbook. 
+         * QEMU (`vagrant-qemu`)
+             * [Vagrant with Macbook Mx (arm64)](https://joachim8675309.medium.com/vagrant-with-macbook-mx-arm64-0f590fd7e48a) on March 14, 2024: demonstrate how to run arm64 based VMs (Hyperkit) and Intel based VMs (Q35 emulator) using `vagrant-qemu` plugin on arm64-based Macbook M-Series. 
+    * **Provisioners**
          * Shell (`shell`) - https://medium.com/@Joachim8675309/vagrant-provisioning-e4c9fd57968d
          * Ansible (`ansible_local`) - https://medium.com/@Joachim8675309/vagrant-provisioning-with-ansible-6dba6bca6290
          * Docker (`docker`) - https://medium.com/@Joachim8675309/vagrant-provisioning-with-docker-3621df12092a
-         * Chef (`chef_zero`) - https://medium.com/@Joachim8675309/vagrant-provisioning-with-chef-90a2bf724f
-         * Puppet (`puppet`) - https://medium.com/@Joachim8675309/vagrant-provisioning-with-puppet-553a59f0c48e
-         * Salt Stack (`salt`) - https://medium.com/@Joachim8675309/vagrant-provisioning-with-saltstack-50dab12ce6c7
-* Kitchen (Test Kitchen)
-    * Chef, Busser/ServerSpec, InSpec
-         * https://medium.com/@Joachim8675309/testkitchen-with-chef-and-serverspec-2ac0cd938e5
+* **Test Kitchen** - automates the process of creating, configuring, and testing systems
+    * Chef, ServerSpec, Busser/ServerSpec
+         * [TestKitchen with Chef](https://joachim8675309.medium.com/testkitchen-with-chef-and-serverspec-2ac0cd938e5) on Aug 28, 2018
     * Ansible, Busser/TestInfra, Shell/TestInfra
-         * https://medium.com/@Joachim8675309/testkitchen-with-ansible-and-testinfra-e3fc4320ced
-* Chef
-    * Overview: https://medium.com/@Joachim8675309/testing-on-the-chef-platform-overview-8e29b4f050ca
-    * Integration w/ InSpec: https://medium.com/@Joachim8675309/testing-chef-cookbooks-with-inspec-c18ec1119c94
-* Salt Stack
-    * developing formulas (`vagrant`) - https://joachim8675309.medium.com/building-gke-with-terraform-869df1cd3f41
-    * using external formulas (`vagrant`) - https://joachim8675309.medium.com/salt-devkit-with-external-formulas-9e38d8b90cd7
+         * [TestKitchen with Ansible and TestInfra](https://joachim8675309.medium.com/testkitchen-with-ansible-and-testinfra-e3fc4320ced) on Sep 6, 2018
+
+#### **Change Configuration** 
+
+Aautomate the management/deployment of infrastructure by defining the desired state of systems through code
+
+* **Chef**
+    * [Vagrant Provisioning with Chef](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018 - `chef-zero`
+    * [Testing on the Chef Platform: Overview](https://joachim8675309.medium.com/testing-on-the-chef-platform-overview-8e29b4f050ca) on Aug 23, 2018
+    * [Testing Chef Cookbooks with InSpec](https://joachim8675309.medium.com/testing-chef-cookbooks-with-inspec-c18ec1119c94) on Aug 31, 2018
+* **Puppet** 
+    * [Vagrant Provisioning with Puppet](https://joachim8675309.medium.com/vagrant-provisioning-with-puppet-553a59f0c48e) on Aug 12, 2018 - Puppet 5, Provisioner: `puppet`
+    * [Master of Puppets with Vagrant](https://joachim8675309.medium.com/master-of-puppets-with-vagrant-b29be7858b28) on Sep 2024 - Puppet 8, Provisioner: `puppet_server`
+    * [Puppetry with Vagrant](https://joachim8675309.medium.com/puppetry-with-vagrant-1b5e0613672a) on Sep 2024 - Puppet 8, Provisioner: `puppet`
+* **Salt Stack (Salt Project)**
+    * [Vagrant Provisioning with SaltStack](https://joachim8675309.medium.com/vagrant-provisioning-with-saltstack-50dab12ce6c7) on Aug 12, 2018
+    * [Salt DevKit with External Formulas](https://joachim8675309.medium.com/salt-devkit-with-external-formulas-9e38d8b90cd7) on Feb 6, 2020
+    * [Salt DevKit: Developing Formulas](https://joachim8675309.medium.com/salt-devkit-developing-formulas-e8b500d6b970) on Feb 10, 2020
+    * [Adding Salt to Vagrant](https://medium.com/@joachim8675309/adding-salt-to-vagrant-43c162e67008) on Aug 6, 2024 - `salt 3007.1`
 
 ### Language Platforms
 
