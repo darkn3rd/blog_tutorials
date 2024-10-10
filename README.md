@@ -39,7 +39,7 @@ These are code related to tutorials created.
 
 #### **Change Configuration** 
 
-Aautomate the management/deployment of infrastructure by defining the desired state of systems through code
+Automate the management/deployment of infrastructure by defining the desired state of systems through code
 
 * **Chef**
     * [Vagrant Provisioning with Chef](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018 - `chef-zero`
@@ -60,7 +60,7 @@ Aautomate the management/deployment of infrastructure by defining the desired st
 * Getting Compilers - https://joachim8675309.medium.com/getting-compilers-d4819d95942a
 * Python
     * Manage Pythons (`pyenv`) - https://joachim8675309.medium.com/installing-pythons-with-pyenv-54cca2196cd3
-    * Mange Virtualenvs (`virtualenv)` - https://joachim8675309.medium.com/getting-compilers-d4819d95942a
+    * Mange Virtualenvs (`virtualenv`) - https://joachim8675309.medium.com/getting-compilers-d4819d95942a
 * Ruby
     * Manage Rubies (`rvm`) - https://joachim8675309.medium.com/a-tale-of-two-rubies-part-i-34e5658c5bfc
     * Manage Rubies (`rbenv`) - https://joachim8675309.medium.com/a-tale-of-two-rubies-part-ii-5c3904dc4b3b
