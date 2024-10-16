@@ -42,7 +42,8 @@ These are code related to tutorials created.
 Automate the management/deployment of infrastructure by defining the desired state of systems through code
 
 * **Chef**
-    * [Vagrant Provisioning with Chef](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018 - `chef-zero`
+    * [Vagrant Provisioning with Chef](https://joachim8675309.medium.com/vagrant-provisioning-with-chef-90a2bf724f) on Aug 10, 2018 - Vagrant Provisioner: `chef_zero`
+    * [Cooking with Chef on Vagrant](https://medium.com/@joachim8675309/cooking-with-chef-on-vagrant-fd5264569448) on Oct 15, 2024 - Vagrant Provisioner: `chef_zero`
     * [Testing on the Chef Platform: Overview](https://joachim8675309.medium.com/testing-on-the-chef-platform-overview-8e29b4f050ca) on Aug 23, 2018
     * [Testing Chef Cookbooks with InSpec](https://joachim8675309.medium.com/testing-chef-cookbooks-with-inspec-c18ec1119c94) on Aug 31, 2018
 * **Puppet** 
