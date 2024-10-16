@@ -1,5 +1,27 @@
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu2204"
+  ### Provider Configuration 
+  if RUBY_PLATFORM =~ /^x86_64/
+    # use qemu/virtualbox image for x86_64
+    config.vm.box = "generic/ubuntu2204"
+    if RUBY_PLATFORM =~ /darwin$/
+      # configure QEMU/HVF if qemu provider
+      config.vm.provider "qemu" do |qe|
+        qe.ssh_port = "50025" # change ssh port as needed
+        qe.qemu_dir = "/usr/local/share/qemu"
+        qe.arch = "x86_64"
+        qe.machine = "q35,accel=hvf"
+        qe.net_device = "virtio-net-pci"
+      end
+    end
+  elsif RUBY_PLATFORM =~ /^arm64.?-darwin.*$/
+    # arm64 image for macOS on Apple Silicon
+    config.vm.box = "perk/ubuntu-2204-arm64"
+    # configure QEMU/HVF if qemu provider
+    config.vm.provider "qemu" do |qe|
+      qe.ssh_port = "50026" # change ssh port as needed
+    end
+  end
+
   config.vm.network "forwarded_port", guest: 80, host: 8085
 
   config.vm.provision "chef_zero" do |chef|
