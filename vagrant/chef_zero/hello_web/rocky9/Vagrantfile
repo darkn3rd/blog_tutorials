@@ -1,0 +1,22 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/rocky9"
+  config.vm.network "forwarded_port", guest: 80, host: 8083
+
+  config.vm.provision "chef_zero" do |chef|
+    chef.cookbooks_path = "../cookbooks"
+    chef.add_recipe "hello_web"
+    chef.nodes_path = "nodes"
+
+    #### Override Attributes ####
+    chef.json = {
+      'hello_web' => {
+        'package' => 'httpd',
+        'service' => 'httpd',
+        'docroot' => '/var/www/html'
+      }
+    }
+
+    chef.log_level = "debug"
+    chef.arguments = "--chef-license accept-silent"
+  end
+end
