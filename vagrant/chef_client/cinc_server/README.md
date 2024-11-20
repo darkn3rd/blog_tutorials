@@ -4,12 +4,11 @@ The goal of these area is to show how to bootstrap a Chef Server (or CINC Server
 
 ## CINC Server
 
-For this area, we’ll use CINC Server as an alternative to Chef Server, which is no longer available for free download. The latest open-source Chef Server version, `12.13.91`, was released over six years ago and only supports end-of-life distributions like Ubuntu 18.04 (EOL April 30, 2023) and CentOS 7 (EOL on June 30, 2024) ([source](https://community.chef.io/downloads/tools/infra-server)).
+For this area, we’ll use CINC Server as an alternative to Chef Server, as the latter is no longer available for free download. The latest open-source Chef Server version, `12.13.91`, was released over six years ago and only supports end-of-life distributions like Ubuntu 18.04 (EOL April 30, 2023) and CentOS 7 (EOL on June 30, 2024) ([source](https://community.chef.io/downloads/tools/infra-server)).
 
 More recent versions, such as [Chef Infra Server 15.10.12](https://discourse.chef.io/t/chef-infra-server-15-10-12-released/23280), are behind a licensing paywall.
 
-Given these limitations, [CINC Server](https://cinc.sh/) provides a practical solution for automating development and testing with a local Chef Server environment.
-
+Given these limitations, [CINC Server](https://cinc.sh/) provides a practical solution for automating development and testing of a local Chef Server environment.
 
 
 # Resources
