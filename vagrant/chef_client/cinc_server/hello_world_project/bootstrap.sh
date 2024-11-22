@@ -52,6 +52,7 @@ setup_hosts_file() {
 #####################
 install_cinc_server() {
   curl -L https://omnitruck.cinc.sh/install.sh \
+    | sudo bash -s -- -P cinc-server -v 15
 }
 
 #######
@@ -61,7 +62,7 @@ configure_cinc_server() {
   sudo cinc-server-ctl reconfigure
   sudo cinc-server-ctl user-create $ADMIN_USER $ADMIN_FIRST_NAME $ADMIN_LAST_NAME \
     $ADMIN_EMAIL $ADMIN_PASSWORD --filename $ADMIN_PEM
-  sudo cinc-server-ctl org-create $ORG_NAME $ORG_FULL_NAME \
+  sudo cinc-server-ctl org-create $ORG_NAME "$ORG_FULL_NAME" \
     --association_user $ADMIN_USER --filename $ORG_PEM
 }
 
