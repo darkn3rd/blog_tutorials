@@ -34,6 +34,10 @@ export DG_ALLOW_LIST="${EKS_CIDR},${MY_IP_ADDRESS}/32"
 ### Dgraph
 
 ```bash
+# add Dgraph helm charts (demo application)
+helm repo add "dgraph" "https://charts.dgraph.io"
+helm update 
+
 ./scripts/deploy_dgraph.sh
 ```
 
