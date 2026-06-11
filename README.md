@@ -117,9 +117,13 @@ Automate the management/deployment of infrastructure by defining the desired sta
           * Linkerd service mesh - https://joachim8675309.medium.com/linkerd-service-mesh-on-aks-a75d60ef4f5a
           * Istio service mesh - https://joachim8675309.medium.com/istio-service-mesh-on-aks-1b6ed16f6890
   * EKS
-      * VPC + EKS (`eksctl`) - https://joachim8675309.medium.com/building-eks-with-eksctl-799eeb3b0efd
+      * VPC + EKS (`eksctl`)
+          * 2019 using K8S 1.14: https://joachim8675309.medium.com/building-eks-with-eksctl-799eeb3b0efd
+          * 2026 using K8S 1.34: https://joachim8675309.medium.com/minimalist-eks-213e899b8354
       * VPC for future EKS (`terraform`) - https://joachim8675309.medium.com/create-an-amazon-vpc-for-eks-597481514bcc
-      * EKS using existing VPC (`terraform` + `eksctl`) - https://joachim8675309.medium.com/create-eks-with-an-existing-vpc-8e31d95ccc5b
+      * EKS using existing VPC (`eksctl` for cluster) - 
+          * 2020 with K8S 1.17 (`terraform` for VPC): https://joachim8675309.medium.com/create-eks-with-an-existing-vpc-8e31d95ccc5b
+          * 2016 with K8S 1.35 (`aws` cli for VPC): https://medium.com/@joachim8675309/minimalist-eks-the-hard-way-fd438f511381
       * Terraform with K8S Provider - https://joachim8675309.medium.com/deploy-kubernetes-apps-w-terraform-266f3e8028d2
       * Nginx Ingress - https://joachim8675309.medium.com/adding-ingress-with-amazon-eks-6c4379803b2
       * ALB Ingress - https://joachim8675309.medium.com/alb-ingress-with-amazon-eks-3d84cf822c85

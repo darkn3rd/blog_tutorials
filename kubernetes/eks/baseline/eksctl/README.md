@@ -73,8 +73,6 @@ If you would like to download all the Helm chart repositories in adavance you ca
 helm repo add "eks" "https://aws.github.io/eks-charts"
 # add Calico CNI helm charts
 helm repo add "projectcalico" "https://docs.tigera.io/calico/charts"
-# add Dgraph helm charts (demo application)
-helm repo add "dgraph" "https://charts.dgraph.io"
 
 # download charts
 helm repo update
@@ -90,7 +88,7 @@ The [asdf](https://asdf-vm.com/) command must be installed before using these st
 
 ```bash
 # install kubectl plugin for asdf
-asdf plugin-add kubectl \
+asdf plugin add kubectl \
   https://github.com/asdf-community/asdf-kubectl.git
 
 # fetch latest kubectl 
