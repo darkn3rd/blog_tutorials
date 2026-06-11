@@ -534,6 +534,9 @@ EOF
 
   cat >> cluster.yaml <<EOF
 
+iam:
+  withOIDC: true
+
 addonsConfig:
   autoApplyPodIdentityAssociations: true
 
@@ -542,6 +545,8 @@ addons:
     useDefaultPodIdentityAssociations: true
   - name: aws-ebs-csi-driver
     useDefaultPodIdentityAssociations: true
+  - name: eks-pod-identity-agent
+
 EOF
 }
 
