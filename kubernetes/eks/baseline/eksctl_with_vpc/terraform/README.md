@@ -11,6 +11,7 @@ eks_region       = "us-east-2"
 EOF
 
 # create EKS network infrastructure
+terraform init # only once
 terraform plan
 terraform apply
 

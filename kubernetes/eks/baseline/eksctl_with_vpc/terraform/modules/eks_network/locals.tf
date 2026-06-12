@@ -4,7 +4,11 @@ locals {
   name     = var.eks_cluster_name
   vpc_cidr = "192.168.0.0/16"
 
-  azs = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
+  azs = slice(
+    data.aws_availability_zones.available.names,
+    0,
+    min(3, length(data.aws_availability_zones.available.names))
+  )
 
   public_subnets = {
     for index, az in local.azs :
