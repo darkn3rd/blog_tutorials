@@ -123,7 +123,8 @@ Automate the management/deployment of infrastructure by defining the desired sta
       * VPC for future EKS (`terraform`) - https://joachim8675309.medium.com/create-an-amazon-vpc-for-eks-597481514bcc
       * EKS using existing VPC (`eksctl` for cluster) - 
           * 2020 with K8S 1.17 (`terraform` for VPC): https://joachim8675309.medium.com/create-eks-with-an-existing-vpc-8e31d95ccc5b
-          * 2016 with K8S 1.35 (`aws` cli for VPC): https://medium.com/@joachim8675309/minimalist-eks-the-hard-way-fd438f511381
+          * 2026 with K8S 1.35 (`aws` cli for VPC): https://medium.com/@joachim8675309/minimalist-eks-the-hard-way-fd438f511381
+          * 2026 with K8S 1.35 (`terraform` for VPC): https://medium.com/@joachim8675309/minimalist-eks-the-hard-way-too-3bb993951d1e
       * Terraform with K8S Provider - https://joachim8675309.medium.com/deploy-kubernetes-apps-w-terraform-266f3e8028d2
       * Nginx Ingress - https://joachim8675309.medium.com/adding-ingress-with-amazon-eks-6c4379803b2
       * ALB Ingress - https://joachim8675309.medium.com/alb-ingress-with-amazon-eks-3d84cf822c85
