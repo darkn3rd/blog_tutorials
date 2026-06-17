@@ -1,11 +1,13 @@
 # EKSCTL with Existing VPC usign Terraform
 
+## Create 
+
 ```bash
 export AWS_PROFILE="myprofile" # change
 
 # set desired variable values
 cat <<EOF > terraform.tfvars
-eks_version      = "1.35"
+eks_version      = "1.36
 eks_cluster_name = "mycluster"
 eks_region       = "us-east-2"
 EOF
@@ -22,4 +24,11 @@ export KUBECONFIG="$HOME/.kube/aws/$EKS_REGION.$EKS_CLUSTER_NAME.yaml"
 
 # create Kubernetes cluster
 eksctl create cluster -f cluster.yaml
+```
+
+## Cleanup
+
+```
+eksctl delete cluster -f cluster.yaml
+terraform destroy
 ```
