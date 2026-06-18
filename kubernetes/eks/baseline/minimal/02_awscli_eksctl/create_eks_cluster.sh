@@ -1,37 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source ../shared_lib/shell_lib/common.sh
+
 main() {
   validate_env
 
-  # create network infra
-  ./create_eks_network.sh
+  # Load generated network IDs
+  source ./vpc-outputs.env
 
-  # create KUBECONFIG
-  mkdir -p $HOME/.kube/aws/
+  # Sanity check network/config before creating EKS
+  ./validate_eks_network.sh
+
+  mkdir -p "$HOME/.kube/aws"
   export KUBECONFIG="$HOME/.kube/aws/$EKS_REGION.$EKS_CLUSTER_NAME.yaml"
-  
-  # create k8s cluster
-  eksctl create cluster -f cluster.yaml
+
+  eksctl create cluster --config-file cluster.yaml
 }
 
 validate_env() {
-  require_env AWS_PROFILE
-  require_env EKS_CLUSTER_NAME
-  require_env EKS_REGION
-  require_env EKS_VERSION
+  require_envs AWS_PROFILE EKS_CLUSTER_NAME EKS_REGION EKS_VERSION
+  require_commands aws eksctl
 
-  if [[ "$EKS_REGION" != "us-east-2" ]]; then
-    cat >&2 <<EOF
-ERROR: this script currently hardcodes the subnet/AZ layout for us-east-2.
-
-Set:
-  export EKS_REGION="us-east-2"
-EOF
-    exit 1
-  fi
+  [[ -f ./vpc-outputs.env ]] \
+    || die "missing ./vpc-outputs.env; run ./create_eks_network.sh first"
+  [[ -f ./cluster.yaml ]] \
+    || die "missing ./cluster.yaml; run ./create_eks_network.sh first"
 }
 
-source ../shared_lib/shell_lib/common.sh
 
 main "$@"
