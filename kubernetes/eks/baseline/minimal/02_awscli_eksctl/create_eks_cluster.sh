@@ -32,12 +32,6 @@ EOF
   fi
 }
 
-require_env() {
-  local var="$1"
-  if [[ -z "${!var:-}" ]]; then
-    echo "ERROR: environment variable '$var' is required" >&2
-    exit 1
-  fi
-}
+source ../shared_lib/shell_lib/common.sh
 
 main "$@"

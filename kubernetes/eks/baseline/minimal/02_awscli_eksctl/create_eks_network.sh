@@ -19,51 +19,11 @@ main() {
   print_summary
 }
 
-log() {
-  printf '\n[%s] %s\n' "$(date +'%Y-%m-%d %H:%M:%S')" "$*"
-}
-require_command() {
-  local cmd="$1"
-
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "ERROR: required command '$cmd' not found in PATH" >&2
-    exit 1
-  fi
-}
-
-require_env() {
-  local var="$1"
-  if [[ -z "${!var:-}" ]]; then
-    echo "ERROR: environment variable '$var' is required" >&2
-    exit 1
-  fi
-}
-
-aws_cli() {
-  aws --profile "$AWS_PROFILE" --region "$EKS_REGION" "$@"
-}
-
-tag_spec() {
-  local resource_type="$1"
-  local tags="$2"
-  printf "ResourceType=%s,Tags=[%s]" "$resource_type" "$tags"
-}
-
-az_suffix() {
-  local az="$1"
-  echo "${az^^}" | tr -d '-'
-}
-
-aws_text_exists() {
-  local value="${1:-}"
-  [[ -n "$value" && "$value" != "None" ]]
-}
+source ../shared_lib/shell_lib/common.sh
+source ../shared_lib/shell_lib/aws.sh
 
 validate_env() {
-  require_env AWS_PROFILE
-  require_env EKS_CLUSTER_NAME
-  require_env EKS_REGION
-  require_env EKS_VERSION
+  require_envs AWS_PROFILE EKS_CLUSTER_NAME EKS_REGION EKS_VERSION
   require_command aws
 
   if [[ "$EKS_REGION" != "us-east-2" ]]; then
@@ -105,112 +65,109 @@ set_layout() {
   declare -gA PRIV_RTS
 }
 
-safety_checks() {
-  log "Checking AWS caller identity"
-  aws_cli sts get-caller-identity >/dev/null
-}
+source ../shared_lib/shell_lib/aws_net.sh
 
-find_igw_by_name() {
-  aws_cli ec2 describe-internet-gateways \
-    --filters "Name=tag:Name,Values=$1" \
-    --query 'InternetGateways[0].InternetGatewayId' \
-    --output text 2>/dev/null || true
-}
+# find_igw_by_name() {
+#   aws_cli ec2 describe-internet-gateways \
+#     --filters "Name=tag:Name,Values=$1" \
+#     --query 'InternetGateways[0].InternetGatewayId' \
+#     --output text 2>/dev/null || true
+# }
 
-find_nat_by_name() {
-  aws_cli ec2 describe-nat-gateways \
-    --filter \
-      "Name=vpc-id,Values=${VPC_ID}" \
-      "Name=tag:Name,Values=$1" \
-      "Name=state,Values=pending,available" \
-    --query 'NatGateways[0].NatGatewayId' \
-    --output text 2>/dev/null || true
-}
+# find_nat_by_name() {
+#   aws_cli ec2 describe-nat-gateways \
+#     --filter \
+#       "Name=vpc-id,Values=${VPC_ID}" \
+#       "Name=tag:Name,Values=$1" \
+#       "Name=state,Values=pending,available" \
+#     --query 'NatGateways[0].NatGatewayId' \
+#     --output text 2>/dev/null || true
+# }
 
-find_eip_by_name() {
-  aws_cli ec2 describe-addresses \
-    --filters "Name=tag:Name,Values=$1" \
-    --query 'Addresses[0].AllocationId' \
-    --output text 2>/dev/null || true
-}
+# find_eip_by_name() {
+#   aws_cli ec2 describe-addresses \
+#     --filters "Name=tag:Name,Values=$1" \
+#     --query 'Addresses[0].AllocationId' \
+#     --output text 2>/dev/null || true
+# }
 
-find_subnet_by_name() {
-  aws_cli ec2 describe-subnets \
-    --filters \
-      "Name=vpc-id,Values=${VPC_ID}" \
-      "Name=tag:Name,Values=$1" \
-    --query 'Subnets[0].SubnetId' \
-    --output text 2>/dev/null || true
-}
+# find_subnet_by_name() {
+#   aws_cli ec2 describe-subnets \
+#     --filters \
+#       "Name=vpc-id,Values=${VPC_ID}" \
+#       "Name=tag:Name,Values=$1" \
+#     --query 'Subnets[0].SubnetId' \
+#     --output text 2>/dev/null || true
+# }
 
-find_route_table_by_name() {
-  aws_cli ec2 describe-route-tables \
-    --filters \
-      "Name=vpc-id,Values=${VPC_ID}" \
-      "Name=tag:Name,Values=$1" \
-    --query 'RouteTables[0].RouteTableId' \
-    --output text 2>/dev/null || true
-}
+# find_route_table_by_name() {
+#   aws_cli ec2 describe-route-tables \
+#     --filters \
+#       "Name=vpc-id,Values=${VPC_ID}" \
+#       "Name=tag:Name,Values=$1" \
+#     --query 'RouteTables[0].RouteTableId' \
+#     --output text 2>/dev/null || true
+# }
 
-ensure_route() {
-  local route_table_id="$1"
-  local destination="$2"
-  local target_type="$3"
-  local target_id="$4"
+# ensure_route() {
+#   local route_table_id="$1"
+#   local destination="$2"
+#   local target_type="$3"
+#   local target_id="$4"
 
-  local existing
-  existing=$(aws_cli ec2 describe-route-tables \
-    --route-table-ids "$route_table_id" \
-    --query "RouteTables[0].Routes[?DestinationCidrBlock=='${destination}'] | [0].DestinationCidrBlock" \
-    --output text 2>/dev/null || true)
+#   local existing
+#   existing=$(aws_cli ec2 describe-route-tables \
+#     --route-table-ids "$route_table_id" \
+#     --query "RouteTables[0].Routes[?DestinationCidrBlock=='${destination}'] | [0].DestinationCidrBlock" \
+#     --output text 2>/dev/null || true)
 
-  if aws_text_exists "$existing"; then
-    log "Route already exists on $route_table_id: $destination"
-    return
-  fi
+#   if aws_text_exists "$existing"; then
+#     log "Route already exists on $route_table_id: $destination"
+#     return
+#   fi
 
-  aws_cli ec2 create-route \
-    --route-table-id "$route_table_id" \
-    --destination-cidr-block "$destination" \
-    "$target_type" "$target_id" >/dev/null
-}
+#   aws_cli ec2 create-route \
+#     --route-table-id "$route_table_id" \
+#     --destination-cidr-block "$destination" \
+#     "$target_type" "$target_id" >/dev/null
+# }
 
-ensure_route_table_association() {
-  local route_table_id="$1"
-  local subnet_id="$2"
+# ensure_route_table_association() {
+#   local route_table_id="$1"
+#   local subnet_id="$2"
 
-  local existing_rt
-  existing_rt=$(aws_cli ec2 describe-route-tables \
-    --filters "Name=association.subnet-id,Values=${subnet_id}" \
-    --query 'RouteTables[0].RouteTableId' \
-    --output text 2>/dev/null || true)
+#   local existing_rt
+#   existing_rt=$(aws_cli ec2 describe-route-tables \
+#     --filters "Name=association.subnet-id,Values=${subnet_id}" \
+#     --query 'RouteTables[0].RouteTableId' \
+#     --output text 2>/dev/null || true)
 
-  if [[ "$existing_rt" == "$route_table_id" ]]; then
-    log "Subnet already associated: $subnet_id -> $route_table_id"
-    return
-  fi
+#   if [[ "$existing_rt" == "$route_table_id" ]]; then
+#     log "Subnet already associated: $subnet_id -> $route_table_id"
+#     return
+#   fi
 
-  if aws_text_exists "$existing_rt"; then
-    local assoc_id
-    assoc_id=$(aws_cli ec2 describe-route-tables \
-      --filters "Name=association.subnet-id,Values=${subnet_id}" \
-      --query 'RouteTables[0].Associations[0].RouteTableAssociationId' \
-      --output text)
+#   if aws_text_exists "$existing_rt"; then
+#     local assoc_id
+#     assoc_id=$(aws_cli ec2 describe-route-tables \
+#       --filters "Name=association.subnet-id,Values=${subnet_id}" \
+#       --query 'RouteTables[0].Associations[0].RouteTableAssociationId' \
+#       --output text)
 
-    aws_cli ec2 replace-route-table-association \
-      --association-id "$assoc_id" \
-      --route-table-id "$route_table_id" >/dev/null
+#     aws_cli ec2 replace-route-table-association \
+#       --association-id "$assoc_id" \
+#       --route-table-id "$route_table_id" >/dev/null
 
-    log "Replaced route table association: $subnet_id -> $route_table_id"
-    return
-  fi
+#     log "Replaced route table association: $subnet_id -> $route_table_id"
+#     return
+#   fi
 
-  aws_cli ec2 associate-route-table \
-    --route-table-id "$route_table_id" \
-    --subnet-id "$subnet_id" >/dev/null
+#   aws_cli ec2 associate-route-table \
+#     --route-table-id "$route_table_id" \
+#     --subnet-id "$subnet_id" >/dev/null
 
-  log "Associated subnet: $subnet_id -> $route_table_id"
-}
+#   log "Associated subnet: $subnet_id -> $route_table_id"
+# }
 
 create_vpc() {
   local tag_specification
