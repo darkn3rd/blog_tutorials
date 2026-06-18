@@ -22,6 +22,14 @@ main() {
 log() {
   printf '\n[%s] %s\n' "$(date +'%Y-%m-%d %H:%M:%S')" "$*"
 }
+require_command() {
+  local cmd="$1"
+
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "ERROR: required command '$cmd' not found in PATH" >&2
+    exit 1
+  fi
+}
 
 require_env() {
   local var="$1"
@@ -56,6 +64,7 @@ validate_env() {
   require_env EKS_CLUSTER_NAME
   require_env EKS_REGION
   require_env EKS_VERSION
+  require_command aws
 
   if [[ "$EKS_REGION" != "us-east-2" ]]; then
     cat >&2 <<EOF
