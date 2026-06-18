@@ -7,6 +7,11 @@ source ../shared_lib/shell_lib/aws.sh
 [[ -f ./vpc-outputs.env ]] || die "vpc-outputs.env not found in current directory"
 source ./vpc-outputs.env
 
+# Shell parameter expansion:
+# Fail if EKS_REGION is unset or empty.
+# Equivalent to:
+#   require_env EKS_REGION
+# Using the POSIX shell idiom for reference.
 : "${EKS_REGION:?EKS_REGION is required}"
 : "${VPC_ID:?VPC_ID is required}"
 
