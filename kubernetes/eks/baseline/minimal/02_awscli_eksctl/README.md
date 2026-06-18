@@ -41,6 +41,11 @@ The commands below provision the VPC networking resources, generate a `cluster.y
 
 > ℹ️ **NOTE**: Resource identifiers are stored in `vpc-outputs.env` as the network infrastructure is created. The cleanup script uses this file to locate and remove the AWS resources created by the example.
 
+This example creates a more complete EKS configuration than the simple one-command deployment, including:
+
+- OIDC Provider (IRSA)
+- Pod Identity
+- Persistent Storage with EBS CSI
 
 ```bash
 export AWS_PROFILE="myuser"
@@ -57,17 +62,7 @@ export KUBECONFIG="$HOME/.kube/aws/$EKS_REGION.$EKS_CLUSTER_NAME.yaml"
 ./create_eks_cluster.sh
 ```
 
-### Cluster Features
-
-This example creates a more complete EKS configuration than the simple one-command deployment, including:
-
-- Existing VPC support
-- Private worker nodes
-- OIDC Provider (IRSA)
-- Pod Identity
-- VPC CNI Pod Identity integration
-- EBS CSI Driver with dynamic persistent volume provisioning
-- GP3 storage
+Unlike the previous example with `01_eksctl`, the VPC resources are created and managed explicitly rather than being generated automatically by `eksctl`.
 
 ## Cleanup
 
