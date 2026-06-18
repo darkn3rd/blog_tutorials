@@ -27,44 +27,42 @@ main() {
 validate_env() {
   require_envs AWS_PROFILE EKS_CLUSTER_NAME EKS_REGION EKS_VERSION
   require_command aws
-
-if [[ "$EKS_REGION" != "us-east-2" ]]; then
-    die "this script currently hardcodes the subnet/AZ layout for us-east-2.
-
-Set:
-  export EKS_REGION=\"us-east-2\""
-  fi
 }
 
 set_layout() {
   VPC_CIDR="192.168.0.0/16"
   STACK_PREFIX="${EKS_CLUSTER_NAME}"
 
-  AZS=(
-    us-east-2a
-    us-east-2b
-    us-east-2c
+  mapfile -t AZS < <(
+    aws_cli ec2 describe-availability-zones \
+      --filters "Name=state,Values=available" \
+      --query 'AvailabilityZones[?ZoneType==`availability-zone`].ZoneName' \
+      --output text | tr '\t' '\n' | sort | head -n 3
   )
 
-  declare -gA PUB_CIDRS=(
-    [us-east-2a]="192.168.32.0/19"
-    [us-east-2b]="192.168.64.0/19"
-    [us-east-2c]="192.168.0.0/19"
-  )
+  if [[ "${#AZS[@]}" -lt 2 ]]; then
+    die "Expected at least 2 available AZs in region $EKS_REGION, found ${#AZS[@]}"
+  fi
 
-  declare -gA PRIV_CIDRS=(
-    [us-east-2a]="192.168.128.0/19"
-    [us-east-2b]="192.168.160.0/19"
-    [us-east-2c]="192.168.96.0/19"
-  )
+  declare -gA PUB_CIDRS
+  declare -gA PRIV_CIDRS
+
+  local i az
+  for i in "${!AZS[@]}"; do
+    az="${AZS[$i]}"
+
+    # /19 subnets inside 192.168.0.0/16
+    # Public:  192.168.0.0/19,  192.168.32.0/19,  192.168.64.0/19
+    # Private: 192.168.96.0/19, 192.168.128.0/19, 192.168.160.0/19
+    PUB_CIDRS[$az]="192.168.$((i * 32)).0/19"
+    PRIV_CIDRS[$az]="192.168.$(((i + 3) * 32)).0/19"
+  done
 
   declare -gA PUB_SUBNETS
   declare -gA PRIV_SUBNETS
   declare -gA PUB_RTS
   declare -gA PRIV_RTS
 }
-
-source ../shared_lib/shell_lib/aws_net.sh
 
 create_vpc() {
   local tag_specification
@@ -424,29 +422,35 @@ EOF
 write_outputs_env() {
   log "Writing vpc-outputs.env"
 
-  cat > vpc-outputs.env <<EOF
-export AWS_PROFILE="${AWS_PROFILE}"
-export EKS_CLUSTER_NAME="${EKS_CLUSTER_NAME}"
-export EKS_REGION="${EKS_REGION}"
-export EKS_VERSION="${EKS_VERSION}"
-export VPC_ID="${VPC_ID}"
-export INTERNET_GATEWAY_ID="${IGW_ID}"
-export NAT_GATEWAY_ID="${NAT_GW_ID}"
-export NAT_EIP_ALLOCATION_ID="${EIP_ALLOC_ID}"
-export PUBLIC_ROUTE_TABLE_ID="${PUB_RT_ID}"
-EOF
+  {
+    printf 'export AWS_PROFILE="%s"\n' "$AWS_PROFILE"
+    printf 'export EKS_CLUSTER_NAME="%s"\n' "$EKS_CLUSTER_NAME"
+    printf 'export EKS_REGION="%s"\n' "$EKS_REGION"
+    printf 'export EKS_VERSION="%s"\n' "$EKS_VERSION"
+    printf 'export VPC_ID="%s"\n' "$VPC_ID"
+    printf 'export INTERNET_GATEWAY_ID="%s"\n' "$IGW_ID"
+    printf 'export NAT_GATEWAY_ID="%s"\n' "$NAT_GW_ID"
+    printf 'export NAT_EIP_ALLOCATION_ID="%s"\n' "$EIP_ALLOC_ID"
+    printf 'export PUBLIC_ROUTE_TABLE_ID="%s"\n' "$PUB_RT_ID"
 
-  local az suffix
-  for az in "${AZS[@]}"; do
-    suffix=$(az_suffix "$az")
+    printf 'export AZS="%s"\n' "${AZS[*]}"
 
-    cat >> vpc-outputs.env <<EOF
-export PUBLIC_SUBNET_${suffix}_ID="${PUB_SUBNETS[$az]}"
-export PRIVATE_SUBNET_${suffix}_ID="${PRIV_SUBNETS[$az]}"
-export PUBLIC_ROUTE_TABLE_${suffix}_ID="${PUB_RTS[$az]}"
-export PRIVATE_ROUTE_TABLE_${suffix}_ID="${PRIV_RTS[$az]}"
-EOF
-  done
+    printf 'export PUBLIC_SUBNET_IDS="'
+    for az in "${AZS[@]}"; do printf '%s ' "${PUB_SUBNETS[$az]}"; done
+    printf '"\n'
+
+    printf 'export PRIVATE_SUBNET_IDS="'
+    for az in "${AZS[@]}"; do printf '%s ' "${PRIV_SUBNETS[$az]}"; done
+    printf '"\n'
+
+    printf 'export PUBLIC_ROUTE_TABLE_IDS="'
+    for az in "${AZS[@]}"; do printf '%s ' "${PUB_RTS[$az]}"; done
+    printf '"\n'
+
+    printf 'export PRIVATE_ROUTE_TABLE_IDS="'
+    for az in "${AZS[@]}"; do printf '%s ' "${PRIV_RTS[$az]}"; done
+    printf '"\n'
+  } > vpc-outputs.env
 }
 
 print_summary() {

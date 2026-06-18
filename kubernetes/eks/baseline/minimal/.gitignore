@@ -7,3 +7,4 @@ terraform.tfvars
 
 *.env
 cluster.yaml
+vpc-outputs.env
