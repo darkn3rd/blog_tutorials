@@ -1,0 +1,49 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ${cluster_name}
+  region: ${region}
+  version: "${version}"
+
+vpc:
+  id: ${vpc_id}
+  subnets:
+    public:
+%{ for az, subnet_id in public_subnet_ids ~}
+      ${az}:
+        id: ${subnet_id}
+%{ endfor ~}
+    private:
+%{ for az, subnet_id in private_subnet_ids ~}
+      ${az}:
+        id: ${subnet_id}
+%{ endfor ~}
+
+managedNodeGroups:
+  - name: ng-1
+    amiFamily: AmazonLinux2023
+    instanceType: m5.large
+    desiredCapacity: 3
+    minSize: 3
+    maxSize: 3
+    privateNetworking: true
+    volumeSize: 80
+    volumeType: gp3
+    subnets:
+%{ for subnet_id in node_subnet_ids ~}
+      - ${subnet_id}
+%{ endfor ~}
+
+iam:
+  withOIDC: true
+
+addonsConfig:
+  autoApplyPodIdentityAssociations: true
+
+addons:
+  - name: vpc-cni
+    useDefaultPodIdentityAssociations: true
+  - name: aws-ebs-csi-driver
+    useDefaultPodIdentityAssociations: true
+  - name: eks-pod-identity-agent

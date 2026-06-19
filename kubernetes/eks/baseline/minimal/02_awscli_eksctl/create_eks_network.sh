@@ -40,6 +40,8 @@ set_layout() {
       --output text | tr '\t' '\n' | sort | head -n 3
   )
 
+  log "Selected AZs: ${AZS[*]}"
+
   if [[ "${#AZS[@]}" -lt 2 ]]; then
     die "Expected at least 2 available AZs in region $EKS_REGION, found ${#AZS[@]}"
   fi
@@ -66,8 +68,8 @@ set_layout() {
 
 create_vpc() {
   local tag_specification
-  
-  if [[ -n "${VPC_ID:-}" ]]; then
+
+  if [[ "${USE_EXISTING_VPC:-false}" == "true" && -n "${VPC_ID:-}" ]]; then
     log "VPC_ID is set; verifying VPC exists: $VPC_ID"
     aws_cli ec2 describe-vpcs --vpc-ids "$VPC_ID" >/dev/null
     log "Using existing VPC: $VPC_ID"
@@ -78,6 +80,8 @@ create_vpc() {
     --filters "Name=tag:Name,Values=${STACK_PREFIX}/VPC" \
     --query 'Vpcs[0].VpcId' \
     --output text 2>/dev/null || true)
+
+  VPC_ID=$(aws_text_or_empty "$VPC_ID")
 
   if aws_text_exists "$VPC_ID"; then
     log "Using existing VPC by tag: $VPC_ID"
@@ -96,8 +100,13 @@ create_vpc() {
     --query 'Vpc.VpcId' \
     --output text)
 
-  aws_cli ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-support
-  aws_cli ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-hostnames
+  aws_cli ec2 modify-vpc-attribute \
+    --vpc-id "$VPC_ID" \
+    --enable-dns-support '{"Value":true}'
+
+  aws_cli ec2 modify-vpc-attribute \
+    --vpc-id "$VPC_ID" \
+    --enable-dns-hostnames '{"Value":true}'
 
   log "Created VPC: $VPC_ID"
 }
@@ -105,6 +114,20 @@ create_vpc() {
 create_igw() {
   local name="${STACK_PREFIX}/InternetGateway"
   local tag_specification
+  local existing_attached_igw
+
+  existing_attached_igw=$(aws_cli ec2 describe-internet-gateways \
+    --filters "Name=attachment.vpc-id,Values=$VPC_ID" \
+    --query 'InternetGateways[0].InternetGatewayId' \
+    --output text 2>/dev/null || true)
+
+  existing_attached_igw=$(aws_text_or_empty "$existing_attached_igw")
+
+  if aws_text_exists "$existing_attached_igw"; then
+    IGW_ID="$existing_attached_igw"
+    log "Using Internet Gateway already attached to VPC: $IGW_ID"
+    return
+  fi
 
   if [[ -n "${IGW_ID:-}" ]]; then
     aws_cli ec2 describe-internet-gateways \
@@ -135,6 +158,8 @@ create_igw() {
     --internet-gateway-ids "$IGW_ID" \
     --query 'InternetGateways[0].Attachments[0].VpcId' \
     --output text 2>/dev/null || true)
+
+  attached_vpc=$(aws_text_or_empty "$attached_vpc")
 
   if [[ "$attached_vpc" == "$VPC_ID" ]]; then
     log "Internet Gateway already attached to VPC: $VPC_ID"
@@ -509,7 +534,7 @@ Files written:
   ./vpc-outputs.env
 
 Next step:
-  eksctl create cluster -f cluster.yaml
+  eksctl create cluster --config-file cluster.yaml
 
 Optional:
   export KUBECONFIG="\$HOME/.kube/aws/${EKS_REGION}.${EKS_CLUSTER_NAME}.yaml"
