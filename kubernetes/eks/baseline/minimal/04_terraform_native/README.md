@@ -9,7 +9,7 @@ This repository is not intended to be production-ready. Instead, it serves as a 
 
 ## Setup
 
-Create a terraform.tfvars file and define the cluster settings:
+Create a `terraform.tfvars` file and define the cluster settings:
 
 ```bash
 # configure var definitions
@@ -17,6 +17,7 @@ cat <<EOF > terraform.tfvars
 eks_version      = "1.36"
 eks_cluster_name = "mincluster"
 eks_region       = "us-east-2"
+EOF
 ```
 
 Ensure your AWS credentials are configured before proceeding. For example:

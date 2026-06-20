@@ -6,6 +6,38 @@ The goal is to show the AWS resources normally hidden behind `eksctl create clus
 
 > ⚠️ **DISCLAIMER**: This example is intended for learning purposes and is not production-ready. Running this example will create AWS resources that may incur charges.
 
+## Network Infrastructure Requirements
+
+If you have existing network infrastructure and cannot use the Terraform scripts, verify that the following requirements are met before creating the EKS cluster:
+
+* VPC
+  * DNS Hostnames enabled
+  * DNS Resolution enabled
+
+* Subnets
+  * At least 2 subnets across 2 Availability Zones
+  * Public subnet tags:
+    * `kubernetes.io/role/elb = 1`
+  * Private subnet tags:
+    * `kubernetes.io/role/internal-elb = 1`
+
+* Cluster Tags (recommended)
+  * `kubernetes.io/cluster/{cluster_name} = shared`
+    * or
+  * `kubernetes.io/cluster/{cluster_name} = owned`
+
+* Route Tables
+  * Public subnets:
+    * `0.0.0.0/0 -> Internet Gateway`
+  * Private subnets:
+    * `0.0.0.0/0 -> NAT Gateway`
+
+* IP Address Capacity
+  * Sufficient IP addresses must be available for nodes, pods, and load balancers.
+
+* Security Controls
+  * Worker nodes must be able to communicate with required AWS services such as EKS, EC2, STS, ECR, and S3.
+
 ## Setup Profile
 
 ```bash
