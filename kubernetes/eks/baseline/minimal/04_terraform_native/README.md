@@ -51,6 +51,19 @@ Terraform will provision:
 * Route tables and network configuration
 * An Amazon EKS cluster
 
+## Access the K8S Cluster
+
+```bash
+mkdir -p "$HOME/.kube/aws"
+
+export KUBECONFIG="$HOME/.kube/aws/${EKS_REGION}.${EKS_CLUSTER_NAME}.yaml"
+
+aws eks update-kubeconfig \
+  --name "$EKS_CLUSTER_NAME" \
+  --region "$EKS_REGION" \
+  --kubeconfig "$KUBECONFIG"
+```
+
 ## Cleanup
 
 To remove all resources created by Terraform:
