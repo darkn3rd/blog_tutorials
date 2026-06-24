@@ -5,3 +5,6 @@
 *.tfstate.backup
 terraform.tfvars
 
+*.env
+cluster.yaml
+vpc-outputs.env

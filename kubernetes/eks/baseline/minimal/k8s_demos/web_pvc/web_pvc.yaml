@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: web-demo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-pvc-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-pvc-demo
+  template:
+    metadata:
+      labels:
+        app: web-pvc-demo
+    spec:
+      initContainers:
+        - name: write-demo-page
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - |
+              [ -f /data/persist.txt ] \
+                || echo "Created at $(date) from pod $HOSTNAME" > /data/persist.txt
+
+              cat > /data/index.html <<'EOF'
+              <html>
+                <body>
+                  <h1>EKS PVC Demo</h1>
+                  <p>This page is served by nginx from a PersistentVolumeClaim.</p>
+                  <p>Open <a href="/persist.txt">persist.txt</a> to view data stored on the PVC.</p>
+                </body>
+              </html>
+              EOF
+          volumeMounts:
+            - name: web-data
+              mountPath: /data
+      containers:
+        - name: nginx
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: web-data
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: web-data
+          persistentVolumeClaim:
+            claimName: web-demo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-pvc-demo
+spec:
+  type: LoadBalancer
+  selector:
+    app: web-pvc-demo
+  ports:
+    - port: 80
+      targetPort: 80

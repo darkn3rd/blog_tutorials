@@ -5,13 +5,14 @@ module "eks_network" {
   eks_region       = var.eks_region
 }
 
-module "eks_cluster" {
-  source = "../shared_lib/terraform/modules/eks_cluster"
+module "eks_clusterconfig" {
+  source = "../shared_lib/terraform/modules/eks_clusterconfig"
 
-  eks_cluster_name   = var.eks_cluster_name
-  eks_region         = var.eks_region
-  eks_version        = var.eks_version
+  eks_cluster_name = var.eks_cluster_name
+  eks_region       = var.eks_region
+  eks_version      = var.eks_version
+
   vpc_id             = module.eks_network.vpc_id
-  private_subnet_ids = module.eks_network.private_subnet_ids
   public_subnet_ids  = module.eks_network.public_subnet_ids
+  private_subnet_ids = module.eks_network.private_subnet_ids
 }

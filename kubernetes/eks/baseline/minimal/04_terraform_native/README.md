@@ -9,7 +9,7 @@ This repository is not intended to be production-ready. Instead, it serves as a 
 
 ## Setup
 
-Create a terraform.tfvars file and define the cluster settings:
+Create a `terraform.tfvars` file and define the cluster settings:
 
 ```bash
 # configure var definitions
@@ -17,6 +17,7 @@ cat <<EOF > terraform.tfvars
 eks_version      = "1.36"
 eks_cluster_name = "mincluster"
 eks_region       = "us-east-2"
+EOF
 ```
 
 Ensure your AWS credentials are configured before proceeding. For example:
@@ -49,6 +50,19 @@ Terraform will provision:
 * A NAT Gateway
 * Route tables and network configuration
 * An Amazon EKS cluster
+
+## Access the K8S Cluster
+
+```bash
+mkdir -p "$HOME/.kube/aws"
+
+export KUBECONFIG="$HOME/.kube/aws/${EKS_REGION}.${EKS_CLUSTER_NAME}.yaml"
+
+aws eks update-kubeconfig \
+  --name "$EKS_CLUSTER_NAME" \
+  --region "$EKS_REGION" \
+  --kubeconfig "$KUBECONFIG"
+```
 
 ## Cleanup
 
