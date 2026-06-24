@@ -61,6 +61,7 @@ module "eks_cluster" {
   kubernetes_version = var.eks_version
 
   endpoint_public_access = true
+  enable_irsa            = true
 
   vpc_id     = module.eks_network.vpc_id
   subnet_ids = module.eks_network.private_subnets
@@ -68,12 +69,33 @@ module "eks_cluster" {
   enable_cluster_creator_admin_permissions = true
 
   addons = {
-    coredns                = {}
-    kube-proxy             = {}
-    vpc-cni                = {}
-    eks-pod-identity-agent = {}
-    aws-ebs-csi-driver     = {}
-    metrics-server         = {}
+    coredns        = { most_recent = true }
+    kube-proxy     = { most_recent = true }
+    metrics-server = { most_recent = true }
+
+    aws-ebs-csi-driver = {
+      most_recent = true
+
+      pod_identity_association = [{
+        role_arn        = module.ebs_csi_pod_identity.iam_role_arn
+        service_account = "ebs-csi-controller-sa"
+      }]
+    }
+
+    vpc-cni = {
+      before_compute = true
+      most_recent    = true
+
+      pod_identity_association = [{
+        role_arn        = module.aws_vpc_cni_pod_identity.iam_role_arn
+        service_account = "aws-node"
+      }]
+    }
+
+    eks-pod-identity-agent = {
+      before_compute = true
+      most_recent    = true
+    }
   }
 
   eks_managed_node_groups = {
@@ -104,4 +126,23 @@ module "eks_cluster" {
       }
     }
   }
+}
+
+module "ebs_csi_pod_identity" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.8"
+
+  name = "${var.eks_cluster_name}-ebs-csi"
+
+  attach_aws_ebs_csi_policy = true
+}
+
+module "aws_vpc_cni_pod_identity" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "~> 2.8"
+
+  name = "${var.eks_cluster_name}-vpc-cni"
+
+  attach_aws_vpc_cni_policy = true
+  aws_vpc_cni_enable_ipv4   = true
 }
