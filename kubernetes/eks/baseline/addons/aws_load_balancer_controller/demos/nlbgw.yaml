@@ -1,0 +1,33 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: aws-nlb
+spec:
+  controllerName: gateway.k8s.aws/nlb
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: demo-nlb
+spec:
+  gatewayClassName: aws-nlb
+  listeners:
+    - name: tcp-80
+      protocol: TCP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: demo-nlb
+spec:
+  parentRefs:
+    - name: demo-nlb
+      sectionName: tcp-80
+  rules:
+    - backendRefs:
+        - name: demo-nlb-app
+          port: 80

@@ -1,0 +1,36 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: demo-gwtcp-app
+spec:
+  controllerName: gateway.k8s.aws/nlb
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: demo-gwtcp-app
+spec:
+  gatewayClassName: demo-gwtcp-app
+  listeners:
+    - name: tcp-80
+      protocol: TCP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+        kinds:
+          - kind: TCPRoute  
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: demo-gwtcp-app
+spec:
+  parentRefs:
+    - name: demo-gwtcp-app
+      sectionName: tcp-80
+  rules:
+    - backendRefs:
+        - name: demo-gwtcp-app
+          kind: Service
+          port: 80
