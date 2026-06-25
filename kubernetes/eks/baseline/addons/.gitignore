@@ -1,0 +1,10 @@
+.terraform
+*.lock.hcl
+*.tfstate.lock.info
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+
+*.env
+cluster.yaml
+vpc-outputs.env
