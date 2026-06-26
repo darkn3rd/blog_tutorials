@@ -1,23 +1,20 @@
-kubectl create namespace demo-nlb
-kubectl config set-context --current --namespace=demo-nlb
+#!/usr/bin/env bash
+set -euo pipefail
 
 kubectl create deployment demo-nlb-app \
   --image=nginx:alpine
 
-kubectl expose deployment demo-nlb-app\
+kubectl expose deployment demo-nlb-app \
   --port=80 \
+  --target-port=80 \
   --type=LoadBalancer \
   --dry-run=client \
   --output yaml \
 | kubectl annotate --filename - \
   "service.beta.kubernetes.io/aws-load-balancer-type=external" \
   "service.beta.kubernetes.io/aws-load-balancer-scheme=internet-facing" \
+  "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type=instance" \
   --local \
   --output yaml \
-| kubectl apply --filename -
-
-
-kubectl delete svc,deploy demo-nlb-app
-kubectl config set-context --current --namespace=default
-kubectl delete namespace demo-nlb
+| kubectl apply --dry-run=client --output yaml --filename -
 
