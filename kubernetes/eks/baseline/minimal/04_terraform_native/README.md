@@ -1,4 +1,4 @@
-# EKS with Terraform (no external modules)
+# EKS via Terraform | VPC via Terraform (Native Resources)
 
 This project demonstrates how to provision a minimal Amazon EKS cluster using Terraform without relying on external Terraform modules.
 

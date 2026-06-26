@@ -1,4 +1,4 @@
-# EKS with Terraform and eksctl
+# EKS via eksctl | VPC via Terraform
 
 This project demonstrates how to provision the AWS networking layer for Amazon EKS using Terraform and then create the Kubernetes cluster using eksctl.
 

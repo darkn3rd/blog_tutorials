@@ -1,4 +1,4 @@
-# EKS with Terraform AWS Modules
+# EKS via Terraform | VPC via Terraform (Community Modules)
 
 This project demonstrates how to provision an Amazon EKS cluster using the official Terraform AWS community modules.
 
