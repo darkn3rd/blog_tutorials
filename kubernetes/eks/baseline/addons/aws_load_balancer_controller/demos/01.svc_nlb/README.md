@@ -13,27 +13,33 @@ kubectl config set-context --current --namespace=demo-nlb
 
 Deploy the application instance. 
 
-> 📓 **NOTE**: You can provision using the manifest or alternative jump down to the Extra section to generate it purely via the CLI.
-
 ```bash
 kubectl create deployment demo-nlb-app \
   --image=nginx:alpine
+```
 
-# Provision using manifest
+## Provision Endpoint
+
+You can provision the network service infrastructure using a static manifest configuration:
+
+```bash
 kubectl apply --filename svc.yaml
 ```
+
+*Alternatively, skip the manifest entirely and jump down to the Extra section below to create the service using an imperative pipeline.*
 
 ## Test
 
 Because AWS provisions the Network Load Balancer asynchronously, fetch the dynamic DNS hostname via `JSONPath` and query it:
 
 ```bash
+# Extract the public NLB address directly into your environment
 EXTERNAL_IP=$(kubectl get service demo-nlb-app \
   --namespace "demo-nlb" \
-  --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
-)
+  --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 
-curl -i $EXTERNAL_IP
+# Hit the endpoint (it may take a minute for AWS DNS to propagate)
+curl -i "$EXTERNAL_IP"
 ```
 
 ## Cleanup
