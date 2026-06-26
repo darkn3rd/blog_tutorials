@@ -1,26 +1,39 @@
 
-# * [Install AWS Load Balancer Controller with Helm](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html)
+#!/usr/bin/env bash
+set -euo pipefail
 
+: "${EKS_CLUSTER_NAME:?EKS_CLUSTER_NAME is required}"
+: "${EKS_REGION:?EKS_REGION is required}"
+: "${AWS_PROFILE:?AWS_PROFILE is required}"
+
+AWS_ACCOUNT_ID="$(aws sts get-caller-identity \
+  --query "Account" \
+  --output text)"
+VPC_ID="$(aws eks describe-cluster \
+  --name "$EKS_CLUSTER_NAME" \
+  --region "$EKS_REGION" \
+  --query "cluster.resourcesVpcConfig.vpcId" \
+  --output text)"
+
+PROJ_PREFIX_LBC_URL="https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller"
+PROJ_PREFIX_GW_URL="https://github.com/kubernetes-sigs/gateway-api"
 LBC_HELM_CHART_VERSION="3.4.0"
-LBC_IAM_POLICY="https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.14.1/docs/install/iam_policy.json"
+LBC_IAM_POLICY="$PROJ_PREFIX_LBC_URL/v2.14.1/docs/install/iam_policy.json"
+
 K8S_GATEWAY_API_CRDS=(
-    https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
-    https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/experimental-install.yaml
-    https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/refs/heads/main/config/crd/gateway/gateway-crds.yaml
+    $PROJ_PREFIX_GW_URL/releases/download/v1.5.0/standard-install.yaml
+    $PROJ_PREFIX_GW_URL/releases/download/v1.5.0/experimental-install.yaml
+    $PROJ_PREFIX_LBC_URL/refs/heads/main/config/crd/gateway/gateway-crds.yaml
 )
 
-
-
-curl -sOL $LBC_IAM_POLICY
-# aws iam create-policy \
-#     --policy-name AWSLoadBalancerControllerIAMPolicy \
-#     --policy-document file://iam_policy.json
-
-aws iam create-policy \
+create_lbc_iam_policy() {
+  aws iam create-policy \
     --policy-name AWSLoadBalancerControllerIAMPolicy \
-    --policy-document file://<(curl -sL LBC_IAM_POLICY)
+    --policy-document file://<(curl -sL $LBC_IAM_POLICY)
+}
 
-eksctl create iamserviceaccount \
+create_lbc_irsa_association() {
+  eksctl create iamserviceaccount \
     --cluster=$EKS_CLUSTER_NAME \
     --namespace=kube-system \
     --name=aws-load-balancer-controller \
@@ -28,22 +41,25 @@ eksctl create iamserviceaccount \
     --override-existing-serviceaccounts \
     --region $EKS_REGION \
     --approve
+}
 
-helm repo add eks https://aws.github.io/eks-charts
-helm repo update eks
+add_helm_repo() {
+  helm repo add eks https://aws.github.io/eks-charts
+  helm repo update eks
+}
 
-# Gateway CRDs
-kubectl apply --server-side --filename https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
-kubectl apply --server-side --filename https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/experimental-install.yaml
-# AWS LBC Gateway CRDs
-kubectl apply --server-side --filename https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/refs/heads/main/config/crd/gateway/gateway-crds.yaml
+install_gateway_crds() {
+  for URL in ${K8S_GATEWAY_API_CRDS[@]}; do 
+    kubectl apply --server-side --filename $URL
+  done
+}
 
-helm upgrade \
+install_lbc_helm_chart() {
+  helm upgrade \
   --install \
   --version $LBC_HELM_CHART_VERSION \
   aws-load-balancer-controller eks/aws-load-balancer-controller \
   --values - <<EOF
-# values.yaml.tmpl
 clusterName: "${EKS_CLUSTER_NAME}"
 vpcId: "${VPC_ID}"
 region: "${EKS_REGION}"
@@ -59,9 +75,13 @@ controllerConfig:
     GatewayListenerSet: true
 EOF
 
+}
 
-# Apparently not needed in newer versions of Helm
-# wget https://raw.githubusercontent.com/aws/eks-charts/master/stable/aws-load-balancer-controller/crds/crds.yaml
-# kubectl apply -f crds.yaml
+main() {
+  create_lbc_iam_policy
+  create_lbc_irsa_association
+  install_gateway_crds
+  add_helm_repo
+  install_lbc_helm_chart
+}
 
-# https://github.com/kubernetes-sigs/aws-load-balancer-controller/issues/3613
