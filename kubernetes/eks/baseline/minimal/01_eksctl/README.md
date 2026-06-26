@@ -1,4 +1,4 @@
-# EKS with eksctl
+# EKS via eksctl | VPC via eksctl
 
 This is the simplest example in the series.
 
@@ -8,26 +8,33 @@ The goal of this example is to introduce Amazon EKS and `eksctl` while minimizin
 
 > ⚠️ **DISCLAIMER**: This example is intended for learning purposes and is not production-ready. The networking and cluster configuration are largely managed by eksctl defaults. Running this example will create AWS resources that may incur charges.
 
-## Setup Profile
+## 1. Setup Profile
+
+Configure a local AWS CLI profile using browser-based console authentication to acquire secure, short-lived temporary credentials:
 
 ```bash
+# Define your environment vars
 EKS_ACCOUNT_ID="123456789012" # Change to your account id
 EKS_REGION="us-east-2"
 
 mkdir -p ~/.aws
 
+# Append the login configuration block
 cat <<EOF >> ~/.aws/config
 [profile myuser]
 login_session = arn:aws:iam::$EKS_ACCOUNT_ID:user/myuser
 region = $EKS_REGION
 EOF
 
-export AWS_PROFILE=myuser
-aws login
+# Authenticate and activate the session
+aws login --profile "myuser"
+export AWS_PROFILE="myuser"
+
+# Verify your active identity context
 aws sts get-caller-identity
 ```
 
-This should show:
+A successful connection will return your authenticated identity metadata:
 
 ```json
 {
@@ -37,70 +44,50 @@ This should show:
 }
 ```
 
-## Create Cluster
+## 2. Create Cluster
 
-The commands below will provision an EKS cluster and configure access using the `KUBECONFIG` environment variable.
+The deployment scripts provision an EKS cluster and automatically configure local context tracking using an isolated `KUBECONFIG` path.
 
-By default, `eksctl` installs:
+By default, eksctl automatically initializes:
 
-- EKS Control Plane
-- Managed Node Group
-- Add-ons:
-  - CoreDNS
-  - kube-proxy
-  - Amazon VPC CNI
-  - Metrics Server
+* EKS Control Plane (Fully managed Kubernetes API master)
+* Managed Node Group (EC2 worker compute instances)
+* Core Add-ons: CoreDNS, kube-proxy, Amazon VPC CNI, and Metrics Server
 
-> ⚠️ **IMPORTANT**: The simple eksctl deployment attaches the VPC CNI policy to the node IAM role. This works, but it grants broad EC2 networking permissions at the node level. In the Terraform-native example, we instead assign the VPC CNI permissions through Pod Identity, limiting those permissions to the VPC CNI service account.
+### Initialize Environment Variables
+Run these commands in your active shell to seed the environment before executing the creation scripts:
 
 ```bash
 export AWS_PROFILE="myuser"
 EKS_CLUSTER_NAME="mycluster"
 EKS_REGION="$(aws configure get region --profile "$AWS_PROFILE")"
 
-# setup Kubernetes Configuration to a separate file
+# Isolate the Kubernetes configuration mapping to a dedicated file
 mkdir -p $HOME/.kube/aws/
 export KUBECONFIG="$HOME/.kube/aws/$EKS_REGION.$EKS_CLUSTER_NAME.yaml"
-
-# create K8S Cluster
-eksctl create cluster --name $EKS_CLUSTER_NAME --region $EKS_REGION --version 1.36
 ```
 
-## Optional Enhancements
+### Option A: Create a Simple Cluster
 
-The default cluster is sufficient for basic experimentation. The following optional components provide capabilities commonly required by real-world workloads.
+This script provisions a basic 2-node cluster and applies runtime patches to configure IRSA, Pod Identity, and the EBS CSI storage driver.
 
-### OIDC Provider 
-
-The OIDC provider enables IAM Roles for Service Accounts (IRSA), which are required by many AWS-integrated applications such as the AWS Load Balancer Controller.
+> ⚠️ **SECURITY NOTE**: This simple deployment attaches the VPC CNI network policy directly to the shared node IAM Instance Profile. This grants broad, cluster-wide EC2 networking permissions at the underlying node layer.
 
 ```bash
-eksctl utils associate-iam-oidc-provider \
-  --cluster $EKS_CLUSTER_NAME \
-  --approve
+./simple_cluster.sh
 ```
 
-### Pod Identity Agent 
+### Option B: Create a Secure Cluster
 
-The Pod Identity Agent enables Kubernetes service accounts to access AWS resources using EKS Pod Identity.
-
-```bash
-eksctl create addon \
-  --cluster $EKS_CLUSTER_NAME \
-  --name eks-pod-identity-agent
-```
-
-### EBS CSI
-
-The EBS CSI Driver allows Kubernetes PersistentVolumes to be dynamically provisioned from Amazon EBS.
+This script implements a more production-ready paradigm where the VPC CNI policy is scoped down and assigned exclusively to its specific Kubernetes service account using EKS Pod Identity.
 
 ```bash
-eksctl create addon \
-  --cluster $EKS_CLUSTER_NAME \
-  --name aws-ebs-csi-driver
+./secure_cluster.sh
 ```
 
 ## Cleanup
+
+To avoid recurring AWS infrastructure charges, completely tear down the provisioned EKS cluster and its underlying VPC network stack by running:
 
 ```bash
 eksctl delete cluster --name $EKS_CLUSTER_NAME --region $EKS_REGION
