@@ -14,7 +14,7 @@ Configure a local AWS CLI profile using browser-based console authentication to 
 
 ```bash
 # Define your environment vars
-EKS_ACCOUNT_ID="123456789012" # Change to your account id
+AWS_ACCOUNT_ID="123456789012" # Change to your account id
 EKS_REGION="us-east-2"
 
 mkdir -p ~/.aws
@@ -22,7 +22,7 @@ mkdir -p ~/.aws
 # Append the login configuration block
 cat <<EOF >> ~/.aws/config
 [profile myuser]
-login_session = arn:aws:iam::$EKS_ACCOUNT_ID:user/myuser
+login_session = arn:aws:iam::$AWS_ACCOUNT_ID:user/myuser
 region = $EKS_REGION
 EOF
 
@@ -44,7 +44,32 @@ A successful connection will return your authenticated identity metadata:
 }
 ```
 
-## 2. Create Cluster
+## 2. Input Environment Variables (Optional)
+
+To persist your configuration settings across multiple terminal sessions, save your target infrastructure metadata to a local environment file.
+
+> 📝 **NOTE**: It is recommended to add `inputs.env` to your local `.gitignore` file so your active environment settings are never accidentally committed upstream.
+
+Run this block to write or overwrite your configuration matrix:
+
+```bash
+cat <<EOF > inputs.env
+export AWS_PROFILE="myuser"
+export EKS_CLUSTER_NAME="mincluster"
+export EKS_REGION="us-east-2"
+export EKS_VERSION="1.36"
+EOF
+
+echo "✅ Environment variables successfully saved to inputs.env"
+```
+
+Whenever you open a new terminal window or return to this project, reload your configuration into your active shell context instantly by running:
+
+```bash
+source inputs.env
+```
+
+## 3. Create Cluster
 
 The deployment scripts provision an EKS cluster and automatically configure local context tracking using an isolated `KUBECONFIG` path.
 
