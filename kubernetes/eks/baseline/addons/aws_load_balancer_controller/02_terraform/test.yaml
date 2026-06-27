@@ -1,0 +1,75 @@
+accessConfig:
+  authenticationMode: API_AND_CONFIG_MAP
+addonsConfig: {}
+apiVersion: eksctl.io/v1alpha5
+availabilityZones:
+- us-east-2b
+- us-east-2a
+- us-east-2c
+cloudWatch:
+  clusterLogging: {}
+iam:
+  vpcResourceControllerPolicy: true
+  withOIDC: false
+kind: ClusterConfig
+kubernetesNetworkConfig:
+  ipFamily: IPv4
+managedNodeGroups:
+- amiFamily: AmazonLinux2023
+  desiredCapacity: 3
+  disableIMDSv1: true
+  disablePodIMDS: false
+  iam:
+    withAddonPolicies:
+      albIngress: false
+      appMesh: false
+      appMeshPreview: false
+      autoScaler: false
+      awsLoadBalancerController: false
+      certManager: false
+      cloudWatch: false
+      ebs: false
+      efs: false
+      externalDNS: false
+      fsx: false
+      imageBuilder: false
+      xRay: false
+  instanceSelector: {}
+  labels:
+    alpha.eksctl.io/cluster-name: modcluster
+    alpha.eksctl.io/nodegroup-name: ng-0ebebd2b
+  maxSize: 3
+  minSize: 3
+  name: ng-0ebebd2b
+  privateNetworking: false
+  releaseVersion: ""
+  securityGroups:
+    withLocal: null
+    withShared: null
+  ssh:
+    allow: false
+    publicKeyPath: ""
+  tags:
+    alpha.eksctl.io/nodegroup-name: ng-0ebebd2b
+    alpha.eksctl.io/nodegroup-type: managed
+  volumeIOPS: 3000
+  volumeSize: 80
+  volumeThroughput: 125
+  volumeType: gp3
+metadata:
+  name: modcluster
+  region: us-east-2
+  version: "1.35"
+privateCluster:
+  enabled: false
+  skipEndpointCreation: false
+upgradePolicy: {}
+vpc:
+  autoAllocateIPv6: false
+  cidr: 192.168.0.0/16
+  clusterEndpoints:
+    privateAccess: false
+    publicAccess: true
+  manageSharedNodeSecurityGroupRules: true
+  nat:
+    gateway: Single

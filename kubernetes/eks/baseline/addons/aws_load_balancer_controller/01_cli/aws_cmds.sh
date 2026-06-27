@@ -41,4 +41,18 @@ EOF
 
   rm trust-policy.json
 
+  cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: aws-load-balancer-controller
+  name: aws-load-balancer-controller
+  namespace: kube-system
+  annotations:
+    # This is the magic key that links the K8s pod to the AWS IAM Role
+    eks.amazonaws.com/role-arn: arn:aws:iam::$AWS_ACCOUNT_ID:role/AmazonEKSLoadBalancerControllerRole
+EOF
+
 }

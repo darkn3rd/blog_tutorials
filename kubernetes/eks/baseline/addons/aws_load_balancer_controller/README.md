@@ -1,3 +1,35 @@
+# AWS Load Balancer Controller
+
+The **AWS Load Balancer Controller** manages AWS Elastic Load Balancing (ELBv2) resources natively inside an Amazon EKS cluster. It satisfies Kubernetes resource requirements by provisioning high-performance network load balancers across two distinct OSI layers:
+
+### 🌐 Layer 4 Routing (Network Load Balancer - NLB)
+* **Legacy/Standard:** `Service` resources configured as `type: LoadBalancer`.
+* **Gateway API:** `Gateway` resources coupled with `TCPRoute` configurations.
+
+### 🚀 Layer 7 Routing (Application Load Balancer - ALB)
+* **Legacy/Standard:** Traditional `Ingress` resources.
+* **Gateway API:** `Gateway` resources coupled with `HTTPRoute` or `GRPCRoute` configurations.
+
+## Prerequisites 
+
+Before deploying the controller, ensure your environment meets the following baseline requirements:
+
+* **Core Cluster Components:** A functional Amazon EKS cluster running the standard **VPC CNI**, **kube-proxy**, and **CoreDNS** add-ons.
+* **AWS IAM Access (Least Privilege):** You must configure fine-grained AWS API permissions for the controller using one of two supported authentication methods:
+  * **EKS Pod Identity (Recommended):** Requires the `eks-pod-identity-agent` add-on to be installed on your cluster nodes.
+  * **IRSA (IAM Roles for Service Accounts):** Requires an active OIDC Provider configured for your EKS cluster.
+
+### EKS Cluster
+
+These can be easily provisioned using one of the guides:
+
+* [EKS via eksctl | VPC via eksctl](../../minimal/01_eksctl/README.md)
+* [EKS via eksctl | VPC via AWS CLI](../../minimal/02_awscli_eksctl/README.md)
+* [EKS via eksctl | VPC via Terraform](../../minimal/03_terraform_eksctl/README.md)
+* [EKS via Terraform | VPC via Terraform (Native Resources)](../../minimal/04_terraform_native/README.md)
+* [EKS via Terraform | VPC via Terraform (Community Modules)](../../minimal/05_terraform_modules/README.md)
+
+
 
 
 

@@ -29,6 +29,14 @@ kubectl apply --filename ing.yaml
 
 *Alternatively, skip the manifest entirely and jump to the Extra section below to create the Ingress rule using an imperative pipeline.*
 
+## Verify
+
+Monitor the generation and operational status of your newly provisioned application and routing components:
+
+```bash
+kubectl get all,ing,targetgroupbinding
+```
+
 ## Test
 
 Because AWS provisions the Application Load Balancer asynchronously, fetch the dynamic DNS hostname via `JSONPath`. Since the ALB routes based on host-matching headers, pass the targeted domain explicitly in the curl execution:

@@ -30,6 +30,14 @@ Provision your Layer 4 load balancing framework entirely from the CLI. This prov
 kubectl apply --namespace demo-gwtcp --filename gwtcp.yaml
 ```
 
+## Verify
+
+Monitor the generation and operational status of your newly provisioned Gateway infrastructure components:
+
+```bash
+kubectl get all,gtw,gc,tcproute,targetgroupbinding,targetgroupconfiguration,loadbalancerconfiguration
+```
+
 ## Test
 
 Because AWS provisions the Network Load Balancer asynchronously, fetch the dynamic DNS hostname via JSONPath.
@@ -38,7 +46,8 @@ To verify your environment, use this validation routine to monitor your public e
 
 ```bash
 # Extract the public NLB address directly into your environment
-EXTERNAL_IP=$(kubectl get gateway demo-nlb-gateway --output jsonpath='{.status.addresses[0].value}')
+EXTERNAL_IP=$(kubectl get gateway demo-nlb-gateway \
+  --output jsonpath='{.status.addresses[0].value}')
 
 # Wait until global AWS name servers populate the record
 while [ -z "\$(dig +short "\$EXTERNAL_IP")" ]; do

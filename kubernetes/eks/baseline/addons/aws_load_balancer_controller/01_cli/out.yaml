@@ -1,0 +1,24 @@
+Usage:
+  kubectl-neat [flags]
+  kubectl-neat [command]
+
+Examples:
+kubectl get pod mypod -o yaml | kubectl neat
+kubectl get pod mypod -oyaml | kubectl neat -o json
+kubectl neat -f - <./my-pod.json
+kubectl neat -f ./my-pod.json
+kubectl neat -f ./my-pod.json --output yaml
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  get         
+  help        Help about any command
+  version     Print kubectl-neat version
+
+Flags:
+  -f, --file string     file path to neat, or - to read from stdin (default "-")
+  -h, --help            help for kubectl-neat
+  -o, --output string   output format: yaml or json (default "yaml")
+
+Use "kubectl-neat [command] --help" for more information about a command.
+

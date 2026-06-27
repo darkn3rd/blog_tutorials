@@ -28,6 +28,14 @@ kubectl apply --filename svc.yaml
 
 *Alternatively, skip the manifest entirely and jump down to the Extra section below to create the service using an imperative pipeline.*
 
+## Verify
+
+Monitor the generation and operational status of your newly provisioned network load balancing components:
+
+```bash
+kubectl get all,targetgroupbinding
+```
+
 ## Test
 
 Because AWS provisions the Network Load Balancer asynchronously, fetch the dynamic DNS hostname via `JSONPath` and query it:
