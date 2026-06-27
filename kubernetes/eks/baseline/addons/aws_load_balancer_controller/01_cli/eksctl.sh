@@ -24,8 +24,13 @@ LBC_HELM_CHART_VERSION="3.4.0"
 LBC_IAM_POLICY="$PROJ_PREFIX_LBC_URL/v2.14.1/docs/install/iam_policy.json"
 
 create_lbc_iam_policy() {
+  echo "Checking for existing LBC IAM Policy..."
+  if aws iam get-policy --policy-arn "$POLICY_ARN" >/dev/null 2>&1; then
+    echo "✅ IAM Policy already exists. Skipping creation."
+    return 0
+  fi
+
   echo "Creating LBC IAM Policy (Injecting modern Gateway API requirements)..."
-  
   # Fetch standard policy, then append the explicit attributes needed by Gateway API loops
   local BASE_POLICY
   BASE_POLICY=$(curl -sL "$LBC_IAM_POLICY")
@@ -61,7 +66,7 @@ create_lbc_irsa_association() {
 }
 
 add_helm_repo() {
-  helm repo add eks https://aws.github.io/eks-charts
+  helm repo add eks https://aws.github.io/eks-charts 2>/dev/null || true
   helm repo update eks
 }
 
@@ -71,12 +76,12 @@ install_gateway_crds() {
   case "$channel" in
     standard)
       echo "Applying Gateway API standard CRDs..."
-      kubectl apply --server-side --filename \
+      kubectl apply --server-side --force-conflicts --filename \
         "$CRD_STANDARD"
       ;;
     experimental)
       echo "Applying Gateway API experimental CRDs..."
-      kubectl apply --server-side --filename \
+      kubectl apply --server-side --force-conflicts --filename \
         "$CRD_EXPERIMENTAL"
       ;;
     *)
@@ -86,7 +91,7 @@ install_gateway_crds() {
   esac
 
   echo "Applying AWS Load Balancer Controller Gateway CRDs..."
-  kubectl apply --server-side --filename \
+  kubectl apply --server-side --force-conflicts --filename \
     "$CRD_LBC_GW"
 }
 
@@ -116,10 +121,10 @@ EOF
 }
 
 main() {
-  #create_lbc_iam_policy
-  #create_lbc_irsa_association
-  #install_gateway_crds experimental
-  #add_helm_repo
+  create_lbc_iam_policy
+  create_lbc_irsa_association
+  install_gateway_crds experimental
+  add_helm_repo
   install_lbc_helm_chart
 }
 

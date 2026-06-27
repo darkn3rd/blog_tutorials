@@ -66,8 +66,8 @@ curl -i "$EXTERNAL_IP"
 Tear down the deployment, service endpoints, and namespace cleanly to avoid racking up cloud charges:
 
 ```bash
-kubectl delete svc,deploy demo-gwtcp-app
 kubectl delete --filename gwtcp.yaml
+kubectl delete svc,deploy demo-gwtcp-app
 
 kubectl config set-context --current --namespace=default
 kubectl delete ns demo-gwtcp

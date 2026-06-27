@@ -64,8 +64,9 @@ curl -i -H "Host: demo.example.com" "http://${EXTERNAL_IP}"
 Tear down the deployment, service endpoints, Gateway configurations, and namespace cleanly to avoid racking up unexpected cloud infrastructure charges:
 
 ```bash
-kubectl delete svc,deploy,ing demo-gwhttp-app
 kubectl delete --filename gwhttp.yaml
+kubectl delete svc,deploy demo-gwhttp-app
+
 kubectl config set-context --current --namespace=default
 kubectl delete ns demo-gwhttp
 
