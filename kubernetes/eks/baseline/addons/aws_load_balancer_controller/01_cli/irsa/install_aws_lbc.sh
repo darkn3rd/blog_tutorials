@@ -11,6 +11,7 @@ set -euo pipefail
 HELM_CHART_VERSION="3.4.0"
 POLICY_NAME="AWSLoadBalancerControllerIAMPolicy"
 SERVICE_ACCOUNT_NAME="aws-load-balancer-controller"
+ROLE_NAME="AmazonEKSLoadBalancerControllerRole"
 
 verify_binaries() {
   echo "Checking required local CLI tools..."
@@ -95,6 +96,18 @@ create_lbc_iam_policy() {
 
 create_lbc_irsa_association() {
   local policy_arn="${1:?policy_arn is required}"
+  local target_mode="${2:?mode is required}"
+
+  if [ "$target_mode" = "aws-cli" ]; then
+    create_lbc_irsa_association_awscli "$policy_arn"
+  else
+    # Your classic eksctl code path wrapped into a descriptive sub-call
+    create_lbc_irsa_association_eksctl "$policy_arn"
+  fi
+}
+
+create_lbc_irsa_association_eksctl() {
+  local policy_arn="${1:?policy_arn is required}"
 
   echo "Associating IAM Service Account via eksctl..."
   eksctl create iamserviceaccount \
@@ -108,6 +121,74 @@ create_lbc_irsa_association() {
     
   echo "Sleeping 15 seconds to allow AWS OIDC replication to settle..."
   sleep 15
+}
+
+create_lbc_irsa_association_awscli() {
+  local policy_arn="${1:?policy_arn is required}"
+  
+  echo "Discovering OIDC issuer configuration..."
+  local oidc_url oidc_provider
+  oidc_url=$(aws eks describe-cluster \
+    --name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --query "cluster.identity.oidc.issuer" \
+    --output text)
+  
+  oidc_provider="${oidc_url#https://}"
+
+  echo "Generating temporary IAM trust policy document..."
+  local trust_policy
+  trust_policy=$(cat <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::$AWS_ACCOUNT_ID:oidc-provider/$oidc_provider"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "${oidc_provider}:sub": "system:serviceaccount:kube-system:$SERVICE_ACCOUNT_NAME",
+          "${oidc_provider}:aud": "sts.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+EOF
+)
+
+  echo "Configuring IAM Role and policy attachments..."
+  if aws iam get-role --role-name "$ROLE_NAME" >/dev/null 2>&1; then
+    echo "⚠️ IAM Role '$ROLE_NAME' exists. Updating trust relationship..."
+    aws iam update-assume-role-policy \
+      --role-name "$ROLE_NAME" \
+      --policy-document "$trust_policy"
+  else
+    aws iam create-role \
+      --role-name "$ROLE_NAME" \
+      --assume-role-policy-document "$trust_policy"
+  fi
+
+  aws iam attach-role-policy \
+    --role-name "$ROLE_NAME" \
+    --policy-arn "$policy_arn"
+
+  echo "Deploying annotated Kubernetes ServiceAccount..."
+  cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: $SERVICE_ACCOUNT_NAME
+  name: $SERVICE_ACCOUNT_NAME
+  namespace: kube-system
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::$AWS_ACCOUNT_ID:role/$ROLE_NAME
+EOF
 }
 
 add_helm_repo() {
@@ -180,7 +261,18 @@ EOF
 }
 
 main() {
-  verify_requirements aws kubectl eksctl helm jq curl
+  local mode="${1:-eksctl}"
+
+  # Determine which tools are strictly required based on the mode
+  local required_tools=("aws" "kubectl" "helm" "jq" "curl")
+  if [ "$mode" = "eksctl" ]; then
+    required_tools+=("eksctl")
+  elif [ "$mode" != "aws-cli" ]; then
+    echo "❌ Error: Invalid mode '$mode'. Use 'eksctl' or 'aws-cli'." >&2
+    exit 1
+  fi
+
+  verify_requirements "${required_tools[@]}"
 
   echo "Discovering cluster infrastructure details..."
   AWS_ACCOUNT_ID="$(aws sts get-caller-identity \
@@ -194,7 +286,7 @@ main() {
 
   POLICY_ARN="arn:aws:iam::$AWS_ACCOUNT_ID:policy/$POLICY_NAME"
   
-  create_lbc_iam_policy "$POLICY_ARN"
+  create_lbc_iam_policy "$POLICY_ARN" "$mode"
   create_lbc_irsa_association "$POLICY_ARN"
   install_gateway_crds experimental
   add_helm_repo
