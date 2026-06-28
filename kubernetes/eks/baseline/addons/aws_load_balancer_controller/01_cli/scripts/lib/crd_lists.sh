@@ -10,7 +10,6 @@ STANDARD_GATEWAY_CRDS=(
   httproutes.gateway.networking.k8s.io
   listenersets.gateway.networking.k8s.io
   referencegrants.gateway.networking.k8s.io
-  safe-upgrades.gateway.networking.k8s.io
   tlsroutes.gateway.networking.k8s.io
 )
 
@@ -21,7 +20,6 @@ EXPERIMENTAL_GATEWAY_CRDS=(
   httproutes.gateway.networking.k8s.io
   listenersets.gateway.networking.k8s.io
   referencegrants.gateway.networking.k8s.io
-  safe-upgrades.gateway.networking.k8s.io
   tcproutes.gateway.networking.k8s.io
   tlsroutes.gateway.networking.k8s.io
   udproutes.gateway.networking.k8s.io

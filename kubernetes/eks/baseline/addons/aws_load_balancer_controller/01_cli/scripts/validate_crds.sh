@@ -20,10 +20,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/crd_lists.sh
 source "$SCRIPT_DIR/lib/crd_lists.sh"
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 usage() {
-  # Print contiguous leading comment block (lines 2–N until first blank/code line)
   awk '/^#!/{next} /^#/{sub(/^# ?/,""); print; next} /^[[:space:]]*$/{next} {exit}' "$0"
   exit 0
 }
@@ -50,38 +49,84 @@ fetch_installed_crds() {
 
 # ── Core logic ────────────────────────────────────────────────────────────────
 
+# validate_group <heading> <installed_nameref> <crd1> [crd2 ...]
+# Prints a headed section for one CRD group. Increments the global
+# TOTAL_MISSING counter so the caller can produce an aggregate summary.
+TOTAL_EXPECTED=0
+TOTAL_MISSING=0
+
+validate_group() {
+  local heading="$1"
+  local installed_ref="$2"
+  shift 2
+  local -a crds=("$@")
+  local -n _inst="$installed_ref"
+
+  echo ""
+  echo "  $heading"
+  echo "  $(printf '─%.0s' $(seq 1 ${#heading}))"
+
+  local group_missing=0
+  for crd in "${crds[@]}"; do
+    if [[ -n "${_inst[$crd]+_}" ]]; then
+      echo "  ✅  $crd"
+    else
+      echo "  ❌  $crd"
+      (( group_missing++ )) || true
+    fi
+  done
+
+  TOTAL_EXPECTED=$(( TOTAL_EXPECTED + ${#crds[@]} ))
+  TOTAL_MISSING=$(( TOTAL_MISSING + group_missing ))
+}
+
 validate_crds() {
   local channel="$1"
   local source="$2"
 
-  local -a expected=()
-  resolve_crds "$channel" "$source" expected || exit 1
-
-  echo "Validating CRDs  [channel: $channel]  [source: $source]"
-  echo "──────────────────────────────────────────────────────────"
-
   local -A installed=()
   fetch_installed_crds installed
 
-  local -a missing=() found=()
-  for crd in "${expected[@]}"; do
-    if [[ -n "${installed[$crd]+_}" ]]; then
-      found+=("$crd")
-    else
-      missing+=("$crd")
-    fi
-  done
-
-  for crd in "${found[@]}";   do echo "  ✅ $crd"; done
-  for crd in "${missing[@]}"; do echo "  ❌ $crd  (missing)"; done
-
+  echo "──────────────────────────────────────────────────────────"
+  echo "  CRD Validation"
   echo "──────────────────────────────────────────────────────────"
 
-  if [[ ${#missing[@]} -eq 0 ]]; then
-    echo "✅ All ${#expected[@]} expected CRDs are present."
+  case "$source" in
+    gateway-api)
+      if [[ "$channel" == "experimental" ]]; then
+        validate_group "Gateway API  (experimental channel)" installed \
+          "${EXPERIMENTAL_GATEWAY_CRDS[@]}"
+      else
+        validate_group "Gateway API  (standard channel)" installed \
+          "${STANDARD_GATEWAY_CRDS[@]}"
+      fi
+      ;;
+    aws-gateway)
+      validate_group "AWS Gateway" installed \
+        "${AWS_GATEWAY_CRDS[@]}"
+      ;;
+    all)
+      if [[ "$channel" == "experimental" ]]; then
+        validate_group "Gateway API  (experimental channel)" installed \
+          "${EXPERIMENTAL_GATEWAY_CRDS[@]}"
+      else
+        validate_group "Gateway API  (standard channel)" installed \
+          "${STANDARD_GATEWAY_CRDS[@]}"
+      fi
+      validate_group "AWS Gateway" installed \
+        "${AWS_GATEWAY_CRDS[@]}"
+      ;;
+  esac
+
+  echo ""
+  echo "──────────────────────────────────────────────────────────"
+
+  local total_found=$(( TOTAL_EXPECTED - TOTAL_MISSING ))
+  if [[ $TOTAL_MISSING -eq 0 ]]; then
+    echo "  ✅  All $TOTAL_EXPECTED CRDs present."
     return 0
   else
-    echo "❌ ${#missing[@]} of ${#expected[@]} CRDs are missing." >&2
+    echo "  ❌  $total_found of $TOTAL_EXPECTED CRDs present  ($TOTAL_MISSING missing)." >&2
     return 1
   fi
 }
