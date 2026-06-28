@@ -287,7 +287,7 @@ main() {
   POLICY_ARN="arn:aws:iam::$AWS_ACCOUNT_ID:policy/$POLICY_NAME"
   
   create_lbc_iam_policy "$POLICY_ARN" "$mode"
-  create_lbc_irsa_association "$POLICY_ARN"
+  create_lbc_irsa_association "$POLICY_ARN" "$mode"
   install_gateway_crds experimental
   add_helm_repo
   install_lbc_helm_chart "$VPC_ID" "$HELM_CHART_VERSION"
