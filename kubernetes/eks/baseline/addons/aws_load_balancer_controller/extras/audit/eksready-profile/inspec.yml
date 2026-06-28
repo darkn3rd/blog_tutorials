@@ -1,0 +1,17 @@
+name: aws-k8s-profile
+title: AWS-K8S InSpec Profile
+maintainer: Joaquin Menchaca
+copyright: Joaquin Menchaca
+copyright_email: suavecali@yahoo.com
+license: Apache-2.0
+summary: An InSpec Compliance Profile
+version: 0.1.0
+inspec_version: '~> 5'
+depends:
+  - name: inspec-aws
+    url: https://github.com/inspec/inspec-aws/archive/main.tar.gz
+  - name: inspec-k8s
+    url: https://github.com/inspec/inspec-k8s/archive/main.tar.gz
+supports:
+  - platform-name: aws
+  - platform-name: k8s
