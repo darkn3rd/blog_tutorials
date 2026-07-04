@@ -2,9 +2,40 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./install_aws_lbc.sh [eksctl|aws-cli] [irsa|pod-identity]
-#   arg1 (tool):  which CLI provisions the IAM binding. Default: eksctl
-#   arg2 (auth):  IRSA (OIDC federation) or EKS Pod Identity. Default: irsa
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [tool] [auth]
+
+Installs the AWS Load Balancer Controller onto an existing EKS cluster.
+
+Arguments:
+  tool   Which CLI provisions the IAM binding: eksctl or aws-cli. Default: eksctl
+  auth   Authentication mechanism: irsa or pod-identity. Default: irsa
+
+Options:
+  -h, --help   Show this help message and exit
+
+Required environment variables:
+  EKS_CLUSTER_NAME   Name of the target EKS cluster
+  EKS_REGION         AWS region the cluster is in
+  AWS_PROFILE        AWS CLI profile to use
+
+Examples:
+  EKS_CLUSTER_NAME=my-cluster EKS_REGION=us-east-2 AWS_PROFILE=default $(basename "$0")
+  EKS_CLUSTER_NAME=my-cluster EKS_REGION=us-east-2 AWS_PROFILE=default $(basename "$0") aws-cli pod-identity
+EOF
+}
+
+# Handled before the required-variable checks below so --help works even
+# without EKS_CLUSTER_NAME/EKS_REGION/AWS_PROFILE set.
+for arg in "$@"; do
+  case "$arg" in
+    -h | --help)
+      usage
+      exit 0
+      ;;
+  esac
+done
 
 # Required Variables
 : "${EKS_CLUSTER_NAME:?EKS_CLUSTER_NAME is required}"
@@ -428,10 +459,14 @@ validate_modes() {
 
   if [ "$tool_mode" != "eksctl" ] && [ "$tool_mode" != "aws-cli" ]; then
     echo "❌ Error: Invalid tool '$tool_mode'. Use 'eksctl' or 'aws-cli'." >&2
+    echo >&2
+    usage >&2
     exit 1
   fi
   if [ "$auth_mode" != "irsa" ] && [ "$auth_mode" != "pod-identity" ]; then
     echo "❌ Error: Invalid auth mode '$auth_mode'. Use 'irsa' or 'pod-identity'." >&2
+    echo >&2
+    usage >&2
     exit 1
   fi
 }
