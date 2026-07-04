@@ -6,8 +6,9 @@ set -uo pipefail
 # if the AWS resource never provisions or DNS never propagates, that demo is reported FAIL
 # instead of hanging forever.
 #
-# Table below mirrors terraform.tfvars (namespaces) and each module's app_name/hostname
-# defaults. If you override those in terraform.tfvars, update this table to match.
+# Works against either demos/tf (Terraform) or demos/cli (create_demos.sh) - both produce
+# the same namespaces/resource names. Table below mirrors those defaults; if you override
+# the namespaces or names in either one, update this table to match.
 
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-180}"
 POLL_INTERVAL="${POLL_INTERVAL:-10}"
@@ -31,18 +32,22 @@ pass=0
 fail=0
 
 # Polls `"$@"` until it prints a non-empty value or TIMEOUT_SECONDS elapses.
+# Prints a "." to stderr per attempt so a long wait doesn't look like a hang.
 wait_for() {
   local elapsed=0 value=""
 
   while (( elapsed < TIMEOUT_SECONDS )); do
     value="$("$@" 2>/dev/null || true)"
     if [ -n "$value" ]; then
+      echo >&2
       printf '%s' "$value"
       return
     fi
+    printf '.' >&2
     sleep "$POLL_INTERVAL"
     elapsed=$((elapsed + POLL_INTERVAL))
   done
+  echo >&2
 }
 
 for demo in "${DEMOS[@]}"; do
@@ -68,7 +73,7 @@ for demo in "${DEMOS[@]}"; do
   address=$(wait_for kubectl get "$kind" "$resource" -n "$namespace" -o jsonpath="$jsonpath")
 
   if [ -z "$address" ]; then
-    echo "FAIL: ${name} - no address/hostname after ${TIMEOUT_SECONDS}s (not provisioned)"
+    echo "❌ FAIL: ${name} - no address/hostname after ${TIMEOUT_SECONDS}s (not provisioned)"
     fail=$((fail + 1))
     continue
   fi
@@ -78,7 +83,7 @@ for demo in "${DEMOS[@]}"; do
   resolved=$(wait_for dig +short "$address")
 
   if [ -z "$resolved" ]; then
-    echo "FAIL: ${name} - DNS for ${address} never resolved after ${TIMEOUT_SECONDS}s"
+    echo "❌ FAIL: ${name} - DNS for ${address} never resolved after ${TIMEOUT_SECONDS}s"
     fail=$((fail + 1))
     continue
   fi
@@ -90,13 +95,15 @@ for demo in "${DEMOS[@]}"; do
   fi
   curl_args+=("http://${address}")
 
-  http_code=$(curl "${curl_args[@]}" || echo "000")
+  # curl's own -w already prints "000" on connection failure/timeout - no
+  # extra fallback needed (and one caused this to double up into "000000")
+  http_code=$(curl "${curl_args[@]}" 2>/dev/null)
 
   if [[ "$http_code" =~ ^2 ]]; then
-    echo "PASS: ${name} - HTTP ${http_code}"
+    echo "✅ PASS: ${name} - HTTP ${http_code}"
     pass=$((pass + 1))
   else
-    echo "FAIL: ${name} - HTTP ${http_code}"
+    echo "❌ FAIL: ${name} - HTTP ${http_code}"
     fail=$((fail + 1))
   fi
 done
