@@ -114,6 +114,40 @@ uninstall_gateway_crds() {
   done
 }
 
+determine_auth_mode() {
+  echo "==> Determining IAM binding type for ServiceAccount $SA_NAMESPACE/$SA_NAME..."
+
+  local sa_role_arn
+  sa_role_arn="$(kubectl get sa "$SA_NAME" -n "$SA_NAMESPACE" \
+    -o jsonpath='{.metadata.annotations.eks\.amazonaws\.com/role-arn}' 2>/dev/null || true)"
+
+  if [[ -n "$sa_role_arn" ]]; then
+    echo "  ServiceAccount is annotated with an IAM role -> IRSA."
+    AUTH_MODE="irsa"
+    return 0
+  fi
+
+  # No annotation doesn't necessarily mean Pod Identity - verify a live
+  # association actually exists rather than assuming.
+  local assoc_id
+  assoc_id="$(aws eks list-pod-identity-associations \
+    --cluster-name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --namespace "$SA_NAMESPACE" \
+    --service-account "$SA_NAME" \
+    --query "associations[0].associationId" \
+    --output text 2>/dev/null || true)"
+
+  if [[ -n "$assoc_id" && "$assoc_id" != "None" ]]; then
+    echo "  Found an EKS Pod Identity association -> Pod Identity."
+    AUTH_MODE="pod-identity"
+    return 0
+  fi
+
+  echo "  No IRSA annotation or Pod Identity association found."
+  AUTH_MODE=""
+}
+
 extract_iam_role_from_sa() {
   echo "==> Extracting IAM role from ServiceAccount annotation..."
   IAM_ROLE_ARN="$(kubectl get sa "$SA_NAME" -n "$SA_NAMESPACE" \
@@ -127,9 +161,69 @@ extract_iam_role_from_sa() {
   fi
 }
 
+extract_iam_role_from_pod_identity() {
+  echo "==> Extracting IAM role from Pod Identity association..."
+
+  local assoc_id
+  assoc_id="$(aws eks list-pod-identity-associations \
+    --cluster-name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --namespace "$SA_NAMESPACE" \
+    --service-account "$SA_NAME" \
+    --query "associations[0].associationId" \
+    --output text 2>/dev/null || true)"
+
+  if [[ -z "$assoc_id" || "$assoc_id" == "None" ]]; then
+    echo "  No Pod Identity association found."
+    POD_IDENTITY_ASSOCIATION_ID=""
+    IAM_ROLE_NAME=""
+    return 0
+  fi
+
+  POD_IDENTITY_ASSOCIATION_ID="$assoc_id"
+
+  local role_arn
+  role_arn="$(aws eks describe-pod-identity-association \
+    --cluster-name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --association-id "$assoc_id" \
+    --query "association.roleArn" \
+    --output text 2>/dev/null || true)"
+
+  if [[ -n "$role_arn" && "$role_arn" != "None" ]]; then
+    IAM_ROLE_NAME="${role_arn##*/}"
+    echo "  Found IAM role: $IAM_ROLE_NAME"
+  else
+    echo "  No IAM role found on Pod Identity association."
+    IAM_ROLE_NAME=""
+  fi
+}
+
+extract_iam_role_info() {
+  case "$AUTH_MODE" in
+    irsa) extract_iam_role_from_sa ;;
+    pod-identity) extract_iam_role_from_pod_identity ;;
+    *) IAM_ROLE_NAME="" ;;
+  esac
+}
+
 delete_service_account() {
   echo "==> Deleting ServiceAccount $SA_NAMESPACE/$SA_NAME..."
   kubectl delete sa "$SA_NAME" -n "$SA_NAMESPACE" --ignore-not-found=true
+}
+
+delete_pod_identity_association() {
+  if [[ -z "${POD_IDENTITY_ASSOCIATION_ID:-}" ]]; then
+    echo "==> No Pod Identity association to delete, skipping."
+    return 0
+  fi
+
+  echo "==> Deleting Pod Identity association: $POD_IDENTITY_ASSOCIATION_ID..."
+  aws eks delete-pod-identity-association \
+    --cluster-name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --association-id "$POD_IDENTITY_ASSOCIATION_ID"
+  echo "  Pod Identity association deleted."
 }
 
 delete_iam_role() {
@@ -223,8 +317,13 @@ delete_iam_policy() {
   echo "  IAM Policy deleted."
 }
 
-delete_eksctl_stack() {
-  local stack_name="eksctl-${EKS_CLUSTER_NAME}-addon-iamserviceaccount-${SA_NAMESPACE}-${SA_NAME}"
+# Deletes a CloudFormation stack by name if it exists; a no-op otherwise. Used
+# to clean up whichever eksctl-managed stack (if any) owns the IAM role -
+# eksctl create iamserviceaccount / podidentityassociation each provision one
+# only when eksctl generated the role itself (no --role-arn/--attach-role-arn
+# was passed), so this is skipped entirely for aws-cli-created roles.
+delete_cfn_stack() {
+  local stack_name="${1:?stack_name is required}"
   echo "==> Deleting CloudFormation stack: $stack_name (if exists)..."
   if aws cloudformation describe-stacks --stack-name "$stack_name" --region "$EKS_REGION" &>/dev/null; then
     aws cloudformation delete-stack --stack-name "$stack_name" --region "$EKS_REGION"
@@ -236,15 +335,40 @@ delete_eksctl_stack() {
   fi
 }
 
+delete_eksctl_irsa_stack() {
+  delete_cfn_stack "eksctl-${EKS_CLUSTER_NAME}-addon-iamserviceaccount-${SA_NAMESPACE}-${SA_NAME}"
+}
+
+delete_eksctl_pod_identity_stack() {
+  delete_cfn_stack "eksctl-${EKS_CLUSTER_NAME}-podidentityrole-${SA_NAMESPACE}-${SA_NAME}"
+}
+
+delete_iam_binding() {
+  case "$AUTH_MODE" in
+    irsa)
+      delete_iam_role
+      delete_eksctl_irsa_stack
+      ;;
+    pod-identity)
+      delete_pod_identity_association
+      delete_iam_role
+      delete_eksctl_pod_identity_stack
+      ;;
+    *)
+      echo "==> No IAM binding detected, skipping IAM role/association cleanup."
+      ;;
+  esac
+}
+
 main() {
   deprovision_aws_load_balancers
   uninstall_lbc_helm_chart
   uninstall_gateway_crds
-  extract_iam_role_from_sa
+  determine_auth_mode
+  extract_iam_role_info
   delete_service_account
-  delete_iam_role
+  delete_iam_binding
   delete_iam_policy
-  delete_eksctl_stack
   echo "Cleanup completed successfully!"
 }
 
