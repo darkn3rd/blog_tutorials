@@ -2,6 +2,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Usage: ./install_aws_lbc.sh [eksctl|aws-cli] [irsa|pod-identity]
+#   arg1 (tool):  which CLI provisions the IAM binding. Default: eksctl
+#   arg2 (auth):  IRSA (OIDC federation) or EKS Pod Identity. Default: irsa
+
 # Required Variables
 : "${EKS_CLUSTER_NAME:?EKS_CLUSTER_NAME is required}"
 : "${EKS_REGION:?EKS_REGION is required}"
@@ -59,7 +63,14 @@ verify_aws_connectivity() {
 }
 
 verify_requirements() {
-  verify_binaries "$@"
+  local tool_mode="${1:?tool_mode is required}"
+
+  local required_tools=("aws" "kubectl" "helm" "jq" "curl")
+  if [ "$tool_mode" = "eksctl" ]; then
+    required_tools+=("eksctl")
+  fi
+
+  verify_binaries "${required_tools[@]}"
   verify_kubernetes_connectivity
   verify_aws_connectivity
 }
@@ -94,6 +105,30 @@ create_lbc_iam_policy() {
     --policy-document "$amended_policy"
 }
 
+verify_oidc_provider() {
+  echo "Checking for an IAM OIDC provider associated with the cluster..."
+
+  local oidc_url
+  oidc_url=$(aws eks describe-cluster \
+    --name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --query "cluster.identity.oidc.issuer" \
+    --output text)
+
+  OIDC_PROVIDER="${oidc_url#https://}"
+
+  if ! aws iam get-open-id-connect-provider \
+      --open-id-connect-provider-arn "arn:aws:iam::$AWS_ACCOUNT_ID:oidc-provider/$OIDC_PROVIDER" \
+      >/dev/null 2>&1; then
+    echo "❌ Error: No IAM OIDC provider is associated with this cluster." >&2
+    echo "IRSA requires one. Create it first, e.g.:" >&2
+    echo "  eksctl utils associate-iam-oidc-provider --cluster \"$EKS_CLUSTER_NAME\" --region \"$EKS_REGION\" --approve" >&2
+    exit 1
+  fi
+
+  echo "✅ IAM OIDC provider found: $OIDC_PROVIDER"
+}
+
 create_lbc_irsa_association() {
   local policy_arn="${1:?policy_arn is required}"
   local target_mode="${2:?mode is required}"
@@ -125,17 +160,8 @@ create_lbc_irsa_association_eksctl() {
 
 create_lbc_irsa_association_awscli() {
   local policy_arn="${1:?policy_arn is required}"
-  
-  echo "Discovering OIDC issuer configuration..."
-  local oidc_url oidc_provider
-  oidc_url=$(aws eks describe-cluster \
-    --name "$EKS_CLUSTER_NAME" \
-    --region "$EKS_REGION" \
-    --query "cluster.identity.oidc.issuer" \
-    --output text)
-  
-  oidc_provider="${oidc_url#https://}"
 
+  # OIDC_PROVIDER is set by verify_oidc_provider, which must run before this
   echo "Generating temporary IAM trust policy document..."
   local trust_policy
   trust_policy=$(cat <<EOF
@@ -145,13 +171,13 @@ create_lbc_irsa_association_awscli() {
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::$AWS_ACCOUNT_ID:oidc-provider/$oidc_provider"
+        "Federated": "arn:aws:iam::$AWS_ACCOUNT_ID:oidc-provider/$OIDC_PROVIDER"
       },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "${oidc_provider}:sub": "system:serviceaccount:kube-system:$SERVICE_ACCOUNT_NAME",
-          "${oidc_provider}:aud": "sts.amazonaws.com"
+          "${OIDC_PROVIDER}:sub": "system:serviceaccount:kube-system:$SERVICE_ACCOUNT_NAME",
+          "${OIDC_PROVIDER}:aud": "sts.amazonaws.com"
         }
       }
     }
@@ -189,6 +215,142 @@ metadata:
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::$AWS_ACCOUNT_ID:role/$ROLE_NAME
 EOF
+}
+
+verify_pod_identity_addon() {
+  echo "Checking for the EKS Pod Identity Agent addon..."
+  if ! aws eks describe-addon \
+      --cluster-name "$EKS_CLUSTER_NAME" \
+      --region "$EKS_REGION" \
+      --addon-name eks-pod-identity-agent >/dev/null 2>&1; then
+    echo "❌ Error: The 'eks-pod-identity-agent' addon is not installed on this cluster." >&2
+    echo "Pod Identity requires it. Install it first, e.g.:" >&2
+    echo "  aws eks create-addon --cluster-name \"$EKS_CLUSTER_NAME\" --region \"$EKS_REGION\" --addon-name eks-pod-identity-agent" >&2
+    exit 1
+  fi
+
+  echo "✅ Pod Identity Agent addon is installed."
+}
+
+# Pod Identity doesn't annotate the ServiceAccount (the binding lives in EKS,
+# not on the object), but Helm is invoked with serviceAccount.create=false,
+# so it still needs to exist.
+ensure_service_account() {
+  echo "Ensuring Kubernetes ServiceAccount exists..."
+  cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: $SERVICE_ACCOUNT_NAME
+  name: $SERVICE_ACCOUNT_NAME
+  namespace: kube-system
+EOF
+}
+
+create_lbc_pod_identity_association() {
+  local policy_arn="${1:?policy_arn is required}"
+  local target_mode="${2:?mode is required}"
+
+  # Precondition (addon must exist) is checked earlier in main() via verify_pod_identity_addon
+  ensure_service_account
+
+  if [ "$target_mode" = "aws-cli" ]; then
+    create_lbc_pod_identity_association_awscli "$policy_arn"
+  else
+    create_lbc_pod_identity_association_eksctl "$policy_arn"
+  fi
+}
+
+create_lbc_pod_identity_association_eksctl() {
+  local policy_arn="${1:?policy_arn is required}"
+
+  echo "Checking for an existing Pod Identity association..."
+  local existing_count
+  existing_count=$(eksctl get podidentityassociation \
+    --cluster="$EKS_CLUSTER_NAME" \
+    --namespace=kube-system \
+    --service-account-name="$SERVICE_ACCOUNT_NAME" \
+    --region "$EKS_REGION" \
+    --output json 2>/dev/null | jq 'length')
+
+  if [ "${existing_count:-0}" != "0" ]; then
+    echo "✅ Pod Identity association already exists. Skipping creation."
+    return 0
+  fi
+
+  echo "Creating Pod Identity association via eksctl..."
+  eksctl create podidentityassociation \
+    --cluster="$EKS_CLUSTER_NAME" \
+    --namespace=kube-system \
+    --service-account-name="$SERVICE_ACCOUNT_NAME" \
+    --permission-policy-arns="$policy_arn" \
+    --region "$EKS_REGION"
+}
+
+create_lbc_pod_identity_association_awscli() {
+  local policy_arn="${1:?policy_arn is required}"
+
+  echo "Generating Pod Identity trust policy document..."
+  local trust_policy
+  trust_policy=$(cat <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "pods.eks.amazonaws.com"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ]
+    }
+  ]
+}
+EOF
+)
+
+  echo "Configuring IAM Role and policy attachments..."
+  if aws iam get-role --role-name "$ROLE_NAME" >/dev/null 2>&1; then
+    echo "⚠️ IAM Role '$ROLE_NAME' exists. Updating trust relationship..."
+    aws iam update-assume-role-policy \
+      --role-name "$ROLE_NAME" \
+      --policy-document "$trust_policy"
+  else
+    aws iam create-role \
+      --role-name "$ROLE_NAME" \
+      --assume-role-policy-document "$trust_policy"
+  fi
+
+  aws iam attach-role-policy \
+    --role-name "$ROLE_NAME" \
+    --policy-arn "$policy_arn"
+
+  echo "Checking for an existing Pod Identity association..."
+  local assoc_id
+  assoc_id=$(aws eks list-pod-identity-associations \
+    --cluster-name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --namespace kube-system \
+    --service-account "$SERVICE_ACCOUNT_NAME" \
+    --query "associations[0].associationId" \
+    --output text 2>/dev/null || true)
+
+  if [ -n "$assoc_id" ] && [ "$assoc_id" != "None" ]; then
+    echo "✅ Pod Identity association already exists. Skipping creation."
+    return 0
+  fi
+
+  echo "Creating Pod Identity association..."
+  aws eks create-pod-identity-association \
+    --cluster-name "$EKS_CLUSTER_NAME" \
+    --region "$EKS_REGION" \
+    --namespace kube-system \
+    --service-account "$SERVICE_ACCOUNT_NAME" \
+    --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID:role/$ROLE_NAME"
 }
 
 add_helm_repo() {
@@ -260,20 +422,21 @@ EOF
 
 }
 
-main() {
-  local mode="${1:-eksctl}"
+validate_modes() {
+  local tool_mode="${1:?tool_mode is required}"
+  local auth_mode="${2:?auth_mode is required}"
 
-  # Determine which tools are strictly required based on the mode
-  local required_tools=("aws" "kubectl" "helm" "jq" "curl")
-  if [ "$mode" = "eksctl" ]; then
-    required_tools+=("eksctl")
-  elif [ "$mode" != "aws-cli" ]; then
-    echo "❌ Error: Invalid mode '$mode'. Use 'eksctl' or 'aws-cli'." >&2
+  if [ "$tool_mode" != "eksctl" ] && [ "$tool_mode" != "aws-cli" ]; then
+    echo "❌ Error: Invalid tool '$tool_mode'. Use 'eksctl' or 'aws-cli'." >&2
     exit 1
   fi
+  if [ "$auth_mode" != "irsa" ] && [ "$auth_mode" != "pod-identity" ]; then
+    echo "❌ Error: Invalid auth mode '$auth_mode'. Use 'irsa' or 'pod-identity'." >&2
+    exit 1
+  fi
+}
 
-  verify_requirements "${required_tools[@]}"
-
+discover_cluster_info() {
   echo "Discovering cluster infrastructure details..."
   AWS_ACCOUNT_ID="$(aws sts get-caller-identity \
     --query "Account" \
@@ -283,11 +446,43 @@ main() {
     --region "$EKS_REGION" \
     --query "cluster.resourcesVpcConfig.vpcId" \
     --output text)"
-
   POLICY_ARN="arn:aws:iam::$AWS_ACCOUNT_ID:policy/$POLICY_NAME"
-  
-  create_lbc_iam_policy "$POLICY_ARN" "$mode"
-  create_lbc_irsa_association "$POLICY_ARN" "$mode"
+}
+
+verify_auth_prerequisites() {
+  local auth_mode="${1:?auth_mode is required}"
+
+  echo "Verifying prerequisites for '$auth_mode' authentication..."
+  if [ "$auth_mode" = "pod-identity" ]; then
+    verify_pod_identity_addon
+  else
+    verify_oidc_provider
+  fi
+}
+
+create_lbc_iam_binding() {
+  local policy_arn="${1:?policy_arn is required}"
+  local auth_mode="${2:?auth_mode is required}"
+  local tool_mode="${3:?tool_mode is required}"
+
+  echo "Provisioning IAM binding via '$auth_mode' using '$tool_mode'..."
+  if [ "$auth_mode" = "pod-identity" ]; then
+    create_lbc_pod_identity_association "$policy_arn" "$tool_mode"
+  else
+    create_lbc_irsa_association "$policy_arn" "$tool_mode"
+  fi
+}
+
+main() {
+  local tool_mode="${1:-eksctl}"
+  local auth_mode="${2:-irsa}"
+
+  validate_modes "$tool_mode" "$auth_mode"
+  verify_requirements "$tool_mode"
+  discover_cluster_info
+  verify_auth_prerequisites "$auth_mode"
+  create_lbc_iam_policy "$POLICY_ARN"
+  create_lbc_iam_binding "$POLICY_ARN" "$auth_mode" "$tool_mode"
   install_gateway_crds experimental
   add_helm_repo
   install_lbc_helm_chart "$VPC_ID" "$HELM_CHART_VERSION"
