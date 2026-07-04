@@ -19,7 +19,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: demo-nlb-gateway
+  name: demo-gwtcp-app-gateway
   namespace: demo-gwtcp
 spec:
   gatewayClassName: aws-nlb-class
@@ -27,7 +27,7 @@ spec:
     parametersRef:
       group: gateway.k8s.aws
       kind: LoadBalancerConfiguration
-      name: demo-nlb-lg-config
+      name: demo-gwtcp-app-lb-config
   listeners:
     - name: tcp-80
       protocol: TCP
@@ -41,11 +41,11 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1alpha2
 kind: TCPRoute
 metadata:
-  name: demo-nlb-route
+  name: demo-gwtcp-app-route
   namespace: demo-gwtcp
 spec:
   parentRefs:
-    - name: demo-nlb-gateway
+    - name: demo-gwtcp-app-gateway
       sectionName: tcp-80
   rules:
     - backendRefs:
@@ -56,7 +56,7 @@ spec:
 apiVersion: gateway.k8s.aws/v1beta1
 kind: LoadBalancerConfiguration
 metadata:
-  name: demo-nlb-lg-config
+  name: demo-gwtcp-app-lb-config
   namespace: demo-gwtcp
 spec:
   scheme: internet-facing
@@ -64,7 +64,7 @@ spec:
 apiVersion: gateway.k8s.aws/v1beta1
 kind: TargetGroupConfiguration
 metadata:
-  name: demo-nlb-tg-config
+  name: demo-gwtcp-app-tg-config
   namespace: demo-gwtcp
 spec:
   targetReference:

@@ -45,7 +45,7 @@ Because AWS provisions the Application Load Balancer asynchronously, fetch the d
 
 ```bash
 # Extract the ALB address from the Ingress status
-EXTERNAL_IP=$(kubectl get gateway demo-alb-gw \
+EXTERNAL_IP=$(kubectl get gateway demo-gwhttp-app-gw \
   --output jsonpath='{.status.addresses[0].value}')
 
 # Monitor until global AWS name servers populate the dynamic DNS record

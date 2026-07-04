@@ -46,7 +46,7 @@ To verify your environment, use this validation routine to monitor your public e
 
 ```bash
 # Extract the public NLB address directly into your environment
-EXTERNAL_IP=$(kubectl get gateway demo-nlb-gateway \
+EXTERNAL_IP=$(kubectl get gateway demo-gwtcp-app-gateway \
   --output jsonpath='{.status.addresses[0].value}')
 
 # Wait until global AWS name servers populate the record
