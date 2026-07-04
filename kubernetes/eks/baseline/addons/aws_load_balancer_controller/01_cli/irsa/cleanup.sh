@@ -317,42 +317,63 @@ delete_iam_policy() {
   echo "  IAM Policy deleted."
 }
 
-# Deletes a CloudFormation stack by name if it exists; a no-op otherwise. Used
-# to clean up whichever eksctl-managed stack (if any) owns the IAM role -
-# eksctl create iamserviceaccount / podidentityassociation each provision one
-# only when eksctl generated the role itself (no --role-arn/--attach-role-arn
-# was passed), so this is skipped entirely for aws-cli-created roles.
+cfn_stack_exists() {
+  local stack_name="${1:?stack_name is required}"
+  aws cloudformation describe-stacks --stack-name "$stack_name" --region "$EKS_REGION" &>/dev/null
+}
+
+# Deletes a CloudFormation stack by name. Disables termination protection
+# first if needed - eksctl enables it by default on stacks it creates, and
+# delete-stack fails outright otherwise. Caller must have already confirmed
+# the stack exists (via cfn_stack_exists).
 delete_cfn_stack() {
   local stack_name="${1:?stack_name is required}"
-  echo "==> Deleting CloudFormation stack: $stack_name (if exists)..."
-  if aws cloudformation describe-stacks --stack-name "$stack_name" --region "$EKS_REGION" &>/dev/null; then
-    aws cloudformation delete-stack --stack-name "$stack_name" --region "$EKS_REGION"
-    echo "  Waiting for stack deletion..."
-    aws cloudformation wait stack-delete-complete --stack-name "$stack_name" --region "$EKS_REGION"
-    echo "  Stack deleted."
-  else
-    echo "  Stack not found, skipping."
+  echo "==> Deleting CloudFormation stack: $stack_name..."
+
+  local termination_protection
+  termination_protection="$(aws cloudformation describe-stacks --stack-name "$stack_name" --region "$EKS_REGION" \
+    --query 'Stacks[0].EnableTerminationProtection' --output text 2>/dev/null || true)"
+
+  if [[ "$termination_protection" == "True" ]]; then
+    echo "  Termination protection is enabled on this stack - disabling it first..."
+    aws cloudformation update-termination-protection \
+      --stack-name "$stack_name" \
+      --region "$EKS_REGION" \
+      --no-enable-termination-protection >/dev/null
   fi
+
+  aws cloudformation delete-stack --stack-name "$stack_name" --region "$EKS_REGION"
+  echo "  Waiting for stack deletion..."
+  aws cloudformation wait stack-delete-complete --stack-name "$stack_name" --region "$EKS_REGION"
+  echo "  Stack deleted."
 }
 
-delete_eksctl_irsa_stack() {
-  delete_cfn_stack "eksctl-${EKS_CLUSTER_NAME}-addon-iamserviceaccount-${SA_NAMESPACE}-${SA_NAME}"
-}
+# eksctl create iamserviceaccount / podidentityassociation each provision a
+# CloudFormation stack to own the IAM role only when eksctl generated the role
+# itself (no --role-arn/--attach-role-arn was passed). When that's the case,
+# CloudFormation must be the one to delete the role - deleting it directly via
+# the IAM API first (as this used to do) leaves the stack orphaned, unable to
+# clean itself up. So: check for the stack first, and only fall back to a
+# direct IAM role deletion when there isn't one (aws-cli-created roles).
+delete_iam_role_or_stack() {
+  local stack_name="${1:?stack_name is required}"
 
-delete_eksctl_pod_identity_stack() {
-  delete_cfn_stack "eksctl-${EKS_CLUSTER_NAME}-podidentityrole-${SA_NAMESPACE}-${SA_NAME}"
+  if cfn_stack_exists "$stack_name"; then
+    echo "==> IAM role is managed by eksctl via CloudFormation stack: $stack_name"
+    delete_cfn_stack "$stack_name"
+  else
+    delete_iam_role
+  fi
 }
 
 delete_iam_binding() {
   case "$AUTH_MODE" in
     irsa)
-      delete_iam_role
-      delete_eksctl_irsa_stack
+      delete_iam_role_or_stack "eksctl-${EKS_CLUSTER_NAME}-addon-iamserviceaccount-${SA_NAMESPACE}-${SA_NAME}"
       ;;
     pod-identity)
       delete_pod_identity_association
-      delete_iam_role
-      delete_eksctl_pod_identity_stack
+      delete_iam_role_or_stack "eksctl-${EKS_CLUSTER_NAME}-podidentityrole-${SA_NAMESPACE}-${SA_NAME}"
       ;;
     *)
       echo "==> No IAM binding detected, skipping IAM role/association cleanup."
