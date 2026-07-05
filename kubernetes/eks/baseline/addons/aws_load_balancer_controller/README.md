@@ -29,36 +29,24 @@ These can be easily provisioned using one of the guides:
 * [EKS via Terraform | VPC via Terraform (Native Resources)](../../minimal/04_terraform_native/README.md)
 * [EKS via Terraform | VPC via Terraform (Community Modules)](../../minimal/05_terraform_modules/README.md)
 
+### Installing AWS Load Balancer Controller 
 
+You can setup and install AWS Load Balancer Controller with the following paths:
 
+* [CLI](./01_cli/README.md) - setup using `helm`, `kubectl`, `aws`, and optional `eksctl` commands with using either IRSA or Pod-Identity association for authorization configuration.
+* [Terraform](./02_terraform/irsa/README.md) - setup using `terraform` with IRSA association for authorization.
 
+### ELBv2 Demos
+
+After the AWS Load Balancer is installed, you test it by deploying service, ingress, or gateway manifests that triggering provisionign of either ALB or NLB.
+
+* [Overview](./demos/README.md)
+  * [Terraform](./demos/tf/README.md) - bring up the demos or use one at a time with `terraform -target`
+  * [CLI](./demos/cli/README.md) - use script to bring up all the demos, or run through them manually. 
+
+## Documentation References
 
 * [Install AWS Load Balancer Controller with Helm](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html)
 * [Getting started with Gateway API](https://gateway-api.sigs.k8s.io/guides/getting-started/introduction/)
 * [AWS Load Balancer Controller: Documentation](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/)
 * [AWS Load Balancer Controller: Gateway API](https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/guide/gateway/gateway/)
-
-
-Standard Channel CRDs: `GatewayClass`, `Gateway`, `HTTPRoute`, and `ReferenceGrant`
-Experimental Channel CRDs: `TCPRoute`, `TLSRoute`, and `UDPRoute`
-
-```bash
-kubectl get crd grpcroutes.gateway.networking.k8s.io -ojsonpath="{.status.storedVersions}"
-kubectl get crd referencegrants.gateway.networking.k8s.io -ojsonpath="{.status.storedVersions}"
-
-crds=("GRPCRoutes" "ReferenceGrants")
-
-for crd in "${crds[@]}"; do
-  output=$(kubectl get "${crd}" -A -o json)
-
-  echo "$output" | jq -c '.items[]' | while IFS= read -r resource; do
-    namespace=$(echo "$resource" | jq -r '.metadata.namespace')
-    name=$(echo "$resource" | jq -r '.metadata.name')
-    kubectl patch "${crd}" "${name}" -n "${namespace}" --type='json' -p='[{"op": "replace", "path": "/metadata/annotations/migration-time", "value": "'"$(date +%Y-%m-%dT%H:%M:%S)"'" }]'
-  done
-done
-
-kubectl patch customresourcedefinitions referencegrants.gateway.networking.k8s.io --subresource='status' --type='merge' -p '{"status":{"storedVersions":["v1beta1"]}}'
-kubectl patch customresourcedefinitions grpcroutes.gateway.networking.k8s.io --subresource='status' --type='merge' -p '{"status":{"storedVersions":["v1"]}}'
-
-```
