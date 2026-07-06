@@ -44,6 +44,10 @@ After the AWS Load Balancer is installed, you test it by deploying service, ingr
   * [Terraform](./demos/tf/README.md) - bring up the demos or use one at a time with `terraform -target`
   * [CLI](./demos/cli/README.md) - use script to bring up all the demos, or run through them manually. 
 
+### Verifying the Install
+
+[`extras/audit`](./extras/audit/README.md) has four InSpec/`cinc-auditor` profiles, one per pipeline stage, to verify the cluster is ready before you install, that installation prep succeeded, that the controller is healthy, and that the demos above actually work end-to-end.
+
 ## Documentation References
 
 * [Install AWS Load Balancer Controller with Helm](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html)

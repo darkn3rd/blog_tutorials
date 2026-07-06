@@ -1,12 +1,15 @@
-name: aws-k8s-profile
-title: AWS-K8S InSpec Profile
+name: bindings-ready-profile
+title: 'Stage 2: AWS LBC Preparation Succeeded'
 maintainer: Joaquin Menchaca
 copyright: Joaquin Menchaca
 copyright_email: suavecali@yahoo.com
 license: Apache-2.0
-summary: An InSpec Compliance Profile
+summary: >
+  Verifies install_aws_lbc.sh's preparation steps succeeded: the Gateway API
+  CRDs are installed, and the IAM role/policy are bound to the controller's
+  ServiceAccount via whichever auth mode (IRSA or Pod Identity) was used.
 version: 0.1.0
-inspec_version: '~> 5'
+inspec_version: '>= 5.0'
 depends:
   - name: inspec-aws
     url: https://github.com/inspec/inspec-aws/archive/main.tar.gz

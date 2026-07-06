@@ -1,0 +1,18 @@
+name: controller-ready-profile
+title: 'Stage 3: AWS LBC Installed and Functional'
+maintainer: Joaquin Menchaca
+copyright: Joaquin Menchaca
+copyright_email: suavecali@yahoo.com
+license: Apache-2.0
+summary: >
+  Verifies the AWS Load Balancer Controller deployment itself is healthy and
+  ready to reconcile Service/Ingress/Gateway resources for both NLB and ALB:
+  replicas ready, ALB/NLB Gateway API feature gates enabled, and the
+  admission webhook has ready endpoints.
+version: 0.1.0
+inspec_version: '>= 5.0'
+depends:
+  - name: inspec-k8s
+    url: https://github.com/inspec/inspec-k8s/archive/main.tar.gz
+supports:
+  - platform-name: k8s

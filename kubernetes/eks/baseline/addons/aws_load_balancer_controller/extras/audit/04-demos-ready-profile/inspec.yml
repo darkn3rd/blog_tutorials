@@ -1,0 +1,16 @@
+name: demos-ready-profile
+title: 'Stage 4: cli/ Demos Working'
+maintainer: Joaquin Menchaca
+copyright: Joaquin Menchaca
+copyright_email: suavecali@yahoo.com
+license: Apache-2.0
+summary: >
+  Verifies the four cli/ demos (svc_nlb, ing_alb, gw_nlb, gw_alb) each got a
+  load balancer actually provisioned by AWS LBC, and that it's reachable.
+version: 0.1.0
+inspec_version: '>= 5.0'
+depends:
+  - name: inspec-k8s
+    url: https://github.com/inspec/inspec-k8s/archive/main.tar.gz
+supports:
+  - platform-name: k8s

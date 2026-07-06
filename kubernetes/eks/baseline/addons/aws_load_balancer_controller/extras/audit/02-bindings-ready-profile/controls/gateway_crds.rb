@@ -41,7 +41,7 @@ control "gateway-api-experimental-crds" do
     'tlsroutes.gateway.networking.k8s.io',
     'udproutes.gateway.networking.k8s.io'
   ]
-  
+
   expected_gateway_crds.each do |crd_name|
     describe k8s_custom_resource_definition(name: crd_name) do
       it { should exist }
