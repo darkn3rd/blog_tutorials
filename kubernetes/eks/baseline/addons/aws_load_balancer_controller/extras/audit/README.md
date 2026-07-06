@@ -26,7 +26,8 @@ Inspec and CINC Auditor are auditing and Testing Frameworks or Compliance-as-Cod
 These profiles were tested with `cinc-auditor`, but should work with `inspec`.  The `run_tests.sh` script will pick `cinc-auditor` if it is in the path, otherwise `inspec` will be used.
 
 * [cinc-auditor](https://cinc.sh/docs/auditor/) [`cinc-auditor`] - fully open-source distribution of the InSpec runtime
-* [Chef Inspec](https://community.chef.io/tools/chef-inspec) [`inspec`] - binary distribution of the InSpec runtime
+* [Chef InSpec](https://community.chef.io/tools/chef-inspec) [`inspec`] - binary distribution of the InSpec runtime
+  * [InSpec Source](https://github.com/inspec/inspec) - source code to InSpec
 
 ## Running the tests
 

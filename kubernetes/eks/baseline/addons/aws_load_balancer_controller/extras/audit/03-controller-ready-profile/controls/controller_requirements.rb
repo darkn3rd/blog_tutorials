@@ -56,7 +56,7 @@ control "lbc-webhook-service-ready" do
        "rejected by the API server."
   impact 1.0
 
-  svc = k8sobject(api: "v1", type: "service", namespace: sa_namespace, name: webhook_service)
+  svc = k8sobject(api: "v1", type: "services", namespace: sa_namespace, name: webhook_service)
 
   describe svc do
     it { should exist }

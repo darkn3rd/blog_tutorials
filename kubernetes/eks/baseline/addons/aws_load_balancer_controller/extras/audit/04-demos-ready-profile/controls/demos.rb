@@ -1,22 +1,54 @@
-# Verifies the four cli/ demos each produced a working, AWS-provisioned load
-# balancer. Namespace/name defaults below match what each demo script
-# actually creates (see cli/0N.*/*.sh); override via env vars if you deployed
-# them elsewhere.
+# Verifies the four demos under eks_terraform_project/demos/ (either the
+# tf/ or cli/ variant -- both produce the same namespaces/resource names,
+# per the comment atop eks_terraform_project/demos/test_demos.sh) each got
+# a working, AWS-provisioned load balancer. Namespace/name defaults below
+# are copied from that same script's DEMOS table, which is the actual
+# source of truth for these values -- if that table changes, update the
+# defaults here to match.
 
-def demo_lb_hostname(ingress_or_addresses)
+# Local (not top-level def): a `def` here would be evaluated against a
+# different receiver inside each `control do...end` block (an
+# Inspec::Rule, not this file's top-level self) and raise NoMethodError --
+# confirmed by hitting exactly that error. A local variable holding a Proc
+# is captured by the block's normal lexical closure instead, same as any
+# other local used inside these controls.
+demo_lb_hostname = lambda do |ingress_or_addresses|
   entry = ingress_or_addresses&.first
   entry&.hostname || entry&.ip || entry&.value
 end
 
+# Not InSpec's own `http` resource: it declares `supports platform: "unix"`
+# / `"windows"` (see http.rb in inspec-core), which InSpec's resource
+# framework enforces before the resource even runs, regardless of what it
+# does internally -- confirmed by hitting exactly "Unsupported
+# resource/backend combination: http / k8s" under -t k8s://. Plain
+# Net::HTTP has no such restriction since it isn't an InSpec resource at
+# all, just stdlib Ruby running inline in the control body.
+require "net/http"
+require "uri"
+
+http_status = lambda do |hostname, host_header: nil|
+  uri = URI("http://#{hostname}/")
+  req = Net::HTTP::Get.new(uri)
+  req["Host"] = host_header if host_header
+  begin
+    Net::HTTP.start(uri.host, uri.port, open_timeout: 10, read_timeout: 10) do |http|
+      http.request(req).code.to_i
+    end
+  rescue StandardError
+    nil
+  end
+end
+
 control "svc-nlb-demo-ready" do
-  title "Service/NLB demo (cli/01.svc_nlb) has a reachable load balancer"
-  desc "Applies to the plain-Service demo in cli/01.svc_nlb/svc.sh: the LoadBalancer Service got an NLB hostname/IP from AWS LBC and it answers HTTP requests."
+  title "Service/NLB demo has a reachable load balancer"
+  desc "The LoadBalancer Service in the Service/NLB demo got an NLB hostname/IP from AWS LBC and it answers HTTP requests."
   impact 1.0
 
   namespace = ENV.fetch("SVC_NLB_NAMESPACE", "demo-nlb")
   name      = ENV.fetch("SVC_NLB_NAME", "demo-nlb-app")
 
-  svc = k8sobject(api: "v1", type: "service", namespace: namespace, name: name)
+  svc = k8sobject(api: "v1", type: "services", namespace: namespace, name: name)
 
   describe svc do
     it { should exist }
@@ -24,7 +56,7 @@ control "svc-nlb-demo-ready" do
 
   next unless svc.exists?
 
-  hostname = demo_lb_hostname(svc.resource.status.loadBalancer&.ingress)
+  hostname = demo_lb_hostname.call(svc.resource.status.loadBalancer&.ingress)
 
   describe "load balancer hostname/IP assigned by AWS LBC" do
     subject { hostname }
@@ -33,21 +65,22 @@ control "svc-nlb-demo-ready" do
 
   next unless hostname
 
-  describe http("http://#{hostname}/") do
-    its("status") { should cmp 200 }
+  describe "HTTP response from #{hostname}" do
+    subject { http_status.call(hostname) }
+    it { should cmp 200 }
   end
 end
 
 control "ing-alb-demo-ready" do
-  title "Ingress/ALB demo (cli/02.ing_alb) has a reachable load balancer"
-  desc "Applies to the Ingress demo in cli/02.ing_alb/ing.sh: the Ingress got an ALB hostname from AWS LBC and it answers HTTP requests for the demo.example.com host rule."
+  title "Ingress/ALB demo has a reachable load balancer"
+  desc "The Ingress in the Ingress/ALB demo got an ALB hostname from AWS LBC and it answers HTTP requests for the demo.example.com host rule."
   impact 1.0
 
-  namespace = ENV.fetch("ING_ALB_NAMESPACE", "default")
+  namespace = ENV.fetch("ING_ALB_NAMESPACE", "demo-alb")
   name      = ENV.fetch("ING_ALB_NAME", "demo-alb-app")
   host      = ENV.fetch("ING_ALB_HOST", "demo.example.com")
 
-  ing = k8sobject(api: "networking.k8s.io/v1", type: "ingress", namespace: namespace, name: name)
+  ing = k8sobject(api: "networking.k8s.io/v1", type: "ingresses", namespace: namespace, name: name)
 
   describe ing do
     it { should exist }
@@ -55,7 +88,7 @@ control "ing-alb-demo-ready" do
 
   next unless ing.exists?
 
-  hostname = demo_lb_hostname(ing.resource.status.loadBalancer&.ingress)
+  hostname = demo_lb_hostname.call(ing.resource.status.loadBalancer&.ingress)
 
   describe "load balancer hostname/IP assigned by AWS LBC" do
     subject { hostname }
@@ -64,20 +97,21 @@ control "ing-alb-demo-ready" do
 
   next unless hostname
 
-  describe http("http://#{hostname}/", headers: { "Host" => host }) do
-    its("status") { should cmp 200 }
+  describe "HTTP response from #{hostname} (Host: #{host})" do
+    subject { http_status.call(hostname, host_header: host) }
+    it { should cmp 200 }
   end
 end
 
 control "gw-nlb-demo-ready" do
-  title "Gateway/NLB TCPRoute demo (cli/03.gw_nlb) has a reachable load balancer"
-  desc "Applies to the Gateway API TCPRoute demo in cli/03.gw_nlb/gwtcp.sh: the Gateway got an NLB hostname/IP from AWS LBC and it answers HTTP requests over the TCP listener."
+  title "Gateway/NLB TCPRoute demo has a reachable load balancer"
+  desc "The Gateway in the Gateway+TCPRoute/NLB demo got an NLB hostname/IP from AWS LBC and it answers HTTP requests over the TCP listener."
   impact 1.0
 
   namespace = ENV.fetch("GW_NLB_NAMESPACE", "demo-gwtcp")
-  name      = ENV.fetch("GW_NLB_NAME", "demo-nlb-gateway")
+  name      = ENV.fetch("GW_NLB_NAME", "demo-gwtcp-app-gateway")
 
-  gw = k8sobject(api: "gateway.networking.k8s.io/v1", type: "gateway", namespace: namespace, name: name)
+  gw = k8sobject(api: "gateway.networking.k8s.io/v1", type: "gateways", namespace: namespace, name: name)
 
   describe gw do
     it { should exist }
@@ -85,7 +119,7 @@ control "gw-nlb-demo-ready" do
 
   next unless gw.exists?
 
-  hostname = demo_lb_hostname(gw.resource.status.addresses)
+  hostname = demo_lb_hostname.call(gw.resource.status.addresses)
 
   describe "load balancer hostname/IP assigned by AWS LBC" do
     subject { hostname }
@@ -94,21 +128,22 @@ control "gw-nlb-demo-ready" do
 
   next unless hostname
 
-  describe http("http://#{hostname}/") do
-    its("status") { should cmp 200 }
+  describe "HTTP response from #{hostname}" do
+    subject { http_status.call(hostname) }
+    it { should cmp 200 }
   end
 end
 
 control "gw-alb-demo-ready" do
-  title "Gateway/ALB HTTPRoute demo (cli/04.gw_alb) has a reachable load balancer"
-  desc "Applies to the Gateway API HTTPRoute demo in cli/04.gw_alb/gwhttp.sh: the Gateway got an ALB hostname from AWS LBC and it answers HTTP requests for the demo.example.com HTTPRoute."
+  title "Gateway/ALB HTTPRoute demo has a reachable load balancer"
+  desc "The Gateway in the Gateway+HTTPRoute/ALB demo got an ALB hostname from AWS LBC and it answers HTTP requests for the demo.example.com HTTPRoute."
   impact 1.0
 
-  namespace = ENV.fetch("GW_ALB_NAMESPACE", "default")
-  name      = ENV.fetch("GW_ALB_NAME", "demo-alb-gw")
+  namespace = ENV.fetch("GW_ALB_NAMESPACE", "demo-gwhttp")
+  name      = ENV.fetch("GW_ALB_NAME", "demo-gwhttp-app-gw")
   host      = ENV.fetch("GW_ALB_HOST", "demo.example.com")
 
-  gw = k8sobject(api: "gateway.networking.k8s.io/v1", type: "gateway", namespace: namespace, name: name)
+  gw = k8sobject(api: "gateway.networking.k8s.io/v1", type: "gateways", namespace: namespace, name: name)
 
   describe gw do
     it { should exist }
@@ -116,7 +151,7 @@ control "gw-alb-demo-ready" do
 
   next unless gw.exists?
 
-  hostname = demo_lb_hostname(gw.resource.status.addresses)
+  hostname = demo_lb_hostname.call(gw.resource.status.addresses)
 
   describe "load balancer hostname/IP assigned by AWS LBC" do
     subject { hostname }
@@ -125,7 +160,8 @@ control "gw-alb-demo-ready" do
 
   next unless hostname
 
-  describe http("http://#{hostname}/", headers: { "Host" => host }) do
-    its("status") { should cmp 200 }
+  describe "HTTP response from #{hostname} (Host: #{host})" do
+    subject { http_status.call(hostname, host_header: host) }
+    it { should cmp 200 }
   end
 end

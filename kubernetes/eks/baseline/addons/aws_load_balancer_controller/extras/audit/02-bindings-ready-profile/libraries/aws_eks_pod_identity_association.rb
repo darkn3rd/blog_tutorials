@@ -1,10 +1,19 @@
-require "aws_backend"
+require "aws-sdk-eks"
 
 # inspec-aws doesn't cover EKS Pod Identity associations. This looks up the
 # association for a namespace/ServiceAccount pair the way eksctl and
 # create_lbc_pod_identity_association_awscli() in
 # ../../../../install_aws_lbc.sh both do.
-class AwsEksPodIdentityAssociation < AwsResourceBase
+#
+# This is NOT built on inspec-aws's AwsResourceBase: each profile/dependency
+# gets its own require-loader AND its own library eval context, and Ruby
+# scopes classes defined via instance_eval to that context's singleton
+# class. So AwsResourceBase, defined inside inspec-aws's own eval context,
+# is genuinely unreachable here (raises NameError, not just a require
+# problem) -- confirmed by running this against a live target. Inspec.resource(1)
+# is a real gem-level constant, not profile-scoped, so it's safe to use
+# directly, along with the aws-sdk-eks gem inspec-aws already depends on.
+class AwsEksPodIdentityAssociation < Inspec.resource(1)
   name "aws_eks_pod_identity_association"
   desc "Looks up an EKS Pod Identity association for a namespace/ServiceAccount."
 
@@ -17,23 +26,28 @@ class AwsEksPodIdentityAssociation < AwsResourceBase
   attr_reader :association_id, :role_arn
 
   def initialize(opts = {})
-    super(opts)
-    validate_parameters(required: [:cluster_name, :namespace, :service_account])
+    cluster_name = opts.fetch(:cluster_name)
+    namespace = opts.fetch(:namespace)
+    service_account = opts.fetch(:service_account)
 
-    catch_aws_errors do
-      assoc = @aws.eks_client.list_pod_identity_associations(
-        cluster_name: opts[:cluster_name],
-        namespace: opts[:namespace],
-        service_account: opts[:service_account]
+    client = Aws::EKS::Client.new
+    begin
+      assoc = client.list_pod_identity_associations(
+        cluster_name: cluster_name,
+        namespace: namespace,
+        service_account: service_account
       ).associations.first
-      next unless assoc
 
-      @association_id = assoc.association_id
-      detail = @aws.eks_client.describe_pod_identity_association(
-        cluster_name: opts[:cluster_name],
-        association_id: assoc.association_id
-      ).association
-      @role_arn = detail.role_arn
+      if assoc
+        @association_id = assoc.association_id
+        detail = client.describe_pod_identity_association(
+          cluster_name: cluster_name,
+          association_id: assoc.association_id
+        ).association
+        @role_arn = detail.role_arn
+      end
+    rescue Aws::Errors::ServiceError => e
+      Inspec::Log.warn "aws_eks_pod_identity_association: #{e.message}"
     end
   end
 

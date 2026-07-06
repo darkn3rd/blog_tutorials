@@ -18,18 +18,23 @@ control "eks-cluster-active" do
 end
 
 control "eks-cluster-subnets-tagged" do
-  title "Cluster subnets carry the ELB discovery tag AWS LBC needs"
+  title "A subnet in the cluster's VPC carries the ELB discovery tag AWS LBC needs"
   desc "AWS LBC auto-discovers subnets via the kubernetes.io/role/elb tag " \
        "(see https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/deploy/subnet_discovery/). " \
        "All four cli/ demos request internet-facing load balancers, so at " \
-       "least one kubernetes.io/role/elb-tagged subnet is required."
+       "least one kubernetes.io/role/elb-tagged subnet is required. Checked " \
+       "across every subnet in the cluster's VPC, not just " \
+       "cluster.resourcesVpcConfig.subnetIds -- on a typical EKS setup that " \
+       "list is only the private/worker subnets, while the ELB-tagged " \
+       "public subnets AWS LBC actually needs live elsewhere in the same VPC."
   impact 1.0
 
   cluster = aws_eks_cluster(cluster_name: cluster_name)
-  subnet_tag_sets = cluster.subnet_ids.map { |id| aws_subnet(id).tags || {} }
+  vpc_subnet_ids = aws_subnets.where(vpc_id: cluster.vpc_id).subnet_ids || []
+  subnet_tag_sets = vpc_subnet_ids.map { |id| aws_subnet(id).tags || {} }
   public_tagged = subnet_tag_sets.any? { |tags| tags.key?("kubernetes.io/role/elb") }
 
-  describe "at least one subnet tagged kubernetes.io/role/elb" do
+  describe "at least one subnet in VPC #{cluster.vpc_id} tagged kubernetes.io/role/elb" do
     subject { public_tagged }
     it { should eq true }
   end
