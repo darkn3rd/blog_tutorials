@@ -1,32 +1,47 @@
 #!/usr/bin/env bash
-# validate_irsa.sh — Verify the full IRSA chain for the AWS Load Balancer Controller:
+# validate_auth.sh — Verify the full IAM auth chain for the AWS Load
+#                    Balancer Controller, whichever mechanism actually binds
+#                    it:
 #
-#   ServiceAccount → role-arn annotation → IAM role exists
-#   → expected policy attached → policy contents correct
+#   ServiceAccount → IRSA annotation or Pod Identity association
+#   → IAM role exists → policy attached → policy contents correct
 #
 # Usage:
-#   validate_irsa.sh [options]
+#   validate_auth.sh [options]
 #
 # Options:
 #   -s, --service-account  Kubernetes ServiceAccount name
 #                          (default: aws-load-balancer-controller)
 #   -n, --namespace        Kubernetes namespace to look in
 #                          (default: kube-system)
-#   -p, --policy-name      Expected IAM policy name to find attached to the role
-#                          (default: AWSLoadBalancerControllerIAMPolicy)
+#   -c, --cluster-name     EKS cluster name. Only needed if there's no IRSA
+#                          annotation, to look up a Pod Identity association
+#                          instead  (default: $EKS_CLUSTER_NAME)
+#   -r, --region           AWS region the cluster lives in. Only needed if
+#                          there's no IRSA annotation -- the Pod Identity
+#                          lookup is region-scoped  (default: $EKS_REGION)
+#   -p, --policy-name      IAM policy name to look for attached to the role.
+#                          If omitted, whichever single policy is actually
+#                          attached is used instead, regardless of its name.
 #   -h, --help             Show this help message.
 #
 # Exit codes:
-#   0  All IRSA chain checks passed.
+#   0  All auth chain checks passed.
 #   1  One or more checks failed.
+#
+# Requires: bash >= 4.3 (enforced at startup; aborts immediately otherwise)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# shellcheck source=lib/bash_version.sh
+source "$SCRIPT_DIR/lib/bash_version.sh"
 # shellcheck source=lib/aws.sh
 source "$SCRIPT_DIR/lib/aws.sh"
 # shellcheck source=lib/k8s.sh
 source "$SCRIPT_DIR/lib/k8s.sh"
+# shellcheck source=lib/role_discovery.sh
+source "$SCRIPT_DIR/lib/role_discovery.sh"
 # shellcheck source=lib/policy_validation.sh
 source "$SCRIPT_DIR/lib/policy_validation.sh"
 
@@ -65,8 +80,8 @@ fail() { echo "  ❌  $*" >&2; exit 1; }
 
 # ── Expected policy document ──────────────────────────────────────────────────
 # Canonical source: upstream iam_policy.json + Gateway API amendment.
-# Duplicated here so validate_irsa.sh is independently runnable without
-# also running validate_iam_policy.sh.
+# Duplicated here so validate_auth.sh is independently runnable without also
+# running validate_iam_policy.sh.
 
 read -r -d '' EXPECTED_POLICY_JSON << 'EOF' || true
 {
@@ -307,15 +322,17 @@ read -r -d '' EXPECTED_POLICY_JSON << 'EOF' || true
 }
 EOF
 
-# ── IRSA chain validation ─────────────────────────────────────────────────────
+# ── Auth chain validation ─────────────────────────────────────────────────────
 
-validate_irsa() {
+validate_auth() {
   local sa_name="$1"
   local namespace="$2"
-  local expected_policy_name="$3"
+  local cluster_name="$3"
+  local region="$4"
+  local expected_policy_name="$5"   # empty -> discover instead of matching a name
 
   echo "══════════════════════════════════════════════════════════"
-  echo "  IRSA Chain Validation"
+  echo "  IAM Auth Chain Validation"
   echo "══════════════════════════════════════════════════════════"
 
   # ── Step 1: ServiceAccount exists ──────────────────────────────────────────
@@ -329,23 +346,34 @@ validate_irsa() {
     fail "ServiceAccount '$sa_name' not found in namespace '$namespace'."
   fi
 
-  # ── Step 2: role-arn annotation is present ──────────────────────────────────
-  step 2 "role-arn annotation present"
-  local annotation_key="eks.amazonaws.com/role-arn"
+  # ── Step 2: bound to an IAM role via IRSA or Pod Identity ───────────────────
+  step 2 "Bound to an IAM role (IRSA or Pod Identity)"
 
-  # jsonpath dots in annotation keys must be escaped for kubectl
-  local escaped_key="${annotation_key//./\\.}"
-  local role_arn
-  role_arn=$(get_service_account_annotation "$sa_name" "$namespace" "$escaped_key")
+  local role_arn auth_mode=""
+  role_arn=$(get_service_account_annotation "$sa_name" "$namespace" 'eks\.amazonaws\.com/role-arn')
 
-  if [[ -z "$role_arn" ]]; then
-    fail "Annotation '$annotation_key' is missing on ServiceAccount '$sa_name'."
+  if [[ -n "$role_arn" ]]; then
+    auth_mode="IRSA"
+    pass "IRSA role-arn annotation present."
+  elif [[ -n "$cluster_name" && -n "$region" ]]; then
+    role_arn=$(get_pod_identity_role_arn "$cluster_name" "$namespace" "$sa_name" "$region")
+    if [[ -n "$role_arn" ]]; then
+      auth_mode="Pod Identity"
+      pass "Pod Identity association found."
+    fi
   fi
 
-  pass "Annotation present."
+  if [[ -z "$role_arn" ]]; then
+    if [[ -z "$cluster_name" || -z "$region" ]]; then
+      fail "No IRSA role-arn annotation on '$sa_name', and --cluster-name/--region (or \$EKS_CLUSTER_NAME/\$EKS_REGION) weren't given, so a Pod Identity association couldn't be looked up either."
+    else
+      fail "ServiceAccount '$sa_name' is bound to a role via neither an IRSA role-arn annotation nor an EKS Pod Identity association in region '$region'."
+    fi
+  fi
+
+  echo "  Auth mode : $auth_mode"
   echo "  Role ARN  : $role_arn"
 
-  # Extract the bare role name from the ARN (last path component)
   local role_name="${role_arn##*/}"
   echo "  Role Name : $role_name"
 
@@ -358,32 +386,39 @@ validate_irsa() {
     fail "IAM role '$role_name' does not exist (or is not accessible)."
   fi
 
-  # ── Step 4: expected policy is attached to the role ─────────────────────────
-  step 4 "Expected policy attached to role"
-  echo "  Looking for : $expected_policy_name"
-
-  local -a attached_arns=()
-  get_role_attached_policy_arns "$role_name" attached_arns
+  # ── Step 4: policy is attached to the role ──────────────────────────────────
+  step 4 "Policy attached to role"
 
   local matched_policy_arn=""
-  for arn in "${attached_arns[@]}"; do
-    local attached_name="${arn##*/}"
-    if [[ "$attached_name" == "$expected_policy_name" ]]; then
-      matched_policy_arn="$arn"
-      break
-    fi
-  done
 
-  if [[ -z "$matched_policy_arn" ]]; then
-    echo "  Attached policies on role '$role_name':"
-    if [[ ${#attached_arns[@]} -eq 0 ]]; then
-      echo "    (none)"
-    else
-      for arn in "${attached_arns[@]}"; do
-        echo "    • $arn"
-      done
+  if [[ -n "$expected_policy_name" ]]; then
+    echo "  Looking for : $expected_policy_name"
+
+    local -a attached_arns=()
+    get_role_attached_policy_arns "$role_name" attached_arns
+
+    for arn in "${attached_arns[@]}"; do
+      local attached_name="${arn##*/}"
+      if [[ "$attached_name" == "$expected_policy_name" ]]; then
+        matched_policy_arn="$arn"
+        break
+      fi
+    done
+
+    if [[ -z "$matched_policy_arn" ]]; then
+      echo "  Attached policies on role '$role_name':"
+      if [[ ${#attached_arns[@]} -eq 0 ]]; then
+        echo "    (none)"
+      else
+        for arn in "${attached_arns[@]}"; do
+          echo "    • $arn"
+        done
+      fi
+      fail "Policy '$expected_policy_name' is not attached to role '$role_name'."
     fi
-    fail "Policy '$expected_policy_name' is not attached to role '$role_name'."
+  else
+    echo "  No --policy-name given -- discovering whichever policy is attached..."
+    matched_policy_arn=$(find_attached_policy_arn "$role_name")
   fi
 
   pass "Policy is attached."
@@ -402,7 +437,7 @@ validate_irsa() {
   # ── Final summary ────────────────────────────────────────────────────────────
   echo ""
   echo "══════════════════════════════════════════════════════════"
-  echo "  ✅  All IRSA chain checks passed."
+  echo "  ✅  All auth chain checks passed ($auth_mode)."
   echo "══════════════════════════════════════════════════════════"
 }
 
@@ -411,7 +446,9 @@ validate_irsa() {
 main() {
   local sa_name="aws-load-balancer-controller"
   local namespace="kube-system"
-  local policy_name="AWSLoadBalancerControllerIAMPolicy"
+  local cluster_name="${EKS_CLUSTER_NAME:-}"
+  local region="${EKS_REGION:-}"
+  local policy_name=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -423,6 +460,14 @@ main() {
         namespace="${2:?--namespace requires a value}"
         shift 2
         ;;
+      -c|--cluster-name)
+        cluster_name="${2:?--cluster-name requires a value}"
+        shift 2
+        ;;
+      -r|--region)
+        region="${2:?--region requires a value}"
+        shift 2
+        ;;
       -p|--policy-name)
         policy_name="${2:?--policy-name requires a value}"
         shift 2
@@ -432,11 +477,12 @@ main() {
     esac
   done
 
+  verify_bash
   verify_dependencies
   verify_aws_connectivity
   verify_kubectl
 
-  validate_irsa "$sa_name" "$namespace" "$policy_name"
+  validate_auth "$sa_name" "$namespace" "$cluster_name" "$region" "$policy_name"
 }
 
 main "$@"

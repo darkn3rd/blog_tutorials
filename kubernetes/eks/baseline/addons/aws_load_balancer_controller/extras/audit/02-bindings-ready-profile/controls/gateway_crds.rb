@@ -4,6 +4,30 @@
 # included "safe-upgrades.gateway.networking.k8s.io", which isn't a CRD at
 # all -- it's the name of a ValidatingAdmissionPolicy/Binding pair bundled
 # in the same manifest file.
+#
+# Each CRD gets one clean line ("<name>"), combining the existence check
+# and the group match into a single assertion. describe crd_name do; it {
+# should exist }; its('group') { should cmp ... }; end would work too, but
+# renders two auto-generated lines per CRD ("Kubernetes
+# CustomResourceDefinition <name> is expected to exist" / "... group is
+# expected to cmp == ..."). Describing the plain name (not the resource
+# object, whose to_s adds the "Kubernetes CustomResourceDefinition" prefix)
+# and using a single explicit `it` with a non-empty-but-blank description
+# (a lone space -- an empty string "" still counts as "no description" to
+# RSpec and would auto-generate anyway) collapses both checks into one
+# clean line instead.
+#
+# This loop body is duplicated across the three controls below rather than
+# factored into a shared helper: a helper would have to be a `lambda`/`Proc`
+# (a top-level `def` becomes a singleton method on whatever object loads
+# this file, invisible once a `control do...end` block's own instance_eval
+# runs with a different `self` -- see iam_binding.rb for that exact bug),
+# but a lambda that calls `describe`/`it` breaks the same way for a
+# different reason: a lambda's `self` is fixed to wherever it was *defined*
+# (this file's top level), not wherever it's later `.call`ed from, so
+# `describe`/`it` inside it would resolve against the wrong object instead
+# of the calling control's Inspec::Rule. `instance_exec` can rebind that,
+# but it's an unnecessary risk for saving a few duplicated lines.
 
 control "gateway-api-standard-crds" do
   title "Verify Kubernetes Gateway API v1.5.0 Standard CRDs"
@@ -22,9 +46,12 @@ control "gateway-api-standard-crds" do
   ]
 
   expected_standard_crds.each do |crd_name|
-    describe k8s_custom_resource_definition(name: crd_name) do
-      it { should exist }
-      its('group') { should cmp 'gateway.networking.k8s.io' }
+    describe crd_name do
+      it(" ") do
+        crd = k8s_custom_resource_definition(name: crd_name)
+        expect(crd).to exist
+        expect(crd.group).to cmp('gateway.networking.k8s.io')
+      end
     end
   end
 end
@@ -48,9 +75,12 @@ control "gateway-api-experimental-crds" do
   ]
 
   expected_gateway_crds.each do |crd_name|
-    describe k8s_custom_resource_definition(name: crd_name) do
-      it { should exist }
-      its('group') { should cmp 'gateway.networking.k8s.io' }
+    describe crd_name do
+      it(" ") do
+        crd = k8s_custom_resource_definition(name: crd_name)
+        expect(crd).to exist
+        expect(crd.group).to cmp('gateway.networking.k8s.io')
+      end
     end
   end
 
@@ -60,9 +90,12 @@ control "gateway-api-experimental-crds" do
   ]
 
   expected_gamma_crds.each do |crd_name|
-    describe k8s_custom_resource_definition(name: crd_name) do
-      it { should exist }
-      its('group') { should cmp 'gateway.networking.x-k8s.io' }
+    describe crd_name do
+      it(" ") do
+        crd = k8s_custom_resource_definition(name: crd_name)
+        expect(crd).to exist
+        expect(crd.group).to cmp('gateway.networking.x-k8s.io')
+      end
     end
   end
 end
@@ -79,9 +112,12 @@ control "aws-lbc-gateway-extensions-crds" do
   ]
 
   expected_aws_gateway_crds.each do |crd_name|
-    describe k8s_custom_resource_definition(name: crd_name) do
-      it { should exist }
-      its('group') { should cmp 'gateway.k8s.aws' }
+    describe crd_name do
+      it(" ") do
+        crd = k8s_custom_resource_definition(name: crd_name)
+        expect(crd).to exist
+        expect(crd.group).to cmp('gateway.k8s.aws')
+      end
     end
   end
 end

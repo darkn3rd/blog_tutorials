@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
+# Requires: bash >= 4.3 (enforced at startup; aborts immediately otherwise)
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/bash_version.sh
+source "$SCRIPT_DIR/lib/bash_version.sh"
+
+die() { echo "❌ $*" >&2; exit 1; }
+
+verify_bash
 
 : "${EKS_CLUSTER_NAME:?EKS_CLUSTER_NAME is required}"
 : "${EKS_REGION:?EKS_REGION is required}"

@@ -14,9 +14,13 @@
 # Exit codes:
 #   0  All expected CRDs are present.
 #   1  One or more CRDs are missing, or a usage/connectivity error occurred.
+#
+# Requires: bash >= 4.3 (enforced at startup; aborts immediately otherwise)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/bash_version.sh
+source "$SCRIPT_DIR/lib/bash_version.sh"
 # shellcheck source=lib/crd_lists.sh
 source "$SCRIPT_DIR/lib/crd_lists.sh"
 
@@ -152,6 +156,7 @@ main() {
     esac
   done
 
+  verify_bash
   verify_kubectl
   validate_crds "$channel" "$source"
 }
