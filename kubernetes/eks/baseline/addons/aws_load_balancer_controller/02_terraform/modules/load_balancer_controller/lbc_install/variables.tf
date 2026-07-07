@@ -18,13 +18,7 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "oidc_issuer_url" {
-  description = "OIDC issuer URL of the target EKS cluster"
+variable "sa_name" {
+  description = "Name of the pre-created Kubernetes service account for the controller (from the lbc_prep module)"
   type        = string
-}
-
-variable "use_experimental_gateway_api" {
-  description = "Install the Gateway API experimental channel CRDs instead of the standard channel. Only one channel may be installed at a time."
-  type        = bool
-  default     = true
 }

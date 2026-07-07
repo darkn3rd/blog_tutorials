@@ -1,6 +1,6 @@
 output "role_arn" {
-  description = "ARN of the IAM role assumed by the aws-load-balancer-controller service account"
-  value       = module.lbc_irsa.role_arn
+  description = "ARN of the IAM role associated with the aws-load-balancer-controller service account"
+  value       = module.lbc_setup.role_arn
 }
 
 output "helm_release_name" {

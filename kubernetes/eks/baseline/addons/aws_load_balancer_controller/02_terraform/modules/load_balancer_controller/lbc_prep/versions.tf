@@ -5,9 +5,9 @@ terraform {
       version = "~> 3.2"
     }
 
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 3.2"
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.0"
     }
 
     kubectl = {
