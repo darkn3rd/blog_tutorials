@@ -1,8 +1,6 @@
 # AWS LBC Demos with kubectl
 
-These demos exercise the AWS Load Balancer Controller through plain `kubectl`/manifests
-instead of Terraform. Each demo lands in its own namespace and produces a different kind
-of AWS load balancer:
+These demos deploy **Kubernetes** resources with plain `kubectl` and manifests instead of **Terraform**. Each demo lands in its own namespace and allows the **AWS Load Balancer Controller** (**AWS LBC**) to provision a different kind of AWS load balancer:
 
 | Demo | Namespace (default) | Produces |
 | --- | --- | --- |
@@ -18,15 +16,13 @@ of AWS load balancer:
 * Credentials to access the EKS cluster, usually set up via `KUBECONFIG`
 * Credentials to access AWS, usually set up via `AWS_PROFILE`
 
-## Option 1: Bring up all 4 demos at once
+## Option 1: Deploy all 4 demos at once
 
 ```bash
 ./create_demos.sh
 ```
 
-This creates each namespace, deploys the nginx demo app, and applies the load balancer
-resource for all 4 demos in one shot. Override the default namespace names via env vars
-if needed:
+This creates each namespace, deploys the demo app, and applies the **Kubernetes** resources that cause **AWS LBC** to provision the load balancer.
 
 ```bash
 SVC_NLB_NAMESPACE=demo-nlb \
@@ -41,7 +37,7 @@ Run `./create_demos.sh --help` for details.
 ### Verify
 
 ```bash
-../test.sh
+../test_demos.sh
 ```
 
 Waits for each demo's load balancer address to appear, waits for DNS to resolve, then
@@ -54,9 +50,7 @@ never finishes provisioning).
 ./clean_demos.sh
 ```
 
-Deletes the load balancer resources, waits for AWS to deprovision them, then deletes each
-namespace. Accepts the same namespace override env vars as `create_demos.sh`. Run
-`./clean_demos.sh --help` for details.
+Deletes the **Kubernetes** load balancer resources, waits for **AWS LBC** to deprovision the AWS load balancers, then deletes each namespace.  Accepts the same namespace override env vars as `create_demos.sh`. Run `./clean_demos.sh --help` for details.
 
 ## Option 2: Walk through a single demo by hand
 

@@ -10,7 +10,7 @@ The **AWS Load Balancer Controller** manages AWS Elastic Load Balancing (ELBv2) 
 * **Legacy/Standard:** Traditional `Ingress` resources.
 * **Gateway API:** `Gateway` resources coupled with `HTTPRoute` or `GRPCRoute` configurations.
 
-## Prerequisites 
+## Prerequisites
 
 Before deploying the controller, ensure your environment meets the following baseline requirements:
 
@@ -29,7 +29,7 @@ These can be easily provisioned using one of the guides:
 * [EKS via Terraform | VPC via Terraform (Native Resources)](../../minimal/04_terraform_native/README.md)
 * [EKS via Terraform | VPC via Terraform (Community Modules)](../../minimal/05_terraform_modules/README.md)
 
-### Installing AWS Load Balancer Controller 
+### Installing AWS Load Balancer Controller
 
 You can setup and install AWS Load Balancer Controller with the following paths:
 
@@ -42,11 +42,18 @@ After the AWS Load Balancer is installed, you test it by deploying service, ingr
 
 * [Overview](./demos/README.md)
   * [Terraform](./demos/tf/README.md) - bring up the demos or use one at a time with `terraform -target`
-  * [CLI](./demos/cli/README.md) - use script to bring up all the demos, or run through them manually. 
+  * [CLI](./demos/cli/README.md) - use script to bring up all the demos, or run through them manually.
 
 ### Verifying the Install
 
 [`extras/audit`](./extras/audit/README.md) has four InSpec/`cinc-auditor` profiles, one per pipeline stage, to verify the cluster is ready before you install, that installation prep succeeded, that the controller is healthy, and that the demos above actually work end-to-end.
+
+## Terminology
+
+* **Provision** infrastructure (AWS resources)
+* **Install** cluster capabilities (controllers, drivers, add-ons)
+* **Deploy** workloads (applications and Kubernetes objects)
+* **Audit** the environment (InSpec)
 
 ## Documentation References
 

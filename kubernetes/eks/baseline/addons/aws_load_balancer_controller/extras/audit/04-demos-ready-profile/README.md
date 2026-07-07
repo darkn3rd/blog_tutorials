@@ -1,11 +1,14 @@
 # Stage 4: Demos Ready
 
-Verifies the four demos under [`../../../eks_terraform_project/demos/`](../../../eks_terraform_project/demos/)
-(either the `tf/` or `cli/` variant — both produce the same
-namespaces/resource names) each got a load balancer actually provisioned by
-AWS LBC and that it's reachable — checks the Kubernetes status field AWS LBC
-writes back (`.status.loadBalancer.ingress` for Service/Ingress,
-`.status.addresses` for Gateway), then makes a real HTTP request against it.
+Verifies four representative workloads (Service/NLB, Ingress/ALB,
+Gateway+TCPRoute/NLB, Gateway+HTTPRoute/ALB) each got a load balancer
+actually provisioned by AWS LBC and that it's reachable — checks the
+Kubernetes status field AWS LBC writes back
+(`.status.loadBalancer.ingress` for Service/Ingress, `.status.addresses`
+for Gateway), then makes a real HTTP request against it. This only checks
+state -- it doesn't deploy the workloads itself; deploy them however you
+like first, using whatever namespaces/names you want (see below for how to
+point the controls at them).
 
 Controls (`controls/demos.rb`), one per demo:
 
@@ -16,18 +19,16 @@ Controls (`controls/demos.rb`), one per demo:
 | `gw-nlb-demo-ready`   | Gateway+TCPRoute/NLB    | `demo-gwtcp` / `demo-gwtcp-app-gateway`                      |
 | `gw-alb-demo-ready`   | Gateway+HTTPRoute/ALB   | `demo-gwhttp` / `demo-gwhttp-app-gw` (Host: `demo.example.com`) |
 
-Defaults are copied from the `DEMOS` table at the top of
-[`../../../eks_terraform_project/demos/test_demos.sh`](../../../eks_terraform_project/demos/test_demos.sh),
-which is the actual source of truth for these values — if that table
-changes, update the defaults in `controls/demos.rb` to match. Override with
-the corresponding `*_NAMESPACE` / `*_NAME` / `*_HOST` env vars (see the top
-of `controls/demos.rb`) if you deployed a demo somewhere else.
+The defaults above are just that -- defaults, set at the top of
+`controls/demos.rb`. Override with the corresponding `*_NAMESPACE` /
+`*_NAME` / `*_HOST` env vars (see the top of that file) if you deployed a
+demo under different names.
 
 ## Required environment variables
 
 None required — only needs a working `KUBECONFIG`/cluster context, and the
-demos already applied per
-[`../../../eks_terraform_project/demos/README.md`](../../../eks_terraform_project/demos/README.md).
+four workloads already deployed somewhere reachable from it (under the
+default names above, or your own via the env var overrides).
 
 ## Run
 

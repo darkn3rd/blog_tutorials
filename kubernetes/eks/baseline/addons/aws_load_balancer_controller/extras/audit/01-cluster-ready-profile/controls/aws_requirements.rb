@@ -1,14 +1,13 @@
-# Cluster-level checks that must pass *before* running install_aws_lbc.sh.
-# Mirrors the prerequisites the script itself checks in
-# verify_auth_prerequisites() (see ../../../install_aws_lbc.sh).
+# Cluster-level checks that must pass *before* the AWS Load Balancer
+# Controller is installed, however that ends up happening.
 
 cluster_name = ENV.fetch("EKS_CLUSTER_NAME")
 
 control "eks-cluster-active" do
   title "EKS cluster exists, is ACTIVE, and runs a supported version"
-  desc "install_aws_lbc.sh calls aws eks describe-cluster before doing " \
-       "anything else (see discover_cluster_info() in ../../../install_aws_lbc.sh); " \
-       "this fails fast if the cluster is missing or still provisioning."
+  desc "AWS LBC needs a running, reachable cluster on a supported " \
+       "Kubernetes version before it can be installed at all; this fails " \
+       "fast if the cluster is missing or still provisioning."
   impact 1.0
 
   describe aws_eks_cluster(cluster_name: cluster_name) do
@@ -20,10 +19,10 @@ end
 control "eks-cluster-subnets-tagged" do
   title "A subnet in the cluster's VPC carries the ELB discovery tag AWS LBC needs"
   desc "AWS LBC auto-discovers subnets via the kubernetes.io/role/elb tag " \
-       "(see https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/deploy/subnet_discovery/). " \
-       "All four cli/ demos request internet-facing load balancers, so at " \
-       "least one kubernetes.io/role/elb-tagged subnet is required. Checked " \
-       "across every subnet in the cluster's VPC, not just " \
+       "(see https://kubernetes-sigs.github.io/aws-load-balancer-controller/latest/deploy/subnet_discovery/) " \
+       "for internet-facing load balancers, so at least one " \
+       "kubernetes.io/role/elb-tagged subnet is required. Checked across " \
+       "every subnet in the cluster's VPC, not just " \
        "cluster.resourcesVpcConfig.subnetIds -- on a typical EKS setup that " \
        "list is only the private/worker subnets, while the ELB-tagged " \
        "public subnets AWS LBC actually needs live elsewhere in the same VPC."
@@ -42,9 +41,9 @@ end
 
 control "eks-lbc-auth-mechanism-ready" do
   title "IRSA OIDC provider or EKS Pod Identity Agent is available"
-  desc "install_aws_lbc.sh requires one of these two auth mechanisms to " \
-       "already be in place before it can bind IAM permissions to the " \
-       "controller (see verify_auth_prerequisites() in ../../../install_aws_lbc.sh)."
+  desc "One of these two auth mechanisms must already be in place before " \
+       "IAM permissions can be bound to the controller's ServiceAccount, " \
+       "regardless of which tool does the binding."
   impact 1.0
 
   cluster = aws_eks_cluster(cluster_name: cluster_name)

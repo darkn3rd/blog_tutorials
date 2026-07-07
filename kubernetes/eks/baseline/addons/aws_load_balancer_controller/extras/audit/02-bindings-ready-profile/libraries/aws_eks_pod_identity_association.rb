@@ -1,9 +1,9 @@
 require "aws-sdk-eks"
 
 # inspec-aws doesn't cover EKS Pod Identity associations. This looks up the
-# association for a namespace/ServiceAccount pair the way eksctl and
-# create_lbc_pod_identity_association_awscli() in
-# ../../../../install_aws_lbc.sh both do.
+# association for a namespace/ServiceAccount pair via the standard
+# list/describe-pod-identity-association EKS API, the same way any tool
+# that creates one would.
 #
 # This is NOT built on inspec-aws's AwsResourceBase: each profile/dependency
 # gets its own require-loader AND its own library eval context, and Ruby

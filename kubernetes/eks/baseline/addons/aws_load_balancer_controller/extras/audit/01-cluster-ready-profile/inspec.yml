@@ -5,10 +5,10 @@ copyright: Joaquin Menchaca
 copyright_email: suavecali@yahoo.com
 license: Apache-2.0
 summary: >
-  Verifies an EKS cluster has the AWS-side prerequisites install_aws_lbc.sh
-  needs before it runs: the cluster exists, its subnets carry the ELB
-  discovery tags, and either an IRSA OIDC provider or the Pod Identity
-  Agent addon is already in place.
+  Verifies an EKS cluster has the AWS-side prerequisites the AWS Load
+  Balancer Controller needs before it's installed: the cluster exists, its
+  subnets carry the ELB discovery tags, and either an IRSA OIDC provider or
+  the Pod Identity Agent addon is already in place.
 version: 0.1.0
 inspec_version: '>= 5.0'
 depends:

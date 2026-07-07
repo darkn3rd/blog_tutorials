@@ -1,8 +1,9 @@
 # Stage 1: Cluster Ready
 
-Verifies an EKS cluster has the AWS-side prerequisites `install_aws_lbc.sh`
-needs *before* it runs at all. Corresponds to `verify_auth_prerequisites()`
-and the discovery steps in [`../../../install_aws_lbc.sh`](../../../install_aws_lbc.sh).
+Verifies an EKS cluster has the AWS-side prerequisites the AWS Load Balancer
+Controller needs *before* anything installs it. This only checks state on
+the cluster and in AWS — it doesn't provision, install, or deploy anything,
+and doesn't assume any particular tool or workflow does either.
 
 Controls (`controls/aws_requirements.rb`):
 

@@ -1,9 +1,9 @@
 # Stage 3: Controller Ready
 
-Verifies the AWS Load Balancer Controller itself — installed by
-`install_lbc_helm_chart()` in
-[`../../../install_aws_lbc.sh`](../../../install_aws_lbc.sh) — is healthy and
-functional, independent of which auth mode/tool provisioned its IAM binding.
+Verifies the AWS Load Balancer Controller itself is healthy and functional
+in the cluster, independent of which tool installed it or which auth mode
+provisioned its IAM binding. This only checks state -- it doesn't install
+or deploy anything itself.
 
 Controls (`controls/controller_requirements.rb`):
 

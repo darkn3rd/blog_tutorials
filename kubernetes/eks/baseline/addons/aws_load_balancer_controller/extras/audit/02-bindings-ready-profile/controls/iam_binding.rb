@@ -4,35 +4,25 @@ require "set"
 require "uri"
 
 # Verifies the LBC IAM role/policy binding succeeded, regardless of which
-# install path (and tool) created it. The controller's IAM role name is
-# NOT predictable in general:
-#   - install_aws_lbc.sh's aws-cli mode always names it
-#     "AmazonEKSLoadBalancerControllerRole" (ROLE_NAME in that script).
-#   - The Terraform module defaults to
-#     "${eks_cluster_name}-aws-load-balancer-controller", but that's
-#     overridable per root via var.role_name -- see
-#     aws_iam_role.aws_load_balancer_controller in
-#     eks_terraform_project/modules/load_balancer_controller/lbc_auth/role.tf.
-#   - install_aws_lbc.sh's eksctl mode (both irsa and pod-identity) never
-#     passes --role-name, so eksctl auto-generates the role via
-#     CloudFormation with a random suffix -- there is no fixed name to
-#     hardcode at all for this path.
+# tool or workflow created it. The controller's IAM role name is NOT
+# predictable in general -- different tools name it differently, and some
+# auto-generate a random name entirely, so there's no fixed name to
+# hardcode and check against.
 #
-# So instead of guessing a name, this discovers the role the same way
-# check_aws_lbc_status.sh's determine_auth_mode() does: read it off the
-# ServiceAccount's IRSA annotation (set identically by eksctl, the aws-cli
-# path, and the Terraform module -- it's the standard EKS Pod Identity
-# Webhook contract, not something each tool invents independently), or
-# fall back to the Pod Identity association if the annotation is absent.
+# So instead of guessing a name, this discovers the role by reading it off
+# the ServiceAccount's IRSA annotation (the standard EKS Pod Identity
+# Webhook contract any IRSA-based tool sets identically, not something
+# each one invents independently), or falling back to the Pod Identity
+# association if that annotation is absent.
 
 cluster_name = ENV.fetch("EKS_CLUSTER_NAME")
 sa_namespace = "kube-system"
 sa_name      = "aws-load-balancer-controller"
 
-# Same canonical source, and the same Gateway-API amendment, that
-# lbc_auth/role.tf and install_aws_lbc.sh's create_lbc_iam_policy() both
-# apply. Whatever install path built the role's policy, this is the actual
-# permission set the controller needs to function -- not a name.
+# The canonical upstream policy, plus the Gateway API statement amendment
+# AWS LBC needs for ALBGatewayAPI/NLBGatewayAPI support. Whatever tool or
+# workflow built the role's policy, this is the actual permission set the
+# controller needs to function -- not a name.
 upstream_policy_url = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.14.1/docs/install/iam_policy.json"
 gateway_api_actions  = %w(
   elasticloadbalancing:DescribeListenerAttributes
@@ -59,9 +49,8 @@ if role_arn.nil?
 end
 role_name = role_arn.to_s.split("/").last
 
-# Normalizes a statement for exact comparison, mirroring
-# lib/policy_validation.sh's fingerprint_statement: Action/Resource coerced
-# to sorted arrays, Condition sorted at every level (or nil). Two statements
+# Normalizes a statement for exact comparison: Action/Resource coerced to
+# sorted arrays, Condition sorted at every level (or nil). Two statements
 # with the same actions in different order are equal; two that differ only
 # in Condition or Resource are not -- unlike a flat action-name check, this
 # also catches a policy that grants the right actions on the wrong resource
@@ -129,14 +118,12 @@ control "lbc-iam-policy-attached" do
        "function: a policy called AWSLoadBalancerControllerIAMPolicy that " \
        "actually grants only s3:* would pass a name/existence check while " \
        "leaving the controller inoperable. So this instead fetches the " \
-       "same upstream policy document lbc_auth/role.tf and " \
-       "install_aws_lbc.sh both install from, applies the same Gateway " \
-       "API statement amendment they do, and checks each resulting " \
-       "statement -- Effect, Action set, Resource set, and Condition, not " \
-       "just the action names -- for an exact match somewhere across " \
-       "whatever policies are attached to the discovered role. Mirrors " \
-       "scripts/lib/policy_validation.sh's fingerprint_statement so both " \
-       "give the same per-statement breakdown."
+       "canonical upstream policy document, applies the same Gateway API " \
+       "statement amendment the controller needs, and checks each " \
+       "resulting statement -- Effect, Action set, Resource set, and " \
+       "Condition, not just the action names -- for an exact match " \
+       "somewhere across whatever policies are attached to the " \
+       "discovered role."
   impact 1.0
 
   describe "IAM role discovered from the ServiceAccount binding" do

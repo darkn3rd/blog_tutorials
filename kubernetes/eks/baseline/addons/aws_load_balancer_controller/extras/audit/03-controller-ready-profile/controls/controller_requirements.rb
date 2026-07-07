@@ -1,6 +1,5 @@
-# Verifies the AWS LBC deployment itself (installed by install_lbc_helm_chart()
-# in ../../../install_aws_lbc.sh) is healthy and ready to serve, independent
-# of how its IAM binding was set up.
+# Verifies the AWS LBC deployment itself is healthy and ready to serve,
+# independent of what installed it or how its IAM binding was set up.
 
 deployment_name = "aws-load-balancer-controller"
 sa_namespace    = "kube-system"
@@ -8,8 +7,8 @@ webhook_service = "aws-load-balancer-webhook-service"
 
 control "lbc-deployment-healthy" do
   title "AWS LBC controller deployment is running with all replicas ready"
-  desc "The Deployment installed by install_lbc_helm_chart() in " \
-       "../../../install_aws_lbc.sh exists and every desired replica is ready."
+  desc "The aws-load-balancer-controller Deployment exists and every " \
+       "desired replica is ready."
   impact 1.0
 
   dep = k8s_deployment(namespace: sa_namespace, name: deployment_name)
@@ -32,8 +31,8 @@ end
 
 control "lbc-gateway-feature-gates-enabled" do
   title "ALB and NLB Gateway API feature gates are enabled on the controller"
-  desc "Matches the --feature-gates flag install_lbc_helm_chart() sets via " \
-       "controllerConfig.featureGates in ../../../install_aws_lbc.sh."
+  desc "Checks the controller's --feature-gates flag directly, matching " \
+       "what controllerConfig.featureGates in the Helm values sets."
   impact 1.0
 
   dep = k8s_deployment(namespace: sa_namespace, name: deployment_name)

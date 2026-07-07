@@ -1,6 +1,6 @@
 # AWS LBC Demos with Terraform
 
-These are Terraform modules that can be used to quickly bring up demos to test the AWS Load Balancer Controller.
+These **Terraform** modules deploy demonstration workloads to **Kubernetes**, allowing the **AWS Load Balancer Controller** to provision the corresponding AWS load balancers and related cloud resources.
 
 ## Prerequisites
 
@@ -11,7 +11,9 @@ These are Terraform modules that can be used to quickly bring up demos to test t
 
 ## Setup
 
-Substitute your own cluster name and region below (or export `EKS_CLUSTER_NAME`/`EKS_REGION` first and this will pick them up):
+Substitute your own cluster name and region below (or export `EKS_CLUSTER_NAME`/`EKS_REGION` first and this will pick them up).
+
+The default namespaces are chosen to match the CLI demos so that the same validation scripts can be used with either deployment method.
 
 ```bash
 cat <<EOF > terraform.tfvars
@@ -24,10 +26,13 @@ gw_nlb_namespace  = "demo-gwtcp"
 gw_alb_namespace  = "demo-gwhttp"
 EOF
 
+# After creating `terraform.tfvars`, initialize the working directory:
 terraform init
 ```
 
-## Provision a Single Demo Load Balancer
+## Deploy a Single Demo
+
+Deploying a demo causes AWS LBC to provision the corresponding AWS load balancer and supporting cloud resources.
 
 ```bash
 terraform apply -target="module.svc_nlb"
@@ -36,9 +41,9 @@ terraform apply -target="module.gw_nlb"
 terraform apply -target="module.gw_alb"
 ```
 
-Note: Terraform prints a warning whenever `-target` is used ("this flag is not recommended for production use"). That's expected here, for it is how we provision one demo at a time and is not a sign anything is wrong.
+> **NOTE**: Terraform warns whenever `-target` is used because it produces a partial apply. In this repository, that's intentional; the flag is used only to provision or destroy an individual demo.
 
-## Provision all Demo Load Balancers
+## Deploy All Demos
 
 ```bash
 terraform apply
@@ -46,15 +51,15 @@ terraform apply
 
 ## Testing
 
-Once one or more demos are provisioned, verify them end-to-end (waits for the load balancer address, waits for DNS, then curls it):
+Once one or more demos are deployed, verify them end-to-end (waits for the load balancer address, waits for DNS, then curls it):
 
 ```bash
-../test.sh
+../test_demos.sh
 ```
 
 ## Cleanup
 
-You can clean up a single load balancer like this:
+Destroy a single demo:
 
 ```bash
 terraform destroy -target="module.svc_nlb"

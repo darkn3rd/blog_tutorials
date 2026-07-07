@@ -1,9 +1,10 @@
 # Stage 2: Bindings Ready
 
-Verifies the LBC preparation steps actually succeeded, regardless of which
-install path produced them: [`../../../install_aws_lbc.sh`](../../../install_aws_lbc.sh)
-(either `tool`/`auth` combination) or the
-[Terraform IRSA module](../../../eks_terraform_project).
+Verifies the LBC preparation steps actually succeeded: the Gateway API CRDs
+are installed, and the controller's ServiceAccount is genuinely bound to an
+IAM role that grants it the permissions it needs. This only checks state --
+it doesn't provision, install, or deploy anything, and doesn't assume any
+particular tool or workflow produced that state.
 
 Controls:
 
@@ -16,23 +17,26 @@ Controls:
     controller's ServiceAccount (an `eks.amazonaws.com/role-arn` annotation
     means IRSA; its absence means Pod Identity) and checks the matching
     side of the binding.
-  * `lbc-iam-policy-attached` — the `AWSLoadBalancerControllerIAMPolicy`
-    exists and is attached to whichever IAM role `lbc-iam-binding-ready`
-    discovered.
+  * `lbc-iam-policy-attached` — does **not** check for a specific policy
+    name either (see below) — it fetches the canonical upstream IAM policy
+    (plus the Gateway API statement amendment AWS LBC needs for
+    ALBGatewayAPI/NLBGatewayAPI support), and verifies each resulting
+    statement — Effect, Action set, Resource set, and Condition, not just
+    action names — is granted somewhere across whatever policies are
+    actually attached to the discovered role. A policy that happens to be
+    named `AWSLoadBalancerControllerIAMPolicy` but grants the wrong
+    permissions fails this; a policy under any other name that grants the
+    right ones passes.
 
-`iam_binding.rb` does **not** hardcode the controller's IAM role name,
-because it isn't predictable in general: `install_aws_lbc.sh`'s `aws-cli`
-mode always names it `AmazonEKSLoadBalancerControllerRole`, and the
-Terraform module names it `${eks_cluster_name}-aws-load-balancer-controller`
-— but `install_aws_lbc.sh`'s `eksctl` mode (both `irsa` and `pod-identity`)
-never passes `--role-name`, so eksctl auto-generates the role via
-CloudFormation with a random suffix, with no fixed name at all to check
-against. Instead, the role is discovered the same way
-`check_aws_lbc_status.sh`'s `determine_auth_mode()` does: read off the
-ServiceAccount's IRSA annotation (set identically by eksctl, the `aws-cli`
-path, and the Terraform module — it's the standard EKS Pod Identity Webhook
-contract, not something each tool invents independently), or off the Pod
-Identity association if that annotation is absent.
+`iam_binding.rb` does **not** hardcode the controller's IAM role name or
+its policy name, because neither is predictable in general -- different
+tools name the role differently, and some auto-generate a random name
+entirely. Instead, the role is discovered from the ServiceAccount's binding
+itself: an `eks.amazonaws.com/role-arn` annotation (the standard EKS Pod
+Identity Webhook contract that any IRSA-based tool sets identically, not
+something each one invents independently) if present, or an EKS Pod
+Identity association otherwise. The attached policy is then discovered off
+that role directly, rather than assumed by name.
 
 This profile ships two custom resources, since `inspec-aws` doesn't cover
 either:

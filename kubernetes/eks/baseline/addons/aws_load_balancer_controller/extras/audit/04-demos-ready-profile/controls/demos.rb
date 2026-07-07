@@ -1,10 +1,8 @@
-# Verifies the four demos under eks_terraform_project/demos/ (either the
-# tf/ or cli/ variant -- both produce the same namespaces/resource names,
-# per the comment atop eks_terraform_project/demos/test_demos.sh) each got
-# a working, AWS-provisioned load balancer. Namespace/name defaults below
-# are copied from that same script's DEMOS table, which is the actual
-# source of truth for these values -- if that table changes, update the
-# defaults here to match.
+# Verifies four representative workloads (Service/NLB, Ingress/ALB,
+# Gateway+TCPRoute/NLB, Gateway+HTTPRoute/ALB) each got a working,
+# AWS-provisioned load balancer. Namespace/name defaults below are just
+# that -- defaults; override via the *_NAMESPACE/*_NAME/*_HOST env vars
+# below if you deployed them under different names.
 
 # Local (not top-level def): a `def` here would be evaluated against a
 # different receiver inside each `control do...end` block (an

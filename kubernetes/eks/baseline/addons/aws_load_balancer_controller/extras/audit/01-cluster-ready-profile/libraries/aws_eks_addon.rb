@@ -1,8 +1,7 @@
 require "aws-sdk-eks"
 
 # inspec-aws doesn't ship an aws_eks_addon resource, so this profile defines
-# its own to check for the eks-pod-identity-agent addon (see
-# verify_pod_identity_addon() in ../../../../install_aws_lbc.sh).
+# its own to check for the eks-pod-identity-agent addon.
 #
 # This is NOT built on inspec-aws's AwsResourceBase: each profile/dependency
 # gets its own require-loader AND its own library eval context, and Ruby

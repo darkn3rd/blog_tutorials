@@ -1,12 +1,13 @@
 name: demos-ready-profile
-title: 'Stage 4: cli/ Demos Working'
+title: 'Stage 4: Demo Workloads Reachable'
 maintainer: Joaquin Menchaca
 copyright: Joaquin Menchaca
 copyright_email: suavecali@yahoo.com
 license: Apache-2.0
 summary: >
-  Verifies the four cli/ demos (svc_nlb, ing_alb, gw_nlb, gw_alb) each got a
-  load balancer actually provisioned by AWS LBC, and that it's reachable.
+  Verifies four representative workloads (Service/NLB, Ingress/ALB,
+  Gateway+TCPRoute/NLB, Gateway+HTTPRoute/ALB) each got a load balancer
+  actually provisioned by AWS LBC, and that it's reachable.
 version: 0.1.0
 inspec_version: '>= 5.0'
 depends:
