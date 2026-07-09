@@ -1,0 +1,57 @@
+cluster:
+  # Selects a subdirectory under $CLUSTER_PROVISIONER_ROOT:
+  #   eksctl            -> 01_eksctl
+  #   awscli-eksctl      -> 02_awscli_eksctl
+  #   terraform-eksctl   -> 03_terraform_eksctl
+  #   terraform-native   -> 04_terraform_native
+  #   terraform-modules  -> 05_terraform_modules
+  # Only terraform-modules is implemented in phases/00_provision_cluster.sh
+  # and phases/09_destroy_cluster.sh today - the rest are stubs.
+  provisioner: terraform-modules
+  eks_version: "1.36"
+  eks_region: us-east-2
+
+cases:
+  - name: cli-eksctl-irsa
+    install_method: cli-eksctl
+    auth_mode: irsa
+
+  - name: cli-eksctl-podid
+    install_method: cli-eksctl
+    auth_mode: pod-identity
+
+  - name: cli-aws-irsa
+    install_method: cli-aws
+    auth_mode: irsa
+
+  - name: cli-aws-podid
+    install_method: cli-aws
+    auth_mode: pod-identity
+
+  - name: terraform-irsa
+    install_method: terraform
+    auth_mode: irsa
+
+  - name: terraform-podid
+    install_method: terraform
+    auth_mode: pod-identity
+
+# suites: all expands to every tests/suites/*.sh file at run time, not a
+# hardcoded list here - adding a new suite file makes it eligible for any
+# tier that requests "all" without editing this file.
+tiers:
+  smoke:
+    cases: [cli-eksctl-irsa, cli-eksctl-podid]
+    suites: [positive]
+
+  full-positive:
+    cases: all
+    suites: [positive]
+
+  negative:
+    cases: [cli-eksctl-irsa, cli-eksctl-podid, terraform-irsa, terraform-podid]
+    suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock]
+
+  release:
+    cases: all
+    suites: all
