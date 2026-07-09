@@ -282,7 +282,7 @@ main() {
   kubectl config set-context --current --namespace=default
 
   echo
-  echo "All demos created. Verify with: ../test.sh"
+  echo "All demos created. Verify with: ../test_demos.sh"
 }
 
 main "$@"

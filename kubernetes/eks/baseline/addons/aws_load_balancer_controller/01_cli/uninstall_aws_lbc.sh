@@ -20,82 +20,178 @@ K8S_GATEWAY_API_CRDS=(
 SA_NAME="aws-load-balancer-controller"
 SA_NAMESPACE="${SA_NAMESPACE:-kube-system}"
 
-deprovision_aws_load_balancers() {
-  echo "==> Deprovisioning AWS load balancer resources..."
+# Every Gateway API kind this script's CRD deletion removes. Since the CRDs
+# themselves are being deleted wholesale regardless of who owns any given
+# instance, every live instance of every one of these kinds is in scope for
+# cleanup - there is no such thing as "not ours" here. This intentionally
+# does NOT filter by GatewayClass name or controllerName: a live HTTPRoute
+# attached to a Gateway named "fido" blocks the httproutes CRD's deletion
+# exactly the same as one attached to a Gateway named "aws-alb-gateway".
+GATEWAY_API_KINDS=(gateway httproute grpcroute tcproute tlsroute udproute referencegrant gatewayclass)
+LBC_CONFIG_KINDS=(loadbalancerconfiguration targetgroupconfiguration listenerruleconfiguration)
 
-  # ALB Ingresses
-  local ingresses
-  ingresses="$(kubectl get ingress --all-namespaces -o json 2>/dev/null || echo '{"items":[]}')"
-  local alb_ingresses
-  alb_ingresses="$(echo "$ingresses" | jq -r '
+# list_all_of_kind <kind> -> stdout, one "namespace/name" per line for
+# namespaced kinds or "name" per line for cluster-scoped kinds (e.g.
+# gatewayclass). Silent empty output if the kind's CRD isn't installed.
+list_all_of_kind() {
+  local kind="${1:?kind is required}"
+  kubectl get "$kind" --all-namespaces -o json 2>/dev/null \
+    | jq -r '.items[]? | if .metadata.namespace then "\(.metadata.namespace)/\(.metadata.name)" else .metadata.name end'
+}
+
+# delete_all_of_kind <kind> [label] - deletes every live instance of <kind>,
+# printing each as it goes. [label] overrides the kind name in the log line
+# (e.g. "ALB Ingress" instead of "ingress").
+delete_all_of_kind() {
+  local kind="${1:?kind is required}"
+  local label="${2:-$kind}"
+  local entry
+  while IFS= read -r entry; do
+    [[ -z "$entry" ]] && continue
+    if [[ "$entry" == */* ]]; then
+      local ns="${entry%%/*}" name="${entry##*/}"
+      echo "  Deleting $label: $ns/$name"
+      kubectl delete "$kind" "$name" -n "$ns" --ignore-not-found=true
+    else
+      echo "  Deleting $label: $entry"
+      kubectl delete "$kind" "$entry" --ignore-not-found=true
+    fi
+  done < <(list_all_of_kind "$kind")
+}
+
+# find_alb_ingresses -> stdout, one "namespace/name" per line
+# Matched by IngressClass *controller* (ingress.k8s.aws/alb), not by an
+# IngressClass literally named "alb" - the IngressClass name is arbitrary,
+# same reasoning as GatewayClass below.
+find_alb_ingresses() {
+  local alb_classes
+  alb_classes="$(kubectl get ingressclass -o json 2>/dev/null | jq -r '
+    .items[]? | select(.spec.controller == "ingress.k8s.aws/alb") | .metadata.name')"
+  local classes_json
+  classes_json="$(printf '%s\n' "$alb_classes" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+
+  kubectl get ingress --all-namespaces -o json 2>/dev/null | jq -r --argjson classes "$classes_json" '
     .items[] |
     select(
-      .metadata.annotations["kubernetes.io/ingress.class"] == "alb" or
-      .spec.ingressClassName == "alb"
-    ) | "\(.metadata.namespace)/\(.metadata.name)"')"
-  for entry in $alb_ingresses; do
-    local ns="${entry%%/*}"
-    local name="${entry##*/}"
-    echo "  Deleting ALB Ingress: $ns/$name"
-    kubectl delete ingress "$name" -n "$ns" --ignore-not-found=true
-  done
+      (.metadata.annotations["kubernetes.io/ingress.class"] as $c | $c != null and ($classes | index($c) != null)) or
+      (.spec.ingressClassName as $c | $c != null and ($classes | index($c) != null))
+    ) | "\(.metadata.namespace)/\(.metadata.name)"'
+}
 
-  # NLB Services (type LoadBalancer with NLB annotation)
-  local services
-  services="$(kubectl get svc --all-namespaces -o json 2>/dev/null || echo '{"items":[]}')"
-  local nlb_services
-  nlb_services="$(echo "$services" | jq -r '
+# find_aws_lb_services -> stdout, one "namespace/name" per line
+# Matched by the fixed annotation values / loadBalancerClass prefix the AWS
+# LBC itself recognizes - these are not user-renameable, unlike class names.
+find_aws_lb_services() {
+  kubectl get svc --all-namespaces -o json 2>/dev/null | jq -r '
     .items[] |
     select(
       .spec.type == "LoadBalancer" and (
-        .metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-type"] == "nlb" or
-        .metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-type"] == "external" or
-        .metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-type"] == "nlb-ip"
+        (.metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-type"] as $t | $t == "nlb" or $t == "external" or $t == "nlb-ip") or
+        ((.spec.loadBalancerClass // "") | startswith("service.k8s.aws/"))
       )
-    ) | "\(.metadata.namespace)/\(.metadata.name)"')"
-  for entry in $nlb_services; do
-    local ns="${entry%%/*}"
-    local name="${entry##*/}"
-    echo "  Deleting NLB Service: $ns/$name"
+    ) | "\(.metadata.namespace)/\(.metadata.name)"'
+}
+
+deprovision_aws_load_balancers() {
+  echo "==> Deprovisioning AWS load balancer resources..."
+
+  local entry
+  while IFS= read -r entry; do
+    [[ -z "$entry" ]] && continue
+    local ns="${entry%%/*}" name="${entry##*/}"
+    echo "  Deleting ALB Ingress: $ns/$name"
+    kubectl delete ingress "$name" -n "$ns" --ignore-not-found=true
+  done < <(find_alb_ingresses)
+
+  while IFS= read -r entry; do
+    [[ -z "$entry" ]] && continue
+    local ns="${entry%%/*}" name="${entry##*/}"
+    echo "  Deleting LB Service: $ns/$name"
     kubectl delete svc "$name" -n "$ns" --ignore-not-found=true
-  done
+  done < <(find_aws_lb_services)
 
-  # Gateway API resources (Gateways with gatewayclass managed by LBC)
+  # Gateway API - wholesale (see GATEWAY_API_KINDS comment above).
   if kubectl api-resources --api-group=gateway.networking.k8s.io &>/dev/null 2>&1; then
-    local gateways
-    gateways="$(kubectl get gateways --all-namespaces -o json 2>/dev/null || echo '{"items":[]}')"
-    local lbc_gateways
-    lbc_gateways="$(echo "$gateways" | jq -r '
-      .items[] |
-      select(
-        .spec.gatewayClassName == "amazon-vpc-lattice" or
-        .spec.gatewayClassName == "aws-alb" or
-        .spec.gatewayClassName == "aws-nlb"
-      ) | "\(.metadata.namespace)/\(.metadata.name)"')"
-    for entry in $lbc_gateways; do
-      local ns="${entry%%/*}"
-      local name="${entry##*/}"
-      echo "  Deleting Gateway: $ns/$name"
-      kubectl delete gateway "$name" -n "$ns" --ignore-not-found=true
-    done
-
-    # HTTPRoutes and TCPRoutes that reference deleted gateways
-    for kind in httproute tcproute grpcroute tlsroute udproute; do
-      local routes
-      routes="$(kubectl get "$kind" --all-namespaces -o json 2>/dev/null || echo '{"items":[]}')"
-      local route_entries
-      route_entries="$(echo "$routes" | jq -r '.items[] | "\(.metadata.namespace)/\(.metadata.name)"')"
-      for entry in $route_entries; do
-        local ns="${entry%%/*}"
-        local name="${entry##*/}"
-        echo "  Deleting $kind: $ns/$name"
-        kubectl delete "$kind" "$name" -n "$ns" --ignore-not-found=true
-      done
+    local kind
+    for kind in "${GATEWAY_API_KINDS[@]}"; do
+      delete_all_of_kind "$kind"
     done
   fi
 
+  # LoadBalancerConfiguration/TargetGroupConfiguration/ListenerRuleConfiguration -
+  # referenced by Gateways via parametersRef, not owned via ownerReference, so
+  # deleting the Gateway above doesn't clean these up on its own.
+  for kind in "${LBC_CONFIG_KINDS[@]}"; do
+    if kubectl api-resources --api-group=gateway.k8s.aws 2>/dev/null | grep -qi "^${kind}"; then
+      delete_all_of_kind "$kind"
+    fi
+  done
+
+  # Poll rather than blindly sleep-and-hope: finalizer removal happens
+  # asynchronously as the controller reconciles each deletion, so give it
+  # real time and confirm rather than assuming 30s was enough.
   echo "  Waiting for load balancers to deprovision..."
-  sleep 30
+  local elapsed=0 interval=10 timeout=120
+  while (( elapsed < timeout )); do
+    if detect_aws_load_balancers >/dev/null 2>&1; then
+      echo "  Confirmed clean."
+      return 0
+    fi
+    sleep "$interval"
+    elapsed=$((elapsed + interval))
+  done
+
+  echo "❌ Timed out after ${timeout}s - resources are still present:" >&2
+  detect_aws_load_balancers
+  return 1
+}
+
+# detect_aws_load_balancers
+# Sanity check: confirms nothing that would provision, reference, or block
+# deletion of an AWS load balancer remains. Silent and returns 0 if clean.
+# On failure, prints exactly what's left (kind + namespace/name) to stderr
+# and returns 1. Callers must treat a non-zero return as fatal: deleting the
+# Gateway API CRDs or uninstalling the Helm release while this reports
+# uncleared resources will cascade onto them and hang, since the controller
+# either won't exist (post-Helm-uninstall) or can't act (mid-CRD-deletion).
+detect_aws_load_balancers() {
+  local -a remaining=()
+  local entry kind
+
+  while IFS= read -r entry; do
+    [[ -n "$entry" ]] && remaining+=("Ingress: $entry")
+  done < <(find_alb_ingresses)
+
+  while IFS= read -r entry; do
+    [[ -n "$entry" ]] && remaining+=("Service: $entry")
+  done < <(find_aws_lb_services)
+
+  if kubectl api-resources --api-group=gateway.networking.k8s.io &>/dev/null 2>&1; then
+    for kind in "${GATEWAY_API_KINDS[@]}"; do
+      while IFS= read -r entry; do
+        [[ -n "$entry" ]] && remaining+=("$kind: $entry")
+      done < <(list_all_of_kind "$kind")
+    done
+  fi
+
+  for kind in "${LBC_CONFIG_KINDS[@]}"; do
+    if kubectl api-resources --api-group=gateway.k8s.aws 2>/dev/null | grep -qi "^${kind}"; then
+      while IFS= read -r entry; do
+        [[ -n "$entry" ]] && remaining+=("$kind: $entry")
+      done < <(list_all_of_kind "$kind")
+    fi
+  done
+
+  if [[ ${#remaining[@]} -gt 0 ]]; then
+    echo "❌ ${#remaining[@]} resource(s) that provision or reference an AWS load balancer are still present:" >&2
+    printf '     %s\n' "${remaining[@]}" >&2
+    echo "  Refusing to delete Gateway API CRDs or uninstall the Helm release while these exist -" >&2
+    echo "  both would cascade onto these objects and hang. Investigate (stuck finalizer? controller" >&2
+    echo "  error? a resource this script doesn't know to look for?) and re-run." >&2
+    return 1
+  fi
+
+  return 0
 }
 
 uninstall_lbc_helm_chart() {
@@ -382,9 +478,24 @@ delete_iam_binding() {
 }
 
 main() {
-  deprovision_aws_load_balancers
-  uninstall_lbc_helm_chart
+  # deprovision_aws_load_balancers() polls detect_aws_load_balancers()
+  # internally and fails (non-zero, with an itemized list already printed)
+  # if anything is still present after the timeout. CRD deletion and the
+  # Helm uninstall both cascade onto/depend on a clean state - if it comes
+  # back present, treat it as fatal and stop instead of walking into either
+  # hang.
+  if ! deprovision_aws_load_balancers; then
+    echo "❌ Aborting: cluster is not in a clean state for CRD/Helm teardown." >&2
+    exit 1
+  fi
+
+  # CRDs before Helm: deleting a CRD cascades to delete every live instance of
+  # it first, and any instance still carrying an LBC-owned finalizer can only
+  # have that finalizer cleared by the controller reconciling the deletion. If
+  # Helm is uninstalled (killing the controller) first, any instance missed by
+  # deprovision_aws_load_balancers() above hangs forever instead of failing.
   uninstall_gateway_crds
+  uninstall_lbc_helm_chart
   determine_auth_mode
   extract_iam_role_info
   delete_service_account

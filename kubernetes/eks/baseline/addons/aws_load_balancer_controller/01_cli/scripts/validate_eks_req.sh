@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
-# Requires: bash >= 4.3 (enforced at startup; aborts immediately otherwise)
 set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/bash_version.sh
-source "$SCRIPT_DIR/lib/bash_version.sh"
-
-die() { echo "❌ $*" >&2; exit 1; }
-
-verify_bash
 
 : "${EKS_CLUSTER_NAME:?EKS_CLUSTER_NAME is required}"
 : "${EKS_REGION:?EKS_REGION is required}"
@@ -21,11 +12,11 @@ check() {
   local label="$1"
   shift
   if "$@" &>/dev/null; then
-    echo "  [PASS] $label"
-    ((PASS++))
+    echo "  ✅ $label"
+    PASS=$((PASS + 1))
   else
-    echo "  [FAIL] $label"
-    ((FAIL++))
+    echo "  ❌ $label"
+    FAIL=$((FAIL + 1))
   fi
 }
 
@@ -34,11 +25,11 @@ check_with_detail() {
   local result="$2"
   local pass="$3"
   if [[ "$pass" == "true" ]]; then
-    echo "  [PASS] $label — $result"
-    ((PASS++))
+    echo "  ✅ $label — $result"
+    PASS=$((PASS + 1))
   else
-    echo "  [FAIL] $label — $result"
-    ((FAIL++))
+    echo "  ❌ $label — $result"
+    FAIL=$((FAIL + 1))
   fi
 }
 
@@ -143,7 +134,7 @@ echo ""
 TOTAL=$((PASS + FAIL))
 echo "==> Results: $PASS/$TOTAL passed"
 if [[ "$FAIL" -gt 0 ]]; then
-  echo "    $FAIL check(s) failed — resolve before installing AWS Load Balancer Controller."
+  echo "    ❌ $FAIL check(s) failed — resolve before installing AWS Load Balancer Controller."
   exit 1
 fi
-echo "    Cluster is ready for AWS Load Balancer Controller."
+echo "    ✅ Cluster is ready for AWS Load Balancer Controller."
