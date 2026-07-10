@@ -46,14 +46,16 @@ source "$SCRIPT_DIR/lib/role_discovery.sh"
 # shellcheck source=lib/policy_validation.sh
 source "$SCRIPT_DIR/lib/policy_validation.sh"
 
+die() { echo "❌ $*" >&2; exit 1; }
+
+verify_bash
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 usage() {
   awk '/^#!/{next} /^#/{sub(/^# ?/,""); print; next} /^[[:space:]]*$/{next} {exit}' "$0"
   exit 0
 }
-
-die() { echo "❌ $*" >&2; exit 1; }
 
 verify_dependencies() {
   local missing=()
@@ -347,7 +349,6 @@ main() {
     esac
   done
 
-  verify_bash
   verify_dependencies
   verify_aws_connectivity
 

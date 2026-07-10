@@ -19,11 +19,19 @@
 #
 # WARNING: Deleting CRDs removes all custom resources of those types cluster-wide.
 #          This operation is irreversible without a backup.
+#
+# Requires: bash >= 4.3 (enforced at startup; aborts immediately otherwise)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/bash_version.sh
+source "$SCRIPT_DIR/lib/bash_version.sh"
 # shellcheck source=lib/crd_lists.sh
 source "$SCRIPT_DIR/lib/crd_lists.sh"
+
+die() { echo "❌ $*" >&2; exit 1; }
+
+verify_bash
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -32,8 +40,6 @@ usage() {
   awk '/^#!/{next} /^#/{sub(/^# ?/,""); print; next} /^[[:space:]]*$/{next} {exit}' "$0"
   exit 0
 }
-
-die() { echo "❌ $*" >&2; exit 1; }
 
 verify_kubectl() {
   command -v kubectl >/dev/null 2>&1 \

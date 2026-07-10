@@ -24,14 +24,16 @@ source "$SCRIPT_DIR/lib/bash_version.sh"
 # shellcheck source=lib/crd_lists.sh
 source "$SCRIPT_DIR/lib/crd_lists.sh"
 
+die() { echo "❌ $*" >&2; exit 1; }
+
+verify_bash
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 usage() {
   awk '/^#!/{next} /^#/{sub(/^# ?/,""); print; next} /^[[:space:]]*$/{next} {exit}' "$0"
   exit 0
 }
-
-die() { echo "❌ $*" >&2; exit 1; }
 
 verify_kubectl() {
   command -v kubectl >/dev/null 2>&1 \
@@ -156,7 +158,6 @@ main() {
     esac
   done
 
-  verify_bash
   verify_kubectl
   validate_crds "$channel" "$source"
 }
