@@ -35,6 +35,7 @@ You can setup and install AWS Load Balancer Controller with the following paths:
 
 * [CLI](./01_cli/README.md) - setup using `helm`, `kubectl`, `aws`, and optional `eksctl` commands with using either IRSA or Pod-Identity association for authorization configuration.
 * [Terraform](./02_terraform/README.md) - setup using `terraform` with either IRSA or Pod-Identity association for authorization configuration.
+* [Python](./03_python/README.md) - setup using `boto3` and the `kubernetes` client directly (no `aws`/`kubectl`/`eksctl` calls, `helm` only) with either IRSA or Pod-Identity association for authorization configuration.
 
 ### ELBv2 Demos
 
