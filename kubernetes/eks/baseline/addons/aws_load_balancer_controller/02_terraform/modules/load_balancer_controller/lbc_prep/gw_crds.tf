@@ -50,3 +50,27 @@ resource "kubectl_manifest" "aws_lbc_gateway" {
 
   server_side_apply = true
 }
+
+# The controller's own core CRDs (elbv2.k8s.aws: TargetGroupBinding,
+# IngressClassParams, ALBTargetControlConfig; aga.k8s.aws: GlobalAccelerator)
+# are bundled directly in the Helm chart's crds/ directory and auto-install
+# on `helm install` - but Helm deliberately never deletes CRDs it installed
+# on `helm uninstall`, and nothing else in this module tracked them, so
+# `terraform destroy` was leaking all four every time. Applying them here
+# (same pattern as the Gateway CRDs above) gives Terraform state ownership
+# so destroy actually removes them; Helm's own bundled install sees them
+# already present and no-ops.
+data "http" "aws_lbc_core_crds" {
+  url = "https://raw.githubusercontent.com/aws/eks-charts/master/stable/aws-load-balancer-controller/crds/crds.yaml"
+}
+
+data "kubectl_file_documents" "aws_lbc_core_docs" {
+  content = data.http.aws_lbc_core_crds.response_body
+}
+
+resource "kubectl_manifest" "aws_lbc_core" {
+  for_each  = data.kubectl_file_documents.aws_lbc_core_docs.manifests
+  yaml_body = each.value
+
+  server_side_apply = true
+}
