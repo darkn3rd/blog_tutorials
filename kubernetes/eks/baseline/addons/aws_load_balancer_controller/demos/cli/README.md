@@ -19,7 +19,7 @@ These demos deploy **Kubernetes** resources with plain `kubectl` and manifests i
 ## Option 1: Deploy all 4 demos at once
 
 ```bash
-./create_demos.sh
+./deploy_demos.sh
 ```
 
 This creates each namespace, deploys the demo app, and applies the **Kubernetes** resources that cause **AWS LBC** to provision the load balancer.

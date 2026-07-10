@@ -12,7 +12,7 @@ demos/cli/01.svc_nlb .. 04.gw_alb), each in its own namespace:
   - Gateway+TCPRoute/NLB   (namespace: \$GW_NLB_NAMESPACE)
   - Gateway+HTTPRoute/ALB  (namespace: \$GW_ALB_NAMESPACE)
 
-Verify with ../test.sh afterward.
+Verify with ../test_demos.sh afterward.
 
 Options:
   -h, --help   Show this help message and exit
@@ -33,6 +33,44 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+die() { echo "❌ $*" >&2; exit 1; }
+# shellcheck source=../../scripts/lib/bash_version.sh
+source "$SCRIPT_DIR/../../scripts/lib/bash_version.sh"
+verify_bash
+
+# Every line of output gets a UTC timestamp prefix from here on (after
+# --help, so a plain --help invocation stays clean).
+# Also dedups repeated tool-progress lines (terraform "Still creating...
+# [Ns elapsed]" heartbeats, eksctl repeated "waiting for..." lines) so a
+# slow apply doesn't spam the terminal, while any genuinely new/changed
+# line (a different resource, a different message) always prints
+# immediately. Lines from this script itself (==>/status markers) print
+# as-is; everything else is indented to show it's from the underlying
+# tool, not this script.
+_tool_output_filter() {
+  local _lf_last="" _lf_last_ts=0
+  while IFS= read -r _line; do
+    local _lf_now _lf_norm
+    _lf_now=$(date +%s)
+    _lf_norm="$(printf '%s' "$_line" | sed -E \
+      -e 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}T? ?[0-9]{2}:[0-9]{2}:[0-9]{2}Z? *//' \
+      -e 's/[0-9]+m[0-9]+s elapsed/Ns elapsed/' \
+      -e 's/\[[0-9]+s elapsed\]/[Ns elapsed]/')"
+    if [[ "$_lf_norm" == "$_lf_last" ]] && (( _lf_now - _lf_last_ts < 30 )); then
+      continue
+    fi
+    _lf_last="$_lf_norm"; _lf_last_ts="$_lf_now"
+    case "$_line" in
+      "==>"*|"✅"*|"❌"*|"⚠️"*|"─────"*|"====="*|"")
+        printf '[%s] %s\n' "$(date -u +%H:%M:%S)" "$_line" ;;
+      *)
+        printf '[%s]     | %s\n' "$(date -u +%H:%M:%S)" "$_line" ;;
+    esac
+  done
+}
+exec > >(_tool_output_filter) 2>&1
 
 SVC_NLB_NAMESPACE="${SVC_NLB_NAMESPACE:-demo-nlb}"
 ING_ALB_NAMESPACE="${ING_ALB_NAMESPACE:-demo-alb}"
