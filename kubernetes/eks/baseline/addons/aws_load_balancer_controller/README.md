@@ -34,7 +34,7 @@ These can be easily provisioned using one of the guides:
 You can setup and install AWS Load Balancer Controller with the following paths:
 
 * [CLI](./01_cli/README.md) - setup using `helm`, `kubectl`, `aws`, and optional `eksctl` commands with using either IRSA or Pod-Identity association for authorization configuration.
-* [Terraform](./02_terraform/irsa/README.md) - setup using `terraform` with IRSA association for authorization.
+* [Terraform](./02_terraform/README.md) - setup using `terraform` with either IRSA or Pod-Identity association for authorization configuration.
 
 ### ELBv2 Demos
 

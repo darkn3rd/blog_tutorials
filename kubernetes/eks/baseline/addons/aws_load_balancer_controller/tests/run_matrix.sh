@@ -41,8 +41,8 @@ TESTS_DIR="$SCRIPT_DIR"
 LOGS_DIR="$TESTS_DIR/logs"
 
 die() { echo "❌ $*" >&2; exit 1; }
-# shellcheck source=../scripts/lib/bash_version.sh
-source "$SCRIPT_DIR/../scripts/lib/bash_version.sh"
+# shellcheck source=../01_cli/scripts/lib/bash_version.sh
+source "$SCRIPT_DIR/../01_cli/scripts/lib/bash_version.sh"
 verify_bash
 
 usage() {

@@ -36,8 +36,8 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 die() { echo "❌ $*" >&2; exit 1; }
-# shellcheck source=../../scripts/lib/bash_version.sh
-source "$SCRIPT_DIR/../../scripts/lib/bash_version.sh"
+# shellcheck source=../../01_cli/scripts/lib/bash_version.sh
+source "$SCRIPT_DIR/../../01_cli/scripts/lib/bash_version.sh"
 verify_bash
 
 # Every line of output gets a UTC timestamp prefix from here on (after

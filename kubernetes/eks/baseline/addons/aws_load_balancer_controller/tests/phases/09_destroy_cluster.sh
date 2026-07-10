@@ -10,8 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TESTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 die() { echo "❌ $*" >&2; exit 1; }
-# shellcheck source=../../scripts/lib/bash_version.sh
-source "$TESTS_DIR/../scripts/lib/bash_version.sh"
+# shellcheck source=../../01_cli/scripts/lib/bash_version.sh
+source "$TESTS_DIR/../01_cli/scripts/lib/bash_version.sh"
 verify_bash
 
 # Every line of output gets a UTC timestamp prefix - same reasoning as
