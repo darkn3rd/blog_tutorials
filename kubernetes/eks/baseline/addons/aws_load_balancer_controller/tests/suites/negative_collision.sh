@@ -87,7 +87,7 @@ collision_via_terraform_drift() {
 
   echo "  Running 'terraform plan -detailed-exitcode', expecting drift (exit 2)..."
   local plan_rc=0
-  (cd "$tf_dir" && terraform plan -var-file="$tfvars_file" -detailed-exitcode -input=false >/dev/null 2>&1) || plan_rc=$?
+  (cd "$tf_dir" && terraform plan -var-file="$tfvars_file" -detailed-exitcode -input=false -no-color >/dev/null 2>&1) || plan_rc=$?
   if [[ "$plan_rc" -eq 2 ]]; then
     echo "  ✅ terraform plan correctly detected drift."
   else
@@ -99,7 +99,7 @@ collision_via_terraform_drift() {
   aws iam attach-role-policy --role-name "$role_name" --policy-arn "$policy_arn"
 
   local restore_rc=0
-  (cd "$tf_dir" && terraform plan -var-file="$tfvars_file" -detailed-exitcode -input=false >/dev/null 2>&1) || restore_rc=$?
+  (cd "$tf_dir" && terraform plan -var-file="$tfvars_file" -detailed-exitcode -input=false -no-color >/dev/null 2>&1) || restore_rc=$?
   if [[ "$restore_rc" -ne 0 ]]; then
     echo "❌ terraform plan still reports drift after restoring the attachment - suite left state dirty." >&2
     rc=1

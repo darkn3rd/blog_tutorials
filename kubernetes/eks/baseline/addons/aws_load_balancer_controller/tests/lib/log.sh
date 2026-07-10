@@ -60,6 +60,7 @@ run_logged_phase() {
   rc=$?
 
   end_ts=$(date +%s)
+  echo "───── [$phase_key] $(date -u +%FT%TZ) - exit $rc, $((end_ts - start_ts))s ─────" >> "$log_path"
 
   PHASE_RESULT["$phase_key"]=$([[ $rc -eq 0 ]] && echo "pass" || echo "fail")
   PHASE_LOG["$phase_key"]="$log_filename"
