@@ -351,13 +351,6 @@ def get_instance_profile_role_name(clients: AwsClients, profile_name: str) -> st
     return roles[0]["RoleName"] if roles else None
 
 
-def role_has_policy_attached(clients: AwsClients, role_name: str, policy_name: str) -> bool:
-    for arn in get_role_attached_policy_arns(clients, role_name):
-        if arn.rsplit("/", 1)[-1] == policy_name:
-            return True
-    return False
-
-
 # ── EC2 (for the node-IAM-role auth fallback path) ─────────────────────────
 
 

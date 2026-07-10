@@ -51,7 +51,11 @@ GATEWAY_API_REQUIRED_CRDS = [
     "listenersets.gateway.networking.k8s.io",
 ]
 
-LBC_POLICY_NAME = "AWSLoadBalancerControllerIAMPolicy"
+# Prefix match, not an exact name: this survey has to recognize the policy
+# regardless of which install method created it, and their naming schemes
+# aren't all the same (e.g. a cluster-scoped "AWSLoadBalancerControllerIAM
+# Policy-<cluster>" vs. a fixed unscoped name).
+LBC_POLICY_NAME_PREFIX = "AWSLoadBalancerControllerIAMPolicy"
 
 
 def _get_deployment(k8s_client: k8s.K8sClient, deployment_name: str, namespace: str):
@@ -112,11 +116,16 @@ def check_node_iam_role(aws_clients: aws.AwsClients, k8s_client: k8s.K8sClient, 
         print(f"  Could not resolve IAM role from instance profile '{profile_name}'.")
         return None, False
 
-    if aws.role_has_policy_attached(aws_clients, role_name, LBC_POLICY_NAME):
-        print(f"  ✅ Node role '{role_name}' (instance {instance_id}) has {LBC_POLICY_NAME} attached.")
+    attached = aws.get_role_attached_policy_arns(aws_clients, role_name)
+    matched = next(
+        (arn for arn in attached if arn.rsplit("/", 1)[-1].startswith(LBC_POLICY_NAME_PREFIX)), None
+    )
+    if matched:
+        matched_name = matched.rsplit("/", 1)[-1]
+        print(f"  ✅ Node role '{role_name}' (instance {instance_id}) has {matched_name} attached.")
         return role_name, True
 
-    print(f"  Node role '{role_name}' does NOT have {LBC_POLICY_NAME} attached.")
+    print(f"  Node role '{role_name}' has no policy starting with '{LBC_POLICY_NAME_PREFIX}' attached.")
     return None, False
 
 

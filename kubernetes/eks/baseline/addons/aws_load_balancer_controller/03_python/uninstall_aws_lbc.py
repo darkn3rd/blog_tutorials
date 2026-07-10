@@ -27,13 +27,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import aws, helm, k8s, log
+from lib import aws, helm, k8s, log, naming
 from lib.errors import die
 from lib.python_version import verify_python
 
-POLICY_NAME = "AWSLoadBalancerControllerIAMPolicy"
+# Not cluster-scoped: unlike the IAM role/policy (see lib/naming.py), a
+# ServiceAccount already lives in one specific cluster's own API server -
+# there's no account-wide namespace for two clusters' ServiceAccounts to
+# collide in.
 SERVICE_ACCOUNT_NAME = "aws-load-balancer-controller"
-ROLE_NAME = "AmazonEKSLoadBalancerControllerRole"
 SA_NAMESPACE = "kube-system"
 
 # Every CRD manifest this script deletes, fetched from source rather than
@@ -332,7 +334,8 @@ def main() -> None:
     k8s_client = k8s.K8sClient.create()
 
     account_id = aws.get_account_id(aws_clients)
-    policy_arn = f"arn:aws:iam::{account_id}:policy/{POLICY_NAME}"
+    policy_name = naming.policy_name(cluster_name)
+    policy_arn = f"arn:aws:iam::{account_id}:policy/{policy_name}"
 
     # deprovision_load_balancers() deletes every load-balancer-provisioning
     # resource wholesale, polls detect_load_balancers() until it reports

@@ -16,6 +16,18 @@ Regardless of auth mode, `install_aws_lbc.py` also:
   client's server-side apply.
 * Installs the AWS LBC Helm chart.
 
+## IAM naming is scoped per cluster
+
+The IAM role and policy this creates are named `AmazonEKSLoadBalancerControllerRole-<cluster>`
+and `AWSLoadBalancerControllerIAMPolicy-<cluster>` (see `lib/naming.py`) rather than a fixed
+name. IAM role/policy names live in a single namespace shared by the whole AWS account —
+unlike a Kubernetes ServiceAccount, which is already isolated per-cluster by being on a
+separate API server. A fixed name would have every cluster in the account fight over the
+same role, and since installing against an existing role overwrites its trust policy, a
+second cluster's install would silently rebind (and a later uninstall would delete) the
+first cluster's binding. `uninstall_aws_lbc.py` computes the same scoped policy name from
+`$EKS_CLUSTER_NAME`, so install and uninstall always agree on which policy is theirs.
+
 ## The one exception: Helm
 
 Everything else in this directory — IAM, EKS, ELBv2, CloudFormation,
@@ -133,10 +145,11 @@ controller was actually installed.
     aws.py                  # boto3 helpers (IAM, EKS, ELBv2, CloudFormation, EC2, STS)
     k8s.py                   # kubernetes client helpers (generic by-kind operations via DynamicClient)
     helm.py                  # the one subprocess exception
-    crd_lists.py              # CRD name lists (validate/delete)
-    policy_definitions.py     # the expected IAM policy document
-    policy_validation.py      # policy statement fingerprinting/diffing
-    role_discovery.py         # find the IAM role/policy bound to a ServiceAccount
+    naming.py                 # cluster-scoped IAM role/policy names
+    crd_lists.py                # CRD name lists (validate/delete)
+    policy_definitions.py       # the expected IAM policy document
+    policy_validation.py        # policy statement fingerprinting/diffing
+    role_discovery.py           # find the IAM role/policy bound to a ServiceAccount
   scripts/
     validate_eks_req.py
     validate_crds.py

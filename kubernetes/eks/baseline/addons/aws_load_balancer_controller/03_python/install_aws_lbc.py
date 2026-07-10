@@ -33,14 +33,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import aws, helm, k8s, log
+from lib import aws, helm, k8s, log, naming
 from lib.errors import die
 from lib.python_version import verify_python
 
 HELM_CHART_VERSION = "3.4.0"
-POLICY_NAME = "AWSLoadBalancerControllerIAMPolicy"
+# Not cluster-scoped: unlike the IAM role/policy (see lib/naming.py), a
+# ServiceAccount already lives in one specific cluster's own API server -
+# there's no account-wide namespace for two clusters' ServiceAccounts to
+# collide in, so it keeps the name the Helm chart expects by default.
 SERVICE_ACCOUNT_NAME = "aws-load-balancer-controller"
-ROLE_NAME = "AmazonEKSLoadBalancerControllerRole"
 SA_NAMESPACE = "kube-system"
 
 
@@ -54,7 +56,7 @@ def verify_requirements(aws_clients: aws.AwsClients, k8s_client: k8s.K8sClient) 
     log.ok(f"AWS connection verified: {caller_arn}")
 
 
-def create_lbc_iam_policy(aws_clients: aws.AwsClients, policy_arn: str) -> None:
+def create_lbc_iam_policy(aws_clients: aws.AwsClients, policy_name: str, policy_arn: str) -> None:
     log.info("Checking for existing LBC IAM Policy...")
     if aws.policy_exists(aws_clients, policy_arn):
         log.ok("IAM Policy already exists. Skipping creation.")
@@ -62,7 +64,7 @@ def create_lbc_iam_policy(aws_clients: aws.AwsClients, policy_arn: str) -> None:
 
     log.info("Creating LBC IAM Policy (Injecting modern Gateway API requirements)...")
     policy_document = aws.fetch_upstream_lbc_iam_policy()
-    aws.create_policy(aws_clients, POLICY_NAME, policy_document)
+    aws.create_policy(aws_clients, policy_name, policy_document)
 
 
 def verify_oidc_provider(aws_clients: aws.AwsClients, cluster_name: str, account_id: str) -> str:
@@ -101,6 +103,7 @@ def verify_pod_identity_addon(aws_clients: aws.AwsClients, cluster_name: str) ->
 def create_irsa_association(
     aws_clients: aws.AwsClients,
     k8s_client: k8s.K8sClient,
+    role_name: str,
     policy_arn: str,
     account_id: str,
     oidc_provider: str,
@@ -126,19 +129,20 @@ def create_irsa_association(
     }
 
     log.info("Configuring IAM Role and policy attachments...")
-    if aws.role_exists(aws_clients, ROLE_NAME):
-        log.warn(f"IAM Role '{ROLE_NAME}' exists. Updating trust relationship...")
-    aws.create_or_update_role(aws_clients, ROLE_NAME, trust_policy)
-    aws.attach_role_policy(aws_clients, ROLE_NAME, policy_arn)
+    if aws.role_exists(aws_clients, role_name):
+        log.warn(f"IAM Role '{role_name}' exists. Updating trust relationship...")
+    aws.create_or_update_role(aws_clients, role_name, trust_policy)
+    aws.attach_role_policy(aws_clients, role_name, policy_arn)
 
     log.info("Deploying annotated Kubernetes ServiceAccount...")
-    role_arn = f"arn:aws:iam::{account_id}:role/{ROLE_NAME}"
+    role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
     k8s.apply_service_account(k8s_client, SERVICE_ACCOUNT_NAME, SA_NAMESPACE, role_arn)
 
 
 def create_pod_identity_association(
     aws_clients: aws.AwsClients,
     k8s_client: k8s.K8sClient,
+    role_name: str,
     policy_arn: str,
     account_id: str,
     cluster_name: str,
@@ -161,13 +165,13 @@ def create_pod_identity_association(
     }
 
     log.info("Configuring IAM Role and policy attachments...")
-    if aws.role_exists(aws_clients, ROLE_NAME):
-        log.warn(f"IAM Role '{ROLE_NAME}' exists. Updating trust relationship...")
-    aws.create_or_update_role(aws_clients, ROLE_NAME, trust_policy)
-    aws.attach_role_policy(aws_clients, ROLE_NAME, policy_arn)
+    if aws.role_exists(aws_clients, role_name):
+        log.warn(f"IAM Role '{role_name}' exists. Updating trust relationship...")
+    aws.create_or_update_role(aws_clients, role_name, trust_policy)
+    aws.attach_role_policy(aws_clients, role_name, policy_arn)
 
     log.info("Checking for an existing Pod Identity association...")
-    role_arn = f"arn:aws:iam::{account_id}:role/{ROLE_NAME}"
+    role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
     existing = aws.find_pod_identity_association_id(
         aws_clients, cluster_name, SA_NAMESPACE, SERVICE_ACCOUNT_NAME
     )
@@ -267,7 +271,11 @@ def main() -> None:
     log.info("Discovering cluster infrastructure details...")
     account_id = aws.get_account_id(aws_clients)
     vpc_id = aws.get_cluster_vpc_id(aws_clients, cluster_name)
-    policy_arn = f"arn:aws:iam::{account_id}:policy/{POLICY_NAME}"
+    role_name = naming.role_name(cluster_name)
+    policy_name = naming.policy_name(cluster_name)
+    policy_arn = f"arn:aws:iam::{account_id}:policy/{policy_name}"
+    log.info(f"  IAM role   : {role_name}")
+    log.info(f"  IAM policy : {policy_name}")
 
     log.info(f"Verifying prerequisites for '{args.auth}' authentication...")
     oidc_provider = None
@@ -276,14 +284,14 @@ def main() -> None:
     else:
         oidc_provider = verify_oidc_provider(aws_clients, cluster_name, account_id)
 
-    create_lbc_iam_policy(aws_clients, policy_arn)
+    create_lbc_iam_policy(aws_clients, policy_name, policy_arn)
 
     log.info(f"Provisioning IAM binding via '{args.auth}'...")
     if args.auth == "pod-identity":
-        create_pod_identity_association(aws_clients, k8s_client, policy_arn, account_id, cluster_name)
+        create_pod_identity_association(aws_clients, k8s_client, role_name, policy_arn, account_id, cluster_name)
     else:
         assert oidc_provider is not None
-        create_irsa_association(aws_clients, k8s_client, policy_arn, account_id, oidc_provider)
+        create_irsa_association(aws_clients, k8s_client, role_name, policy_arn, account_id, oidc_provider)
 
     install_gateway_crds(k8s_client, "experimental")
     helm.add_repo("eks", "https://aws.github.io/eks-charts")
