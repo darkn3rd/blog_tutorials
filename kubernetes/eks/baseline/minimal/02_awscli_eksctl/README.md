@@ -1,4 +1,4 @@
-# EKS with eksctl and VPC with AWS CLI
+# EKS via eksctl | VPC via AWS CLI
 
 This example creates the EKS networking layer using AWS CLI, then creates the EKS cluster using `eksctl`.
 

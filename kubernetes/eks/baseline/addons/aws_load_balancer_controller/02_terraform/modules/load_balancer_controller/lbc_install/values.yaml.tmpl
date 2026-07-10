@@ -1,0 +1,15 @@
+# values.yaml.tmpl
+clusterName: "${cluster_name}"
+vpcId: "${vpc_id}"
+region: "${region}"
+
+serviceAccount:
+  create: false
+  name: "${sa_name}"
+
+# Clean, structured nested blocks instead of dot-notation string hacks
+controllerConfig:
+  featureGates:
+    ALBGatewayAPI: true
+    NLBGatewayAPI: true
+    GatewayListenerSet: true

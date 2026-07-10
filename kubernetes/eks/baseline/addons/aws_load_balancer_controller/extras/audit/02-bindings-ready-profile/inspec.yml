@@ -1,0 +1,21 @@
+name: bindings-ready-profile
+title: 'Stage 2: AWS LBC Preparation Succeeded'
+maintainer: Joaquin Menchaca
+copyright: Joaquin Menchaca
+copyright_email: suavecali@yahoo.com
+license: Apache-2.0
+summary: >
+  Verifies the AWS Load Balancer Controller's preparation steps succeeded:
+  the Gateway API CRDs are installed, and the IAM role/policy are bound to
+  the controller's ServiceAccount via whichever auth mode (IRSA or Pod
+  Identity) was used.
+version: 0.1.0
+inspec_version: '>= 5.0'
+depends:
+  - name: inspec-aws
+    url: https://github.com/inspec/inspec-aws/archive/main.tar.gz
+  - name: inspec-k8s
+    url: https://github.com/inspec/inspec-k8s/archive/main.tar.gz
+supports:
+  - platform-name: aws
+  - platform-name: k8s
