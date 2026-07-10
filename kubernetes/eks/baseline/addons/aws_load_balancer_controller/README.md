@@ -44,6 +44,7 @@ After the AWS Load Balancer is installed, you test it by deploying service, ingr
 * [Overview](./demos/README.md)
   * [Terraform](./demos/tf/README.md) - bring up the demos or use one at a time with `terraform -target`
   * [CLI](./demos/cli/README.md) - use script to bring up all the demos, or run through them manually.
+  * [Python](./demos/python/README.md) - use script to bring up all the demos, via the `kubernetes` Python client.
 
 ### Verifying the Install
 
