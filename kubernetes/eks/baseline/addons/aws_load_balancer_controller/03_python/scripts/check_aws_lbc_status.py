@@ -6,8 +6,7 @@ installation and reports:
   - Gateway API readiness (CRDs installed + controller feature gates)
   - Helm chart version (if Helm-managed) and running controller image version
 
-This is read-only - it does not modify the cluster or AWS account. Python
-port of ../../01_cli/scripts/check_aws_lbc_status.sh.
+This is read-only - it does not modify the cluster or AWS account.
 """
 
 from __future__ import annotations

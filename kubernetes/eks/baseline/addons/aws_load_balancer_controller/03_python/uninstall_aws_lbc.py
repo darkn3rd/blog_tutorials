@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 """uninstall_aws_lbc.py — Removes the AWS Load Balancer Controller from an
-existing EKS cluster.
+existing EKS cluster, using boto3 and the kubernetes client instead of
+shelling out to `aws`/`kubectl`/`eksctl`.
 
-Python port of ../01_cli/uninstall_aws_lbc.sh, using boto3 and the
-kubernetes client instead of shelling out to `aws`/`kubectl`/`eksctl`.
-
-Scope note: bash's uninstall_aws_lbc.sh has to handle bindings created by
-either the eksctl or aws-cli install path (both are "01_cli"), so its
-delete_auth_association() branches on whether an eksctl-owned CloudFormation
-stack exists before deciding how to delete the role. install_aws_lbc.py
-never uses eksctl or CloudFormation - every binding it creates is pure
-boto3 - so that branch is structurally inapplicable here and is dropped
-entirely, matching the project's existing "never run one install method's
-uninstaller against another method's install" rule (see 02_terraform's
-Terraform state vs. 01_cli's CloudFormation stacks for the same reasoning).
-Only run this against a cluster set up by install_aws_lbc.py.
+install_aws_lbc.py never uses eksctl or CloudFormation - every IAM binding
+it creates is pure boto3 API calls - so delete_auth_association() below has
+no CloudFormation-stack-ownership branch to worry about; it always deletes
+the role/policy attachment directly. Only run this against a cluster set up
+by install_aws_lbc.py: it has nothing to reconcile against a binding some
+other tool created a different way.
 
 Required environment variables:
   EKS_CLUSTER_NAME   Name of the target EKS cluster
@@ -43,10 +37,9 @@ ROLE_NAME = "AmazonEKSLoadBalancerControllerRole"
 SA_NAMESPACE = "kube-system"
 
 # Every CRD manifest this script deletes, fetched from source rather than
-# hardcoding resource names by hand - a hand-maintained name list is exactly
-# how the elbv2.k8s.aws/aga.k8s.aws CRDs went unnoticed for as long as they
-# did in the bash version (missed 3 of them, then discovered a 4th only by
-# going to find the authoritative source instead of guessing more names).
+# hardcoding resource names by hand - a hand-maintained name list is an easy
+# way to silently miss a CRD (e.g. elbv2.k8s.aws/aga.k8s.aws ones) that the
+# chart bundles but nothing else in this script's flow would ever remove.
 # The last URL is the Helm chart's own bundled core CRDs
 # (TargetGroupBinding/IngressClassParams/ALBTargetControlConfig/
 # GlobalAccelerator) - auto-installed by `helm install`, never removed by
@@ -229,7 +222,7 @@ def uninstall_gateway_crds(k8s_client: k8s.K8sClient) -> None:
         try:
             with urllib.request.urlopen(url) as resp:  # noqa: S310
                 k8s.delete_yaml_manifests(k8s_client, resp.read().decode())
-        except Exception as exc:  # noqa: BLE001 - best-effort, mirrors bash's `|| true`
+        except Exception as exc:  # noqa: BLE001 - best-effort: one bad/unreachable manifest URL shouldn't abort the rest
             log.warn(f"  Could not process {url}: {exc}")
 
 

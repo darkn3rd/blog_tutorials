@@ -1,5 +1,5 @@
 """lib/policy_validation.py — IAM policy fingerprinting and statement
-validation. Direct port of 01_cli/scripts/lib/policy_validation.sh.
+validation.
 
 A fingerprint is a normalised, order-independent representation of a
 statement used for comparison:
@@ -67,8 +67,8 @@ def _resource_label(stmt: dict[str, Any]) -> str:
         label = resource[0]
     else:
         label = f"[{len(resource)} resources]"
-    # Strip "arn:aws:<service>:<region>:<account>:" the way the bash
-    # version's sed does, for a shorter, more readable label.
+    # Strip "arn:aws:<service>:<region>:<account>:" for a shorter, more
+    # readable label.
     import re
 
     return re.sub(r"^arn:aws:[^:]*:[^:]*:[^:]*:", "", label)

@@ -1,13 +1,9 @@
 """lib/aws.py — Shared boto3 helpers (IAM, EKS, ELBv2, CloudFormation, EC2, STS).
 
-Bash's lib/aws.sh only covered the handful of calls shared between
-validate_iam_policy.sh and validate_auth.sh. Since Python makes real shared
-modules trivial (no per-script-portability tax the way sourcing a bash lib
-file has), this module also absorbs the AWS calls install_aws_lbc.sh /
-uninstall_aws_lbc.sh / check_aws_lbc_status.sh / validate_eks_req.sh each
-reimplemented or duplicated inline in bash - e.g. the IAM role
-detach/delete sequence was written out fully in uninstall_aws_lbc.sh with no
-shared helper; here it's one function used from one place.
+Every AWS call used across the installer, uninstaller, and validation/status
+scripts lives here once - e.g. the IAM role detach/delete sequence is one
+function used from every place that needs it, rather than being
+reimplemented per caller.
 """
 
 from __future__ import annotations
@@ -28,8 +24,7 @@ from lib.errors import die
 class AwsClients:
     """Bundles the boto3 clients every script needs, built once from a
     single Session so AWS_PROFILE/region are threaded through explicitly
-    rather than relied on implicitly from process environment the way the
-    bash scripts lean on the `aws` CLI's own credential resolution.
+    rather than relied on implicitly from process environment.
     """
 
     session: boto3.Session
@@ -138,8 +133,8 @@ def oidc_provider_exists(clients: AwsClients, account_id: str, oidc_provider: st
 
 
 def oidc_provider_registered_for_issuer(clients: AwsClients, oidc_issuer: str) -> bool:
-    """validate_eks_req.sh's check: is there an IAM OIDC provider whose ARN
-    ends with the cluster's OIDC issuer ID, regardless of account.
+    """Checks whether there is an IAM OIDC provider whose ARN ends with the
+    cluster's OIDC issuer ID, regardless of account.
     """
     oidc_id = oidc_issuer.rstrip("/").rsplit("/", 1)[-1]
     providers = clients.iam.list_open_id_connect_providers()["OpenIDConnectProviderList"]
@@ -243,8 +238,7 @@ def create_policy(clients: AwsClients, policy_name: str, policy_document: dict[s
 
 def fetch_upstream_lbc_iam_policy(version: str = "v2.14.1") -> dict[str, Any]:
     """Fetches the AWS Load Balancer Controller's upstream IAM policy JSON
-    and amends it with the Gateway API listener-attribute permissions the
-    same way install_aws_lbc.sh's create_lbc_iam_policy() does.
+    and amends it with the Gateway API listener-attribute permissions.
     """
     url = (
         "https://raw.githubusercontent.com/kubernetes-sigs/"
@@ -268,8 +262,7 @@ def fetch_upstream_lbc_iam_policy(version: str = "v2.14.1") -> dict[str, Any]:
 
 def delete_policy(clients: AwsClients, policy_arn: str) -> None:
     """Detaches the policy from every role/user/group still attached to it,
-    deletes every non-default version, then deletes the policy itself -
-    mirrors uninstall_aws_lbc.sh's delete_iam_policy().
+    deletes every non-default version, then deletes the policy itself.
     """
     entities = clients.iam.list_entities_for_policy(PolicyArn=policy_arn)
 
@@ -324,8 +317,7 @@ def get_role_attached_policy_arns(clients: AwsClients, role_name: str) -> list[s
 
 def delete_role(clients: AwsClients, role_name: str) -> None:
     """Detaches managed policies, deletes inline policies, removes the role
-    from any instance profiles, then deletes the role - mirrors
-    uninstall_aws_lbc.sh's delete_iam_role().
+    from any instance profiles, then deletes the role.
     """
     if not role_exists(clients, role_name):
         return
@@ -366,7 +358,7 @@ def role_has_policy_attached(clients: AwsClients, role_name: str, policy_name: s
     return False
 
 
-# ── EC2 (for check_aws_lbc_status.sh's node-IAM-role fallback path) ────────
+# ── EC2 (for the node-IAM-role auth fallback path) ─────────────────────────
 
 
 def instance_profile_arn_for_instance(clients: AwsClients, instance_id: str) -> str | None:
@@ -395,10 +387,12 @@ def describe_load_balancer_arns(clients: AwsClients) -> list[str]:
 
 def load_balancers_owned_by_cluster(clients: AwsClients, cluster_name: str) -> list[str]:
     """Returns the ARNs of every load balancer tagged as owned by this
-    cluster - the same elbv2.k8s.aws/cluster tag detect_aws_load_balancers()
-    checks in bash, batched into chunks of 20 ARNs per describe-tags call
-    (the API's own limit) to match the batching that was needed there to
-    keep the poll loop from running for minutes.
+    cluster, via the elbv2.k8s.aws/cluster tag - the authoritative signal
+    for cluster ownership, independent of which Kubernetes objects
+    provisioned it. Batched into chunks of 20 ARNs per describe-tags call
+    (the API's own limit), since this runs inside a bounded polling loop
+    and one call per load balancer would let that loop run for minutes on
+    a cluster with many load balancers.
     """
     arns = describe_load_balancer_arns(clients)
     if not arns:
@@ -416,12 +410,11 @@ def load_balancers_owned_by_cluster(clients: AwsClients, cluster_name: str) -> l
 
 
 def delete_load_balancer_and_target_groups(clients: AwsClients, lb_arn: str) -> None:
-    """Deletes a load balancer and its target groups - mirrors
-    uninstall_aws_lbc.sh's force_delete_orphaned_load_balancers(). Target
-    group deletion is retried for up to 30s: ALB (not NLB) target groups can
-    still be attached to a listener rule for a few seconds after
-    delete-load-balancer returns, since that call is asynchronous and the
-    ALB's own listener/rule teardown needs to finish propagating first.
+    """Deletes a load balancer and its target groups. Target group deletion
+    is retried for up to 30s: ALB (not NLB) target groups can still be
+    attached to a listener rule for a few seconds after delete-load-balancer
+    returns, since that call is asynchronous and the ALB's own
+    listener/rule teardown needs to finish propagating first.
     """
     tg_resp = clients.elbv2.describe_target_groups(LoadBalancerArn=lb_arn)
     tg_arns = [tg["TargetGroupArn"] for tg in tg_resp["TargetGroups"]]

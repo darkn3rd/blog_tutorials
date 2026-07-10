@@ -1,5 +1,5 @@
 """lib/crd_lists.py — Shared CRD name lists for Gateway API validation and
-cleanup. Direct port of 01_cli/scripts/lib/crd_lists.sh.
+cleanup.
 """
 
 from __future__ import annotations

@@ -1,17 +1,13 @@
 """lib/k8s.py — Shared Kubernetes client helpers.
 
-Bash's lib/k8s.sh only covered ServiceAccount lookups and a CRD-name scan.
-uninstall_aws_lbc.sh needed far more (generic delete-by-kind across Gateway
-API/LBC-config/ELBv2/GlobalAccelerator kinds, ALB Ingress/LB Service
-detection, finalizer stripping) but reimplemented all of it inline since
-bash has no ergonomic "any kind, any API group" client - it shells out to
-`kubectl get <kind>` and lets kubectl's own RESTMapper resolve names. The
-kubernetes client's DynamicClient does the equivalent resource discovery
-(resolve a Kind to its API group/version/scope without hardcoding any of
-them), so that generic capability lives here once and every kind-specific
-helper below is a thin wrapper over it - mirroring uninstall_aws_lbc.sh's
-GATEWAY_API_KINDS/LBC_CONFIG_KINDS/ELBV2_KINDS/AGA_KINDS gating (skip a kind
-whose CRD isn't installed) without hand-maintaining API versions.
+uninstall_aws_lbc.py needs generic delete-by-kind across Gateway API/
+LBC-config/ELBv2/GlobalAccelerator kinds, ALB Ingress/LB Service detection,
+and finalizer stripping. The kubernetes client's DynamicClient supports
+resolving a Kind to its API group/version/scope by discovery, without
+hardcoding any of them, so that generic capability lives here once and
+every kind-specific helper below is a thin wrapper over it - each one
+gating on whether the kind's CRD is actually installed before acting on it,
+without hand-maintaining API versions per kind.
 """
 
 from __future__ import annotations
@@ -28,7 +24,7 @@ from kubernetes.dynamic.exceptions import NotFoundError, ResourceNotFoundError
 
 from lib.errors import die
 
-# Every Gateway API kind uninstall_aws_lbc.sh's CRD deletion removes. Since
+# Every Gateway API kind uninstall_aws_lbc.py's CRD deletion removes. Since
 # the CRDs themselves are deleted wholesale regardless of who owns any given
 # instance, every live instance of every one of these kinds is in scope for
 # cleanup - there is no such thing as "not ours" here. This intentionally
@@ -176,9 +172,7 @@ def delete_service_account(k8s: K8sClient, name: str, namespace: str) -> None:
 
 def resolve_resource(k8s: K8sClient, kind: str):
     """Returns the DynamicClient resource for `kind`, or None if its CRD
-    isn't installed - mirrors uninstall_aws_lbc.sh's
-    `kubectl api-resources --api-group=X | grep -qi kind` gate, but by kind
-    discovery instead of a hardcoded API group per kind list.
+    isn't installed, by discovery rather than a hardcoded API group.
     """
     try:
         return k8s.dynamic.resources.get(kind=kind)
@@ -200,14 +194,13 @@ def list_all_of_kind(k8s: K8sClient, kind: str) -> list[tuple[str | None, str]]:
 
 def delete_all_of_kind(k8s: K8sClient, kind: str, label: str | None = None) -> None:
     """Deletes every live instance of `kind`. Uses Background propagation
-    (fire the delete and return immediately) rather than Foreground/blocking
-    - kubectl's --wait=true default blocks per object until its finalizer
-    clears, and if the controller is already gone that finalizer never
-    clears, hanging forever with no timeout. The poll-and-force-clear loop
-    in deprovision_load_balancers() is the one place that actually waits,
-    on a bounded timeout - every delete call here needs to get out of its
-    way instead of blocking ahead of it (same reasoning as
-    uninstall_aws_lbc.sh's delete_all_of_kind()).
+    (fire the delete and return immediately) rather than Foreground, which
+    blocks per object until its finalizer clears - if the controller is
+    already gone that finalizer never clears, hanging forever with no
+    timeout. The poll-and-force-clear loop in deprovision_load_balancers()
+    is the one place that actually waits, on a bounded timeout - every
+    delete call here needs to get out of its way instead of blocking ahead
+    of it.
     """
     entries = list_all_of_kind(k8s, kind)
     if not entries:

@@ -1,16 +1,10 @@
 # AWS Load Balancer Controller Installer (Python)
 
-This area does the same thing as [`../01_cli`](../01_cli/README.md) — install
-the AWS Load Balancer Controller (LBC) onto an existing EKS cluster — but
-using **boto3** and the **kubernetes** Python client to call the AWS and
-Kubernetes APIs directly, instead of shelling out to `aws`/`kubectl`/
-`eksctl`.
+Installs the AWS Load Balancer Controller (LBC) onto an existing EKS cluster using
+**boto3** and the **kubernetes** Python client to call the AWS and Kubernetes APIs
+directly, instead of shelling out to `aws`/`kubectl`/`eksctl`.
 
-One structural difference from the CLI version: `01_cli` takes a `tool`
-argument (`eksctl` vs `aws-cli`) because those are two different CLIs for
-the same IAM operations. boto3 talks to the IAM/EKS APIs directly, so that
-distinction disappears — there's only one way to do it. This script only
-takes an **auth mode**:
+`install_aws_lbc.py` takes an **auth mode** argument:
 
 * `irsa` (default) — IAM Roles for Service Accounts, via an OIDC federated
   trust and an annotated ServiceAccount.
@@ -39,9 +33,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Requires Python >= 3.9 (checked at startup by every script; fails fast with
-a clear message otherwise — same idea as `01_cli`'s bash-version guard, see
-`lib/python_version.py`).
+Requires Python >= 3.9, checked at startup by every script; fails fast with
+a clear message otherwise (see `lib/python_version.py`).
 
 ## Required Credentials & Access
 
@@ -54,9 +47,8 @@ a clear message otherwise — same idea as `01_cli`'s bash-version guard, see
 
 ## Auth Prerequisites
 
-Same as `01_cli` — each auth mechanism has a hard prerequisite that the
-script checks before doing any work, and will exit with guidance if it's
-missing:
+Each auth mechanism has a hard prerequisite that the script checks before
+doing any work, and will exit with guidance if it's missing:
 
 * `irsa` requires an IAM OIDC provider already associated with the cluster.
 * `pod-identity` requires the `eks-pod-identity-agent` EKS addon.
@@ -100,19 +92,14 @@ Self-detects whichever auth mode was used (IRSA annotation vs. Pod Identity
 association) and tears down the matching IAM binding, then the CRDs and
 Helm release. Deprovisions any AWS load balancers the controller created
 first, polling with a bounded timeout and forcing stuck Kubernetes
-finalizers as a last resort — same safety behavior as `01_cli`'s
-`uninstall_aws_lbc.sh`.
+finalizers as a last resort.
 
 **Only run this against a cluster set up by `install_aws_lbc.py`.** It never
-touches CloudFormation (nothing it creates is eksctl/CloudFormation-owned)
-— don't point it at an `01_cli eksctl`-installed cluster or a `02_terraform`
-one, same "don't cross install methods" rule that applies between every
-install path in this project.
+touches CloudFormation — everything it creates is plain IAM/EKS API calls, no
+CloudFormation stack involved, so it has nothing to reconcile against a
+binding created by a different tool.
 
 ## Scripts
-
-Mirrors `01_cli/scripts/` — same behavior, same flags, boto3/kubernetes
-client instead of `aws`/`kubectl`:
 
 * `scripts/validate_eks_req.py` — pre-install cluster prerequisite checks
   (OIDC provider, Pod Identity addon, VPC CNI, subnet tagging).
@@ -128,7 +115,9 @@ client instead of `aws`/`kubectl`:
 * `scripts/delete_crds.py` — remove Gateway API CRDs, with a confirmation
   prompt and `--dry-run`.
 
-Each takes `-h`/`--help` for its full flag list.
+Each takes `-h`/`--help` for its full flag list. Every validation script
+checks live cluster/AWS state directly — none of them assume or care how the
+controller was actually installed.
 
 ## Layout
 
@@ -145,7 +134,7 @@ Each takes `-h`/`--help` for its full flag list.
     k8s.py                   # kubernetes client helpers (generic by-kind operations via DynamicClient)
     helm.py                  # the one subprocess exception
     crd_lists.py              # CRD name lists (validate/delete)
-    policy_definitions.py     # the expected IAM policy document (single source, unlike bash's two copies)
+    policy_definitions.py     # the expected IAM policy document
     policy_validation.py      # policy statement fingerprinting/diffing
     role_discovery.py         # find the IAM role/policy bound to a ServiceAccount
   scripts/
@@ -158,8 +147,5 @@ Each takes `-h`/`--help` for its full flag list.
 ```
 
 `lib/` is shared by both the top-level install/uninstall scripts and
-everything under `scripts/` — bash's `01_cli/scripts/lib/*.sh` only covered
-what `scripts/*.sh` needed, since sourcing it from `install_aws_lbc.sh`/
-`uninstall_aws_lbc.sh` (a different directory) wasn't worth the portability
-tax; Python's import system makes one shared `lib/` for everything the
-natural choice instead.
+everything under `scripts/`, since all of it lives in and is used only
+within this directory.

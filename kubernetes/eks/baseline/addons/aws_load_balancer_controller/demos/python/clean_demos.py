@@ -2,10 +2,8 @@
 """clean_demos.py — Removes all 4 aws-load-balancer-controller demos created
 by deploy_demos.py: deletes the load balancer resources (Service/Ingress/
 Gateway+Route), waits for AWS to deprovision the load balancers, then
-deletes each demo's namespace. Python port of demos/cli/clean_demos.sh,
-using the kubernetes client directly instead of shelling out to kubectl.
-
-Self-contained on purpose - see deploy_demos.py's docstring.
+deletes each demo's namespace, using the kubernetes client directly instead
+of shelling out to kubectl.
 
 Requires: kubernetes >= 29.0 (see requirements.txt); Python >= 3.9.
 """
@@ -38,9 +36,8 @@ DEMOS = [
 ]
 
 # Namespaced Gateway API / LBC-config kinds this cleans up wholesale within
-# each demo's namespace - mirrors clean_demos.sh's
-# `kubectl delete gateway,httproute,tcproute --all -n "$ns"` and the
-# LoadBalancerConfiguration/TargetGroupConfiguration line right after it.
+# each demo's namespace - not owned via ownerReference by anything else
+# deleted here, so they need their own explicit delete pass.
 GATEWAY_KINDS = ["Gateway", "HTTPRoute", "TCPRoute"]
 LBC_CONFIG_KINDS = ["LoadBalancerConfiguration", "TargetGroupConfiguration"]
 
@@ -61,8 +58,9 @@ def namespace_exists(core_v1: client.CoreV1Api, ns: str) -> bool:
 
 def delete_all_of_kind_in_namespace(dyn: dynamic.DynamicClient, kind: str, ns: str) -> None:
     """Deletes every live instance of `kind` in one namespace. Silently
-    no-ops if the kind's CRD isn't installed - mirrors clean_demos.sh's
-    `2>/dev/null || true` on these same calls.
+    no-ops if the kind's CRD isn't installed - a demo that never deployed
+    Gateway API resources shouldn't fail cleanup just because those CRDs
+    were never applied.
     """
     try:
         resource = dyn.resources.get(kind=kind)

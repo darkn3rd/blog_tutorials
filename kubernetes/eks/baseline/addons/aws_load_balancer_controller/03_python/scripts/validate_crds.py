@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """validate_crds.py — Verify Gateway API CRDs are installed in the cluster.
-Python port of ../../01_cli/scripts/validate_crds.sh.
 
 Usage:
   validate_crds.py --channel <standard|experimental> --source <gateway-api|aws-gateway|all>

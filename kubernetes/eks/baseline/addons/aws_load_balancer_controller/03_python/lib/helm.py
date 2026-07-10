@@ -18,9 +18,9 @@ from lib.log import run_streamed
 
 
 def add_repo(name: str, url: str) -> None:
-    # Mirrors install_aws_lbc.sh's add_helm_repo(): `helm repo add` fails if
-    # the repo name is already registered, which isn't an error worth
-    # surfacing here - same reasoning as the bash version's `|| true`.
+    # `helm repo add` fails if the repo name is already registered, which
+    # isn't an error worth surfacing here - the desired end state (repo
+    # registered and up to date) is reached either way.
     subprocess.run(["helm", "repo", "add", name, url], capture_output=True, check=False)
     subprocess.run(["helm", "repo", "update", name], check=True, capture_output=True)
 
@@ -83,8 +83,7 @@ def uninstall(release_name: str, namespace: str) -> int:
 
 def get_release_info(release_name: str, namespace: str) -> dict | None:
     """Returns {"chart": ..., "app_version": ..., "status": ...} for the
-    named release, or None if it isn't Helm-managed - mirrors
-    check_aws_lbc_status.sh's check_helm_release().
+    named release, or None if it isn't Helm-managed.
     """
     result = subprocess.run(
         ["helm", "list", "-n", namespace, "--filter", f"^{release_name}$", "-o", "json"],

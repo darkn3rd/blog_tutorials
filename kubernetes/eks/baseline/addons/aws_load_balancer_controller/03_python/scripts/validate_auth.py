@@ -5,8 +5,6 @@ Balancer Controller, whichever mechanism actually binds it:
   ServiceAccount -> IRSA annotation or Pod Identity association
   -> IAM role exists -> policy attached -> policy contents correct
 
-Python port of ../../01_cli/scripts/validate_auth.sh.
-
 Exit codes:
   0  All auth chain checks passed.
   1  One or more checks failed.

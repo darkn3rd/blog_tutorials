@@ -1,7 +1,6 @@
 """lib/python_version.py — Checks the running Python meets this project's
-minimum version. Mirrors 01_cli/scripts/lib/bash_version.sh's verify_bash():
-same idea (fail fast with a clear message instead of a confusing error deep
-in some module that happens to use newer syntax), different language.
+minimum version. Fails fast with a clear message instead of a confusing
+error deep in some module that happens to use newer syntax.
 """
 
 import sys

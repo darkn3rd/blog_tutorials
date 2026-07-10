@@ -1,7 +1,6 @@
 """lib/role_discovery.py — Finds the IAM role (and its attached policy)
 bound to a Kubernetes ServiceAccount, regardless of whether the binding was
-made via IRSA or EKS Pod Identity. Direct port of
-01_cli/scripts/lib/role_discovery.sh.
+made via IRSA or EKS Pod Identity.
 """
 
 from __future__ import annotations

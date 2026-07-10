@@ -1,10 +1,4 @@
-"""lib/errors.py — Shared fatal-error helper.
-
-Bash's die() is defined once per script and every sourced lib/*.sh file
-assumes the sourcing script has already defined it. Python has no equivalent
-"assumes the caller defines this" convention, so it lives here once and
-every module imports it directly instead.
-"""
+"""lib/errors.py — Shared fatal-error helper."""
 
 import sys
 from typing import NoReturn

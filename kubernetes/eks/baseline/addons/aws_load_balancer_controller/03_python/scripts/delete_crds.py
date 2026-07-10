@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""delete_crds.py — Remove Gateway API CRDs from the cluster. Python port of
-../../01_cli/scripts/delete_crds.sh.
+"""delete_crds.py — Remove Gateway API CRDs from the cluster.
 
 WARNING: Deleting CRDs removes all custom resources of those types
 cluster-wide. This operation is irreversible without a backup.

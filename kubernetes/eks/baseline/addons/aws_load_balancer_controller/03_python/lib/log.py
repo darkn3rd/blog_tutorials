@@ -1,12 +1,9 @@
-"""lib/log.py — UTC-timestamped console output, matching the bash scripts'
-per-line "[HH:MM:SS] message" convention (see 01_cli/install_aws_lbc.sh's
-_tool_output_filter). Python calls boto3/kubernetes-client directly instead
-of shelling out to CLI tools, so there's no equivalent repeated-heartbeat
-noise (terraform's "Still creating...", eksctl's repeated "waiting for...")
+"""lib/log.py — UTC-timestamped console output, one "[HH:MM:SS] message" per
+line. Everything in this project calls boto3/kubernetes-client directly
+instead of shelling out to CLI tools, so there's no repeated-heartbeat noise
 to dedup here. The one remaining subprocess call is Helm (no Python SDK
 exists for it - see lib/helm.py); its output is streamed and indented via
-run_streamed() below to mark it as coming from an external tool, the same
-visual convention the bash scripts use for terraform/eksctl output.
+run_streamed() below to visually mark it as coming from an external tool.
 """
 
 import subprocess

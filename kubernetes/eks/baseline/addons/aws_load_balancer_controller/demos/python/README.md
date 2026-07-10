@@ -1,10 +1,9 @@
 # AWS LBC Demos with the Kubernetes Python client
 
-These demos do the same thing as [`../cli`](../cli/README.md) - deploy the same four
-scenarios - but call the Kubernetes API directly via the **kubernetes** Python client
-instead of shelling out to `kubectl`. Each demo lands in its own namespace and allows the
-**AWS Load Balancer Controller** (**AWS LBC**) to provision a different kind of AWS load
-balancer:
+These demos deploy four scenarios by calling the Kubernetes API directly via the
+**kubernetes** Python client instead of shelling out to `kubectl`. Each demo lands in its
+own namespace and allows the **AWS Load Balancer Controller** (**AWS LBC**) to provision a
+different kind of AWS load balancer:
 
 | Demo | Namespace (default) | Produces |
 | --- | --- | --- |
@@ -13,9 +12,9 @@ balancer:
 | Gateway+TCPRoute/NLB | `demo-gwtcp` | Network Load Balancer, via Gateway API |
 | Gateway+HTTPRoute/ALB | `demo-gwhttp` | Application Load Balancer, via Gateway API |
 
-Self-contained by design - these demos work against a cluster set up by any install
-method in this project (CLI, Terraform, or the Python installer), so they don't import
-anything from [`../../03_python`](../../03_python/README.md).
+Works against a cluster with the AWS Load Balancer Controller installed, however that
+install happened — these demos only create Kubernetes objects and don't care how the
+controller got there.
 
 ## Setup
 
@@ -34,9 +33,8 @@ Requires Python >= 3.9 (checked at startup).
 * Credentials to access the EKS cluster, usually set up via `KUBECONFIG` - the kubernetes
   client reads the same kubeconfig `kubectl` does
 
-No AWS credentials are needed here: unlike the installer, these demos only create
-Kubernetes objects and let the already-installed controller reconcile them into AWS load
-balancers.
+No AWS credentials are needed here: these demos only create Kubernetes objects and let
+the already-installed controller reconcile them into AWS load balancers.
 
 ## Deploy all 4 demos at once
 

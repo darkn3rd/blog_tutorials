@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """validate_iam_policy.py — Verify the AWS Load Balancer Controller IAM
-policy contains every required statement. Python port of
-../../01_cli/scripts/validate_iam_policy.sh.
+policy contains every required statement.
 
 If --policy-name is omitted, the policy is discovered instead: found via
 whichever role is bound to the controller's ServiceAccount (IRSA annotation

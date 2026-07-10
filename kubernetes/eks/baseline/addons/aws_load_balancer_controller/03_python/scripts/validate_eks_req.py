@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """validate_eks_req.py — Verify an EKS cluster meets the prerequisites for
-installing the AWS Load Balancer Controller. Python port of
-../../01_cli/scripts/validate_eks_req.sh.
+installing the AWS Load Balancer Controller.
 """
 
 from __future__ import annotations

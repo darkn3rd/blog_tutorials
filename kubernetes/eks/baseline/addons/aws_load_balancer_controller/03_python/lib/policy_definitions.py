@@ -1,10 +1,5 @@
 """lib/policy_definitions.py — The expected AWS Load Balancer Controller IAM
-policy document.
-
-Bash duplicated this same JSON blob verbatim in both validate_iam_policy.sh
-and validate_auth.sh (each needed to be independently runnable without
-sourcing the other). Python's import system makes that unnecessary - one
-definition, imported by both.
+policy document. One definition, imported by every script that needs it.
 
 Canonical source: upstream iam_policy.json + the Gateway API amendment
 (DescribeListenerAttributes / ModifyListenerAttributes) - see

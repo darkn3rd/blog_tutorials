@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 """install_aws_lbc.py — Installs the AWS Load Balancer Controller onto an
-existing EKS cluster.
-
-Python port of ../01_cli/install_aws_lbc.sh, using boto3 and the kubernetes
-client instead of shelling out to `aws`/`kubectl`/`eksctl`. One structural
-difference from the bash version: bash took a `tool` argument (eksctl vs
-aws-cli) because those are two different CLIs for the same IAM operations.
-boto3 does the IAM/EKS calls directly, so that distinction disappears -
-there's only one way to do it, and this script takes just an auth mode.
+existing EKS cluster, using boto3 and the kubernetes client instead of
+shelling out to `aws`/`kubectl`/`eksctl`. Since boto3 talks to the IAM/EKS
+APIs directly, provisioning the IAM binding is always done the same way
+regardless of tooling - this script only takes an auth mode.
 
 Usage:
   install_aws_lbc.py [auth]

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""deploy_demos.py — Creates all 4 aws-load-balancer-controller demos (mirrors
-the walkthroughs in demos/cli/01.svc_nlb .. 04.gw_alb and the scripted
-demos/cli/deploy_demos.sh), each in its own namespace, using the kubernetes
-client directly instead of shelling out to kubectl:
+"""deploy_demos.py — Creates all 4 aws-load-balancer-controller demos, each in
+its own namespace, using the kubernetes client directly instead of shelling
+out to kubectl:
   - Service/NLB            (namespace: $SVC_NLB_NAMESPACE)
   - Ingress/ALB             (namespace: $ING_ALB_NAMESPACE)
   - Gateway+TCPRoute/NLB    (namespace: $GW_NLB_NAMESPACE)
@@ -10,16 +9,12 @@ client directly instead of shelling out to kubectl:
 
 Verify with ../test_demos.sh afterward.
 
-Self-contained on purpose (no import from ../../03_python) - these demos
-work against a cluster set up by any install method (CLI, Terraform, or the
-Python installer), so they don't belong to any one of them.
+Works against a cluster with the AWS Load Balancer Controller installed,
+however that install happened.
 
-One behavior deliberately not ported: deploy_demos.sh runs
-`kubectl config set-context --current --namespace=$ns` after each demo, so
-a user's shell defaults to that namespace for follow-up interactive kubectl
-commands. That's a local kubeconfig file convenience with no cluster-side
-meaning - every call in this script already passes its namespace
-explicitly, so there's nothing for it to affect here.
+Doesn't change your kubeconfig's active namespace after each demo - every
+API call in this script already passes its namespace explicitly, so there's
+nothing for that to affect.
 
 Requires: kubernetes >= 29.0, PyYAML >= 6.0 (see requirements.txt); Python >= 3.9.
 """
