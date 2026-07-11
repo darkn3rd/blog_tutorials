@@ -6,11 +6,11 @@ Load Balancer Controller installed: a Service of type `LoadBalancer` (NLB), an `
 
 | | [`cli/`](cli/README.md) | [`python/`](python/README.md) | [`tf/`](tf/README.md) |
 | --- | --- | --- | --- |
-| Mechanism | Plain `kubectl` / manifests | Python (two ways - see `python/README.md`) | Terraform |
+| Mechanism | Plain `kubectl` / manifests | Python (four ways - see `python/README.md`) | Terraform |
 | State | None - re-run scripts to reconcile | None - re-run scripts to reconcile | Terraform state (`terraform.tfstate`) |
 | Bring up one demo | Run the script or manifest in that demo directory | Not split out per-demo - run the full script | `terraform apply -target="module.<name>"` |
-| Bring up all 4 | `cd cli && ./deploy_demos.sh` | `cd python/direct_api && ./deploy_demos.py` (or `python/exec_cli`) | `cd tf && terraform apply` |
-| Tear down | `cd cli && ./clean_demos.sh` | `cd python/direct_api && ./clean_demos.py` (or `python/exec_cli`) | `cd tf && terraform destroy` |
+| Bring up all 4 | `cd cli && ./deploy_demos.sh` | `cd python/<variant> && ./deploy_demos.py` | `cd tf && terraform apply` |
+| Tear down | `cd cli && ./clean_demos.sh` | `cd python/<variant> && ./clean_demos.py` | `cd tf && terraform destroy` |
 | Best for | Learning step-by-step, or a quick one-off check | If you'd rather read/extend Python than bash | Repeatable setup/teardown, keeping it in sync with the rest of this repo's IaC |
 
 Pick whichever fits what you're doing - none is "more correct" than the others.
