@@ -7,7 +7,7 @@ out to kubectl:
   - Gateway+TCPRoute/NLB    (namespace: $GW_NLB_NAMESPACE)
   - Gateway+HTTPRoute/ALB   (namespace: $GW_ALB_NAMESPACE)
 
-Verify with ../test_demos.sh afterward.
+Verify with ../../test_demos.sh afterward.
 
 Works against a cluster with the AWS Load Balancer Controller installed,
 however that install happened.
@@ -340,7 +340,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Creates all 4 aws-load-balancer-controller demos, each in its own namespace. "
-            "Verify with ../test_demos.sh afterward."
+            "Verify with ../../test_demos.sh afterward."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
@@ -370,7 +370,7 @@ def main() -> None:
     create_gw_alb(core_v1, apps_v1, dyn, gw_alb_ns)
 
     log()
-    log("All demos created. Verify with: ../test_demos.sh")
+    log("All demos created. Verify with: ../../test_demos.sh")
 
 
 if __name__ == "__main__":

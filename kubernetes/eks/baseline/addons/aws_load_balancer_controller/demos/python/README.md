@@ -1,76 +1,16 @@
-# AWS LBC Demos with the Kubernetes Python client
+# AWS LBC Demos (Python)
 
-These demos deploy four scenarios by calling the Kubernetes API directly via the
-**kubernetes** Python client instead of shelling out to `kubectl`. Each demo lands in its
-own namespace and allows the **AWS Load Balancer Controller** (**AWS LBC**) to provision a
-different kind of AWS load balancer:
+Two independent ways to deploy the same four demo scenarios from Python:
 
-| Demo | Namespace (default) | Produces |
+| | [`direct_api/`](direct_api/README.md) | [`exec_cli/`](exec_cli/README.md) |
 | --- | --- | --- |
-| Service/NLB | `demo-nlb` | Network Load Balancer, via a `Service` of type `LoadBalancer` |
-| Ingress/ALB | `demo-alb` | Application Load Balancer, via an `Ingress` |
-| Gateway+TCPRoute/NLB | `demo-gwtcp` | Network Load Balancer, via Gateway API |
-| Gateway+HTTPRoute/ALB | `demo-gwhttp` | Application Load Balancer, via Gateway API |
+| Mechanism | `kubernetes` client (direct API calls) | `subprocess` calling `kubectl` |
+| Dependencies | `kubernetes`, `PyYAML` (see `direct_api/requirements.txt`) | None - just `kubectl` on `PATH` |
 
-Works against a cluster with the AWS Load Balancer Controller installed, however that
-install happened — these demos only create Kubernetes objects and don't care how the
-controller got there.
+Pick whichever fits what you're doing - neither is "more correct" than the other. Don't
+bring up both against the same cluster at once (see `../README.md`).
 
-## Setup
+## See also
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Requires Python >= 3.9 (checked at startup).
-
-## Prerequisites
-
-* Amazon EKS Cluster
-* AWS Load Balancer Controller installed (Gateway API demos also need the Gateway API CRDs installed)
-* Credentials to access the EKS cluster, usually set up via `KUBECONFIG` - the kubernetes
-  client reads the same kubeconfig `kubectl` does
-
-No AWS credentials are needed here: these demos only create Kubernetes objects and let
-the already-installed controller reconcile them into AWS load balancers.
-
-## Deploy all 4 demos at once
-
-```bash
-./deploy_demos.py
-```
-
-This creates each namespace, deploys the demo app, and applies the Kubernetes resources
-that cause AWS LBC to provision the load balancer.
-
-```bash
-SVC_NLB_NAMESPACE=demo-nlb \
-ING_ALB_NAMESPACE=demo-alb \
-GW_NLB_NAMESPACE=demo-gwtcp \
-GW_ALB_NAMESPACE=demo-gwhttp \
-  ./deploy_demos.py
-```
-
-Run `./deploy_demos.py --help` for details.
-
-### Verify
-
-```bash
-../test_demos.sh
-```
-
-Waits for each demo's load balancer address to appear, waits for DNS to resolve, then
-curls it. Reports PASS/FAIL per demo with bounded timeouts (won't hang forever if AWS
-never finishes provisioning).
-
-### Clean up
-
-```bash
-./clean_demos.py
-```
-
-Deletes the Kubernetes load balancer resources, waits for AWS LBC to deprovision the AWS
-load balancers, then deletes each namespace. Accepts the same namespace override env
-vars as `deploy_demos.py`. Run `./clean_demos.py --help` for details.
+* [`direct_api/README.md`](direct_api/README.md) - kubernetes-client-based demos
+* [`exec_cli/README.md`](exec_cli/README.md) - subprocess/kubectl-wrapping demos

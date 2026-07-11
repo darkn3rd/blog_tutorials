@@ -35,7 +35,7 @@ You can setup and install AWS Load Balancer Controller with the following paths:
 
 * [CLI](./01_cli/README.md) - setup using `helm`, `kubectl`, `aws`, and optional `eksctl` commands with using either IRSA or Pod-Identity association for authorization configuration.
 * [Terraform](./02_terraform/README.md) - setup using `terraform` with either IRSA or Pod-Identity association for authorization configuration.
-* [Python](./03_python/README.md) - setup using `boto3` and the `kubernetes` client directly (no `aws`/`kubectl`/`eksctl` calls, `helm` only) with either IRSA or Pod-Identity association for authorization configuration.
+* [Python](./03_python/README.md) - setup in Python, either via `boto3`/`kubernetes` client calls directly, or by scripting the same `aws`/`kubectl`/`eksctl` commands the CLI path uses, with either IRSA or Pod-Identity association for authorization configuration.
 
 ### ELBv2 Demos
 
@@ -44,7 +44,7 @@ After the AWS Load Balancer is installed, you test it by deploying service, ingr
 * [Overview](./demos/README.md)
   * [Terraform](./demos/tf/README.md) - bring up the demos or use one at a time with `terraform -target`
   * [CLI](./demos/cli/README.md) - use script to bring up all the demos, or run through them manually.
-  * [Python](./demos/python/README.md) - use script to bring up all the demos, via the `kubernetes` Python client.
+  * [Python](./demos/python/README.md) - use script to bring up all the demos, either via the `kubernetes` Python client or by scripting `kubectl`.
 
 ### Verifying the Install
 
