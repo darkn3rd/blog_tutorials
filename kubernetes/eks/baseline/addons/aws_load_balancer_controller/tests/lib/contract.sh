@@ -49,8 +49,42 @@ install_lbc() {
     cli-eksctl) "$REPO_ROOT/install_aws_lbc.sh" eksctl "$auth_mode" ;;
     cli-aws) "$REPO_ROOT/install_aws_lbc.sh" aws-cli "$auth_mode" ;;
     terraform) install_lbc_terraform "$auth_mode" ;;
+    python-direct-api) install_lbc_python_direct_api "$auth_mode" ;;
+    python-exec-cli-eksctl) install_lbc_python_exec_cli eksctl "$auth_mode" ;;
+    python-exec-cli-awscli) install_lbc_python_exec_cli aws-cli "$auth_mode" ;;
     *) die "Unknown install_method '$install_method'." ;;
   esac
+}
+
+# ensure_python_venv <dir>
+# Creates .venv and installs requirements.txt if not already done - mirrors
+# how install_lbc_terraform() calls `terraform init` every time (cheap
+# no-op when already initialized) rather than assuming a one-time manual
+# setup step outside this framework. Only needed for 03_python/direct_api
+# (boto3/kubernetes/PyYAML) - 03_python/exec_cli has no pip dependencies at
+# all (subprocess + stdlib only), so it just uses system python3 directly.
+ensure_python_venv() {
+  local dir="${1:?dir is required}"
+  if [[ ! -x "$dir/.venv/bin/python" ]]; then
+    echo "  Creating Python venv in $dir..."
+    (cd "$dir" && python3 -m venv .venv \
+      && ./.venv/bin/pip install --quiet --upgrade pip \
+      && ./.venv/bin/pip install --quiet -r requirements.txt)
+  fi
+}
+
+install_lbc_python_direct_api() {
+  local auth_mode="${1:?auth_mode is required}"
+  local dir="$PROJECT_DIR/03_python/direct_api"
+  ensure_python_venv "$dir"
+  (cd "$dir" && ./.venv/bin/python install_aws_lbc.py "$auth_mode")
+}
+
+install_lbc_python_exec_cli() {
+  local tool_mode="${1:?tool_mode is required}"
+  local auth_mode="${2:?auth_mode is required}"
+  local dir="$PROJECT_DIR/03_python/exec_cli"
+  (cd "$dir" && python3 install_aws_lbc.py "$tool_mode" "$auth_mode")
 }
 
 # terraform_dir_for_auth_mode <auth_mode> -> stdout
@@ -145,8 +179,25 @@ uninstall_lbc() {
   case "$install_method" in
     cli-eksctl|cli-aws) "$REPO_ROOT/uninstall_aws_lbc.sh" ;;
     terraform) uninstall_lbc_terraform "$auth_mode" ;;
+    python-direct-api) uninstall_lbc_python_direct_api ;;
+    python-exec-cli-eksctl|python-exec-cli-awscli) uninstall_lbc_python_exec_cli ;;
     *) die "Unknown install_method '$install_method'." ;;
   esac
+}
+
+# uninstall_aws_lbc.py self-detects auth mode (and, for exec_cli, whether
+# eksctl/CloudFormation owns the binding) the same way the bash version
+# does, so both exec-cli tool variants share one uninstall function - there
+# is no tool_mode to pass at uninstall time.
+uninstall_lbc_python_direct_api() {
+  local dir="$PROJECT_DIR/03_python/direct_api"
+  ensure_python_venv "$dir"
+  (cd "$dir" && ./.venv/bin/python uninstall_aws_lbc.py)
+}
+
+uninstall_lbc_python_exec_cli() {
+  local dir="$PROJECT_DIR/03_python/exec_cli"
+  (cd "$dir" && python3 uninstall_aws_lbc.py)
 }
 
 uninstall_lbc_terraform() {
@@ -371,9 +422,20 @@ verify_clean() {
     [[ "$owned" != "0" ]] && remaining+=("AWS LoadBalancer: $arn")
   done
 
-  # IAM policy - same fixed name regardless of install_method.
-  if aws iam get-policy --policy-arn "arn:aws:iam::${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}:policy/AWSLoadBalancerControllerIAMPolicy" &>/dev/null; then
-    remaining+=("IAM Policy: AWSLoadBalancerControllerIAMPolicy")
+  # IAM policy - fixed name for cli-*/terraform; cluster-scoped for every
+  # python-* install method regardless of tool_mode (see
+  # 03_python/*/lib/naming.py - direct_api and both exec_cli tool paths all
+  # compute the same scoped name from EKS_CLUSTER_NAME). This bash replica
+  # doesn't implement naming.py's long-cluster-name truncation+hash
+  # fallback, so it only matches correctly for cluster names short enough
+  # to never trigger that path - true for every name this framework
+  # generates, but worth re-checking if that naming scheme changes.
+  local policy_name="AWSLoadBalancerControllerIAMPolicy"
+  case "$install_method" in
+    python-*) policy_name="AWSLoadBalancerControllerIAMPolicy-${EKS_CLUSTER_NAME}" ;;
+  esac
+  if aws iam get-policy --policy-arn "arn:aws:iam::${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}:policy/${policy_name}" &>/dev/null; then
+    remaining+=("IAM Policy: ${policy_name}")
   fi
 
   # IAM role / CloudFormation stack, or Terraform-managed role - naming
@@ -381,7 +443,10 @@ verify_clean() {
   # a legitimate deterministic check, unlike the Gateway API instance scan
   # above.
   case "$install_method" in
-    cli-eksctl|cli-aws)
+    cli-eksctl|cli-aws|python-exec-cli-eksctl)
+      # eksctl's own CFN stack naming is invocation-agnostic - the same
+      # stack names apply whether eksctl was invoked directly (cli-eksctl)
+      # or via 03_python/exec_cli's subprocess wrapper.
       local stack
       for stack in \
         "eksctl-${EKS_CLUSTER_NAME}-addon-iamserviceaccount-kube-system-aws-load-balancer-controller" \
@@ -394,6 +459,14 @@ verify_clean() {
     terraform)
       if aws iam get-role --role-name "${EKS_CLUSTER_NAME}-aws-load-balancer-controller" &>/dev/null; then
         remaining+=("IAM Role: ${EKS_CLUSTER_NAME}-aws-load-balancer-controller")
+      fi
+      ;;
+    python-direct-api|python-exec-cli-awscli)
+      # Cluster-scoped role name (see 03_python/*/lib/naming.py) - only
+      # created via direct IAM API calls, not eksctl/CloudFormation, on
+      # these two paths.
+      if aws iam get-role --role-name "AmazonEKSLoadBalancerControllerRole-${EKS_CLUSTER_NAME}" &>/dev/null; then
+        remaining+=("IAM Role: AmazonEKSLoadBalancerControllerRole-${EKS_CLUSTER_NAME}")
       fi
       ;;
   esac

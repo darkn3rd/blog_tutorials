@@ -35,7 +35,7 @@ orchestrated by `run_matrix.sh`.
 
 ## Required Local Tools
 
-`aws`, `kubectl`, `helm`, `jq`, `yq` (mikefarah/yq v4), `terraform`, `eksctl`.
+`aws`, `kubectl`, `helm`, `jq`, `yq` (mikefarah/yq v4), `terraform`, `eksctl`, `python3`.
 
 ## Required Environment Variables
 
@@ -104,7 +104,8 @@ Three sections:
 
 * **`cluster`** — which provisioner (`cluster.provisioner`, maps to a
   `CLUSTER_PROVISIONER_ROOT` subdirectory) and default `eks_version`/`eks_region`.
-* **`cases`** — the 6 `install_method` (`cli-eksctl` | `cli-aws` | `terraform`)
+* **`cases`** — the 12 `install_method` (`cli-eksctl` | `cli-aws` | `terraform`
+  | `python-direct-api` | `python-exec-cli-eksctl` | `python-exec-cli-awscli`)
   x `auth_mode` (`irsa` | `pod-identity`) combinations.
 * **`tiers`** — named `(cases, suites)` presets for `--tier`. `cases: all` and
   `suites: all` both expand at run time — `all` cases means every entry
@@ -139,17 +140,26 @@ verify_clean <install_method>
 Every phase script calls into this — phases themselves never branch on
 `install_method`. Dispatch summary:
 
-| Function | `cli-eksctl` / `cli-aws` | `terraform` |
-|---|---|---|
-| `install_lbc` | `install_aws_lbc.sh <eksctl\|aws-cli> <auth_mode>` | `terraform apply` in [`irsa/`](../irsa) or [`podid/`](../podid) |
-| `uninstall_lbc` | `uninstall_aws_lbc.sh` | `terraform destroy` in the same root |
-| `validate_lbc` / `deploy_demos` / `validate_demos` / `cleanup_demos` | same for both — install-method-agnostic (`scripts/validate_*.sh`, `demos/cli/*.sh`) |
-| `verify_clean` | independent oracle, not a reuse of `uninstall_aws_lbc.sh`'s internals — asserts zero demo namespaces, Gateway API objects/CRDs, Helm release, AWS load balancers, and the IAM policy/role, by kind rather than by name wherever the name is user-choosable |
+| Function | `cli-eksctl` / `cli-aws` | `terraform` | `python-direct-api` | `python-exec-cli-eksctl` / `python-exec-cli-awscli` |
+|---|---|---|---|---|
+| `install_lbc` | `install_aws_lbc.sh <eksctl\|aws-cli> <auth_mode>` | `terraform apply` in [`irsa/`](../irsa) or [`podid/`](../podid) | `03_python/direct_api/install_aws_lbc.py <auth_mode>` (boto3/kubernetes-client) | `03_python/exec_cli/install_aws_lbc.py <eksctl\|aws-cli> <auth_mode>` (subprocess calling `aws`/`kubectl`/`eksctl`) |
+| `uninstall_lbc` | `uninstall_aws_lbc.sh` | `terraform destroy` in the same root | `03_python/direct_api/uninstall_aws_lbc.py` | `03_python/exec_cli/uninstall_aws_lbc.py` (self-detects auth mode and eksctl/CloudFormation ownership - one function serves both `exec-cli` tool variants) |
+| `validate_lbc` / `deploy_demos` / `validate_demos` / `cleanup_demos` | same for all four — install-method-agnostic (`scripts/validate_*.sh`, `demos/cli/*.sh`) |
+| `verify_clean` | independent oracle, not a reuse of any installer's internals — asserts zero demo namespaces, Gateway API objects/CRDs, Helm release, AWS load balancers, and the IAM policy/role, by kind rather than by name wherever the name is user-choosable. IAM policy/role naming is install-method-aware: fixed names for `cli-*`/`terraform`, cluster-scoped names (`AWSLoadBalancerControllerIAMPolicy-<cluster>`, and for `python-direct-api`/`python-exec-cli-awscli` also `AmazonEKSLoadBalancerControllerRole-<cluster>`) for every `python-*` method - see `03_python/*/lib/naming.py`. `python-exec-cli-eksctl` reuses the same CloudFormation stack names as `cli-eksctl`, since eksctl's own naming convention doesn't care which wrapper invoked it. |
 
-**Never** run `uninstall_aws_lbc.sh` against a `terraform`-installed case —
-it owns those resources via Terraform state, not CloudFormation. Mixing the
-two reintroduces the exact ownership-drift bug class this project already
-hit once with CloudFormation, just through Terraform state instead.
+`python-direct-api` needs a Python venv (`.venv`) with its `requirements.txt`
+installed - `install_lbc`/`uninstall_lbc` create and populate it automatically
+on first use (`ensure_python_venv()` in `lib/contract.sh`) if it doesn't
+already exist, the same way `install_lbc_terraform()` calls `terraform init`
+every time. `python-exec-cli-*` has no pip dependencies at all (subprocess +
+stdlib only), so it just uses system `python3` directly.
+
+**Never** run one install method's uninstaller against another method's
+case. `uninstall_aws_lbc.sh` owns its resources via CloudFormation (when
+eksctl-created) or direct IAM calls, `terraform destroy` owns them via
+Terraform state, and the Python uninstallers assume whatever their own
+matching installer created. Mixing any of these reintroduces the exact
+ownership-drift bug class this project already hit once with CloudFormation.
 
 `.tfvars` files for both cluster provisioning and the `irsa`/`podid` roots
 are written per-run/per-case (`test_<datestamp>.tfvars`,
@@ -189,15 +199,18 @@ Each run overwrites the previous run's logs for a given case. `summary.json`:
 
 ## Negative suites (`suites/`)
 
-* **`negative_collision.sh`** — for `cli-*` cases, temporarily pushes a bad
-  IAM policy version and confirms `validate_iam_policy.sh` catches it. For
-  `terraform` cases, detaches the policy from the Terraform-managed role
-  out-of-band and confirms `terraform plan -detailed-exitcode` reports drift.
+* **`negative_collision.sh`** — for `cli-*` and every `python-*` case,
+  temporarily pushes a bad IAM policy version and confirms
+  `validate_iam_policy.sh` catches it (the ARN it pushes onto is
+  install-method-aware, matching whichever policy-naming convention that
+  case actually used). For `terraform` cases, detaches the policy from the
+  Terraform-managed role out-of-band and confirms
+  `terraform plan -detailed-exitcode` reports drift.
 * **`negative_extra_lbs.sh`** — deploys demo-shaped resources with randomly
-  suffixed names/namespaces (not the 4 canonical ones). For `cli-*` cases
-  they're left for phase 08's wholesale uninstall to catch (the actual
-  regression test); for `terraform` cases the suite cleans up after itself,
-  since `terraform destroy` only knows about its own state.
+  suffixed names/namespaces (not the 4 canonical ones). For `cli-*` and
+  `python-*` cases they're left for phase 08's wholesale uninstall to catch
+  (the actual regression test); for `terraform` cases the suite cleans up
+  after itself, since `terraform destroy` only knows about its own state.
 * **`negative_finalizer_lock.sh`** — force-removes the Helm release before
   deprovisioning, stranding a Gateway with a live finalizer, then asserts
   `uninstall_lbc` self-heals within a hard timeout instead of hanging.
@@ -223,7 +236,7 @@ template.
 ## Extending
 
 * **New case**: add an entry under `cases:` in `matrix.yaml` — no script
-  changes needed as long as `install_method` is one of the three
+  changes needed as long as `install_method` is one of the six
   `lib/contract.sh` already dispatches.
 * **New tier**: add an entry under `tiers:` — `cases`/`suites` can be
   explicit lists or `all`.
@@ -235,6 +248,7 @@ template.
 
 ## See also
 
-* [`../README.md`](../README.md) — the Terraform LBC install project itself
-* [`../install_aws_lbc.sh`](../install_aws_lbc.sh) / [`../uninstall_aws_lbc.sh`](../uninstall_aws_lbc.sh) — the CLI-driven install/uninstall this framework tests
+* [`../README.md`](../README.md) — the AWS Load Balancer Controller addon this framework tests
+* [`../01_cli/README.md`](../01_cli/README.md) — the bash CLI install/uninstall
+* [`../03_python/README.md`](../03_python/README.md) — the Python install/uninstall (`direct_api`/`exec_cli`)
 * [`../demos/`](../demos) — the demo apps `deploy_demos`/`validate_demos`/`cleanup_demos` drive

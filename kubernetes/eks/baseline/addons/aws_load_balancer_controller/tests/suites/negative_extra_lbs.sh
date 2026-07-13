@@ -107,7 +107,7 @@ sleep 30
 
 case "$INSTALL_METHOD" in
   terraform) self_cleanup ;;
-  cli-eksctl|cli-aws)
+  cli-eksctl|cli-aws|python-direct-api|python-exec-cli-eksctl|python-exec-cli-awscli)
     echo "  install_method=$INSTALL_METHOD: leaving resources in place for phase 08's wholesale uninstall to catch."
     ;;
   *) die "Unknown install_method '$INSTALL_METHOD'." ;;

@@ -36,6 +36,30 @@ cases:
     install_method: terraform
     auth_mode: pod-identity
 
+  - name: python-direct-api-irsa
+    install_method: python-direct-api
+    auth_mode: irsa
+
+  - name: python-direct-api-podid
+    install_method: python-direct-api
+    auth_mode: pod-identity
+
+  - name: python-exec-cli-eksctl-irsa
+    install_method: python-exec-cli-eksctl
+    auth_mode: irsa
+
+  - name: python-exec-cli-eksctl-podid
+    install_method: python-exec-cli-eksctl
+    auth_mode: pod-identity
+
+  - name: python-exec-cli-awscli-irsa
+    install_method: python-exec-cli-awscli
+    auth_mode: irsa
+
+  - name: python-exec-cli-awscli-podid
+    install_method: python-exec-cli-awscli
+    auth_mode: pod-identity
+
 # suites: all expands to every tests/suites/*.sh file at run time, not a
 # hardcoded list here - adding a new suite file makes it eligible for any
 # tier that requests "all" without editing this file.
@@ -49,7 +73,7 @@ tiers:
     suites: [positive]
 
   negative:
-    cases: [cli-eksctl-irsa, cli-eksctl-podid, terraform-irsa, terraform-podid]
+    cases: [cli-eksctl-irsa, cli-eksctl-podid, terraform-irsa, terraform-podid, python-direct-api-irsa, python-exec-cli-eksctl-irsa]
     suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock]
 
   release:
