@@ -16,7 +16,7 @@ Regardless of auth mode, `install_aws_lbc.py` also:
   client's server-side apply.
 * Installs the AWS LBC Helm chart.
 
-## IAM naming is scoped per cluster
+## IAM naming is scoped per cluster, with collision detection
 
 The IAM role and policy this creates are named `AmazonEKSLoadBalancerControllerRole-<cluster>`
 and `AWSLoadBalancerControllerIAMPolicy-<cluster>` (see `lib/naming.py`) rather than a fixed
@@ -25,8 +25,26 @@ unlike a Kubernetes ServiceAccount, which is already isolated per-cluster by bei
 separate API server. A fixed name would have every cluster in the account fight over the
 same role, and since installing against an existing role overwrites its trust policy, a
 second cluster's install would silently rebind (and a later uninstall would delete) the
-first cluster's binding. `uninstall_aws_lbc.py` computes the same scoped policy name from
-`$EKS_CLUSTER_NAME`, so install and uninstall always agree on which policy is theirs.
+first cluster's binding.
+
+Scoping by cluster name avoids that in the common case, but a name is not a reservation —
+some unrelated resource (hand-created, made by another tool, or left over from a torn-down
+environment that reused the same cluster name) can already occupy the exact name this
+installer would compute. `install_aws_lbc.py` handles that: `lib/aws.py`'s
+`resolve_role_name()`/`resolve_policy_name()` check every existing candidate's ownership tag
+(`aws-load-balancer-controller-installer/cluster`, set on every role/policy this installer
+creates) before deciding whether to reuse it (a prior run of this installer against the same
+cluster — safe, idempotent re-install) or skip it as a genuine collision and escalate to the
+next candidate — a deterministic name derived from a short hash of `<cluster>#<attempt>`, the
+same idea eksctl uses when it appends a generated suffix rather than failing outright. Up to
+`naming.MAX_NAME_ATTEMPTS` (6) candidates are tried before giving up.
+
+`uninstall_aws_lbc.py` can't simply recompute the attempt-0 name the way it used to — if
+install escalated past a collision, that name was never used. Instead `lib/aws.py`'s
+`find_owned_policy_arn()` walks the same candidate sequence checking the ownership tag,
+discovering whichever candidate install actually landed on. (The IAM role doesn't need this:
+uninstall always discovers it from the live ServiceAccount annotation or Pod Identity
+association, not by recomputing a name, so it's collision-safe by construction.)
 
 ## The one exception: Helm
 

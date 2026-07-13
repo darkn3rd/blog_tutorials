@@ -17,6 +17,7 @@ from typing import Any
 import boto3
 from botocore.exceptions import ClientError
 
+from lib import naming
 from lib.errors import die
 
 
@@ -236,6 +237,59 @@ def create_policy(clients: AwsClients, policy_name: str, policy_document: dict[s
     return resp["Policy"]["Arn"]
 
 
+def get_policy_tags(clients: AwsClients, policy_arn: str) -> dict[str, str]:
+    resp = clients.iam.list_policy_tags(PolicyArn=policy_arn)
+    return {t["Key"]: t["Value"] for t in resp["Tags"]}
+
+
+def tag_policy(clients: AwsClients, policy_arn: str, key: str, value: str) -> None:
+    clients.iam.tag_policy(PolicyArn=policy_arn, Tags=[{"Key": key, "Value": value}])
+
+
+def resolve_policy_name(clients: AwsClients, account_id: str, cluster_name: str) -> str:
+    """Returns the policy name to use for this cluster: the first
+    candidate from lib.naming.candidate_names() that either doesn't exist
+    yet, or already exists and is tagged (via lib.naming.OWNER_TAG_KEY) as
+    owned by this cluster - a prior run of this same installer against the
+    same cluster, safe to reuse idempotently. A candidate that exists but
+    isn't tagged for this cluster is a genuine collision with something
+    this installer didn't create, and is skipped in favor of the next
+    candidate rather than silently reused or overwritten.
+    """
+    for name in naming.candidate_names(
+        naming.POLICY_NAME_PREFIX, cluster_name, naming.IAM_POLICY_NAME_MAX_LENGTH
+    ):
+        arn = f"arn:aws:iam::{account_id}:policy/{name}"
+        if not policy_exists(clients, arn):
+            return name
+        if get_policy_tags(clients, arn).get(naming.OWNER_TAG_KEY) == cluster_name:
+            return name
+    die(
+        f"Could not find an available or already-owned policy name for cluster "
+        f"'{cluster_name}' after {naming.MAX_NAME_ATTEMPTS} attempts - every "
+        "candidate name collides with a policy this installer doesn't own."
+    )
+
+
+def find_owned_policy_arn(clients: AwsClients, account_id: str, cluster_name: str) -> str | None:
+    """Locates the policy this installer created for cluster_name, for
+    uninstall. Unlike resolve_policy_name() (which stops at the first
+    candidate that's either free or already ours, since it's choosing a
+    name to create/reuse), this must check every candidate: install may
+    have landed on any attempt if earlier ones collided, and uninstall has
+    no record of which one it picked - only the ownership tag says so.
+    Returns None if no candidate is both present and tagged for this
+    cluster (e.g. already deleted, or install never got this far).
+    """
+    for name in naming.candidate_names(
+        naming.POLICY_NAME_PREFIX, cluster_name, naming.IAM_POLICY_NAME_MAX_LENGTH
+    ):
+        arn = f"arn:aws:iam::{account_id}:policy/{name}"
+        if policy_exists(clients, arn) and get_policy_tags(clients, arn).get(naming.OWNER_TAG_KEY) == cluster_name:
+            return arn
+    return None
+
+
 def fetch_upstream_lbc_iam_policy(version: str = "v2.14.1") -> dict[str, Any]:
     """Fetches the AWS Load Balancer Controller's upstream IAM policy JSON
     and amends it with the Gateway API listener-attribute permissions.
@@ -313,6 +367,37 @@ def attach_role_policy(clients: AwsClients, role_name: str, policy_arn: str) -> 
 def get_role_attached_policy_arns(clients: AwsClients, role_name: str) -> list[str]:
     resp = clients.iam.list_attached_role_policies(RoleName=role_name)
     return [p["PolicyArn"] for p in resp["AttachedPolicies"]]
+
+
+def get_role_tags(clients: AwsClients, role_name: str) -> dict[str, str]:
+    resp = clients.iam.list_role_tags(RoleName=role_name)
+    return {t["Key"]: t["Value"] for t in resp["Tags"]}
+
+
+def tag_role(clients: AwsClients, role_name: str, key: str, value: str) -> None:
+    clients.iam.tag_role(RoleName=role_name, Tags=[{"Key": key, "Value": value}])
+
+
+def resolve_role_name(clients: AwsClients, cluster_name: str) -> str:
+    """Returns the role name to use for this cluster - same ownership-tag
+    based collision handling as resolve_policy_name() above, just for
+    roles instead of policies. Only meaningful when this installer creates
+    the role directly (boto3, or exec_cli's aws-cli tool path); when
+    eksctl creates it via CloudFormation, CloudFormation already generates
+    a unique physical name on its own, so there's nothing for this to do.
+    """
+    for name in naming.candidate_names(
+        naming.ROLE_NAME_PREFIX, cluster_name, naming.IAM_ROLE_NAME_MAX_LENGTH
+    ):
+        if not role_exists(clients, name):
+            return name
+        if get_role_tags(clients, name).get(naming.OWNER_TAG_KEY) == cluster_name:
+            return name
+    die(
+        f"Could not find an available or already-owned role name for cluster "
+        f"'{cluster_name}' after {naming.MAX_NAME_ATTEMPTS} attempts - every "
+        "candidate name collides with a role this installer doesn't own."
+    )
 
 
 def delete_role(clients: AwsClients, role_name: str) -> None:

@@ -26,20 +26,38 @@ Every call in this directory shells out to `aws`, `kubectl`, `eksctl`, or `helm`
 no boto3, no kubernetes client, nothing to `pip install`. Just standard library (`subprocess`,
 `argparse`, `json`) plus those four binaries on your `PATH`.
 
-## IAM naming is scoped per cluster
+## IAM naming is scoped per cluster, with collision detection
 
 The IAM policy this creates is named `AWSLoadBalancerControllerIAMPolicy-<cluster>` (see
 `lib/naming.py`) rather than a fixed name - IAM policy names live in a single namespace
 shared by the whole AWS account, so a fixed name would have every cluster in the account
 fight over the same policy, and since uninstalling deletes the policy unconditionally, a
 second cluster's uninstall would delete the first cluster's policy out from under it.
-`uninstall_aws_lbc.py` computes the same scoped name from `$EKS_CLUSTER_NAME`, so install
-and uninstall always agree on which policy is theirs.
 
 The IAM **role** is only explicitly named this way on the `aws-cli` tool path
 (`AmazonEKSLoadBalancerControllerRole-<cluster>`) - on the `eksctl` tool path, eksctl
 generates its own uniquely-named role via CloudFormation, so there's no fixed name to
 collide in the first place.
+
+Scoping by cluster name avoids the account-wide fixed-name collision in the common case, but
+a name is not a reservation - some unrelated resource (hand-created, made by another tool, or
+left over from a torn-down environment that reused the same cluster name) can already occupy
+the exact name this installer would compute. `install_aws_lbc.py` handles that:
+`resolve_policy_name()` (both tool paths) and `resolve_role_name()` (`aws-cli` only) check
+every existing candidate's ownership tag (`aws-load-balancer-controller-installer/cluster`,
+set on every role/policy this installer creates) before deciding whether to reuse it (a prior
+run of this installer against the same cluster - safe, idempotent re-install) or skip it as a
+genuine collision and escalate to the next candidate - a deterministic name derived from a
+short hash of `<cluster>#<attempt>`, the same idea eksctl uses when it appends a generated
+suffix rather than failing outright. Up to `naming.MAX_NAME_ATTEMPTS` (6) candidates are tried
+before giving up.
+
+`uninstall_aws_lbc.py` can't simply recompute the attempt-0 name the way it used to - if
+install escalated past a collision, that name was never used. Instead `find_owned_policy_arn()`
+walks the same candidate sequence checking the ownership tag, discovering whichever candidate
+install actually landed on. (The IAM role doesn't need this: uninstall always discovers it
+from the live ServiceAccount annotation, Pod Identity association, or eksctl-managed
+CloudFormation stack - not by recomputing a name - so it's collision-safe by construction.)
 
 ## Required Local Tools
 

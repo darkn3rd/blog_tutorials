@@ -77,7 +77,81 @@ def verify_requirements(tool_mode: str, profile: str) -> None:
     verify_aws_connectivity(profile)
 
 
-def create_lbc_iam_policy(profile: str, region: str, policy_name: str, policy_arn: str) -> None:
+# ── IAM name-collision detection ─────────────────────────────────────────
+#
+# See lib/naming.py for why this is needed and how candidate escalation
+# works. get_*_tags/tag_* below are thin wrappers around the `aws iam`
+# subcommands that read/write the ownership tag; resolve_*_name walk
+# lib.naming.candidate_names() picking the first candidate that's either
+# free or already tagged as ours.
+
+
+def policy_exists(policy_arn: str, profile: str) -> bool:
+    return run.run_ok(["aws", "iam", "get-policy", "--policy-arn", policy_arn, "--profile", profile])
+
+
+def get_policy_tags(policy_arn: str, profile: str) -> dict[str, str]:
+    data = run.run_json(["aws", "iam", "list-policy-tags", "--policy-arn", policy_arn, "--profile", profile])
+    return {t["Key"]: t["Value"] for t in (data or {}).get("Tags", [])}
+
+
+def tag_policy(policy_arn: str, key: str, value: str, profile: str) -> None:
+    run.run(["aws", "iam", "tag-policy", "--policy-arn", policy_arn, "--tags", f"Key={key},Value={value}", "--profile", profile])
+
+
+def resolve_policy_name(account_id: str, cluster_name: str, profile: str) -> str:
+    """Returns the policy name to use for this cluster: the first
+    candidate from lib.naming.candidate_names() that either doesn't exist
+    yet, or already exists and is tagged (via lib.naming.OWNER_TAG_KEY) as
+    owned by this cluster - a prior run of this same installer against the
+    same cluster, safe to reuse idempotently. A candidate that exists but
+    isn't tagged for this cluster is a genuine collision with something
+    this installer didn't create, and is skipped in favor of the next
+    candidate rather than silently reused or overwritten.
+    """
+    for name in naming.candidate_names(naming.POLICY_NAME_PREFIX, cluster_name, naming.IAM_POLICY_NAME_MAX_LENGTH):
+        arn = f"arn:aws:iam::{account_id}:policy/{name}"
+        if not policy_exists(arn, profile):
+            return name
+        if get_policy_tags(arn, profile).get(naming.OWNER_TAG_KEY) == cluster_name:
+            return name
+    die(
+        f"Could not find an available or already-owned policy name for cluster "
+        f"'{cluster_name}' after {naming.MAX_NAME_ATTEMPTS} attempts - every "
+        "candidate name collides with a policy this installer doesn't own."
+    )
+
+
+def role_exists(role_name: str, profile: str) -> bool:
+    return run.run_ok(["aws", "iam", "get-role", "--role-name", role_name, "--profile", profile])
+
+
+def get_role_tags(role_name: str, profile: str) -> dict[str, str]:
+    data = run.run_json(["aws", "iam", "list-role-tags", "--role-name", role_name, "--profile", profile])
+    return {t["Key"]: t["Value"] for t in (data or {}).get("Tags", [])}
+
+
+def tag_role(role_name: str, key: str, value: str, profile: str) -> None:
+    run.run(["aws", "iam", "tag-role", "--role-name", role_name, "--tags", f"Key={key},Value={value}", "--profile", profile])
+
+
+def resolve_role_name(cluster_name: str, profile: str) -> str:
+    """Only meaningful for the aws-cli tool path - see lib/naming.py's
+    module docstring for why eksctl doesn't need this.
+    """
+    for name in naming.candidate_names(naming.ROLE_NAME_PREFIX, cluster_name, naming.IAM_ROLE_NAME_MAX_LENGTH):
+        if not role_exists(name, profile):
+            return name
+        if get_role_tags(name, profile).get(naming.OWNER_TAG_KEY) == cluster_name:
+            return name
+    die(
+        f"Could not find an available or already-owned role name for cluster "
+        f"'{cluster_name}' after {naming.MAX_NAME_ATTEMPTS} attempts - every "
+        "candidate name collides with a role this installer doesn't own."
+    )
+
+
+def create_lbc_iam_policy(profile: str, region: str, policy_name: str, policy_arn: str, cluster_name: str) -> None:
     log.info("Checking for existing LBC IAM Policy...")
     if run.run_ok(["aws", "iam", "get-policy", "--policy-arn", policy_arn, "--profile", profile]):
         log.ok("IAM Policy already exists. Skipping creation.")
@@ -112,6 +186,7 @@ def create_lbc_iam_policy(profile: str, region: str, policy_name: str, policy_ar
             "--profile", profile,
         ]
     )
+    tag_policy(policy_arn, naming.OWNER_TAG_KEY, cluster_name, profile)
 
 
 def verify_oidc_provider(cluster_name: str, region: str, profile: str, account_id: str) -> str:
@@ -224,6 +299,7 @@ def create_lbc_irsa_association_awscli(
     log.info("Configuring IAM Role and policy attachments...")
     create_or_update_role(role_name, trust_policy, profile)
     run.run(["aws", "iam", "attach-role-policy", "--role-name", role_name, "--policy-arn", policy_arn, "--profile", profile])
+    tag_role(role_name, naming.OWNER_TAG_KEY, cluster_name, profile)
 
     log.info("Deploying annotated Kubernetes ServiceAccount...")
     role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
@@ -320,6 +396,7 @@ def create_lbc_pod_identity_association_awscli(
     log.info("Configuring IAM Role and policy attachments...")
     create_or_update_role(role_name, trust_policy, profile)
     run.run(["aws", "iam", "attach-role-policy", "--role-name", role_name, "--policy-arn", policy_arn, "--profile", profile])
+    tag_role(role_name, naming.OWNER_TAG_KEY, cluster_name, profile)
 
     log.info("Checking for an existing Pod Identity association...")
     assoc_id = run.run(
@@ -444,11 +521,15 @@ def main() -> None:
     # Only the aws-cli path needs an explicit, collision-safe role name -
     # eksctl generates its own uniquely-named role via CloudFormation. The
     # policy is shared by both tool paths, so it's always scoped.
-    role_name = naming.role_name(cluster_name)
-    policy_name = naming.policy_name(cluster_name)
+    log.info("Resolving IAM policy name (checking for name collisions)...")
+    policy_name = resolve_policy_name(account_id, cluster_name, profile)
     policy_arn = f"arn:aws:iam::{account_id}:policy/{policy_name}"
     log.info(f"  IAM policy : {policy_name}")
+
+    role_name = naming.role_name(cluster_name)  # unused estimate unless aws-cli, see below
     if args.tool == "aws-cli":
+        log.info("Resolving IAM role name (checking for name collisions)...")
+        role_name = resolve_role_name(cluster_name, profile)
         log.info(f"  IAM role   : {role_name}")
 
     log.info(f"Verifying prerequisites for '{args.auth}' authentication...")
@@ -458,7 +539,7 @@ def main() -> None:
     else:
         oidc_provider = verify_oidc_provider(cluster_name, region, profile, account_id)
 
-    create_lbc_iam_policy(profile, region, policy_name, policy_arn)
+    create_lbc_iam_policy(profile, region, policy_name, policy_arn, cluster_name)
 
     log.info(f"Provisioning IAM binding via '{args.auth}' using '{args.tool}'...")
     if args.auth == "pod-identity":

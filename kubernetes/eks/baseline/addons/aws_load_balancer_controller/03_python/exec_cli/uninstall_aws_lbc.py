@@ -473,11 +473,37 @@ def delete_iam_role(role_name: str, profile: str) -> None:
     log.info("  IAM Role deleted.")
 
 
-def delete_iam_policy(policy_arn: str, profile: str) -> None:
-    log.section(f"Deleting IAM Policy: {policy_arn}...")
-    if not run.run_ok(["aws", "iam", "get-policy", "--policy-arn", policy_arn, "--profile", profile]):
-        log.info("  IAM Policy not found, skipping.")
+def policy_exists(policy_arn: str, profile: str) -> bool:
+    return run.run_ok(["aws", "iam", "get-policy", "--policy-arn", policy_arn, "--profile", profile])
+
+
+def get_policy_tags(policy_arn: str, profile: str) -> dict[str, str]:
+    data = run.run_json(["aws", "iam", "list-policy-tags", "--policy-arn", policy_arn, "--profile", profile])
+    return {t["Key"]: t["Value"] for t in (data or {}).get("Tags", [])}
+
+
+def find_owned_policy_arn(account_id: str, cluster_name: str, profile: str) -> str | None:
+    """Locates the policy install_aws_lbc.py created for cluster_name.
+    Unlike resolve_policy_name() there (which stops at the first candidate
+    that's either free or already ours, since it's choosing a name to
+    create/reuse), this must check every candidate: install may have
+    landed on any attempt if earlier ones collided, and uninstall has no
+    record of which one it picked - only the ownership tag says so.
+    Returns None if no candidate is both present and tagged for this
+    cluster (e.g. already deleted, or install never got this far).
+    """
+    for name in naming.candidate_names(naming.POLICY_NAME_PREFIX, cluster_name, naming.IAM_POLICY_NAME_MAX_LENGTH):
+        arn = f"arn:aws:iam::{account_id}:policy/{name}"
+        if policy_exists(arn, profile) and get_policy_tags(arn, profile).get(naming.OWNER_TAG_KEY) == cluster_name:
+            return arn
+    return None
+
+
+def delete_iam_policy(policy_arn: str | None, profile: str) -> None:
+    if not policy_arn:
+        log.section("No IAM Policy owned by this cluster found, skipping.")
         return
+    log.section(f"Deleting IAM Policy: {policy_arn}...")
 
     roles = run.run(["aws", "iam", "list-entities-for-policy", "--policy-arn", policy_arn, "--profile", profile,
                        "--query", "PolicyRoles[].RoleName", "--output", "text"], check=False)
@@ -572,8 +598,13 @@ def main() -> None:
     profile = os.environ.get("AWS_PROFILE") or die("AWS_PROFILE is required")
 
     account_id = run.run(["aws", "sts", "get-caller-identity", "--profile", profile, "--query", "Account", "--output", "text"])
-    policy_name = naming.policy_name(cluster_name)
-    policy_arn = f"arn:aws:iam::{account_id}:policy/{policy_name}"
+    # Not naming.policy_name(cluster_name) (attempt-0 only): if install hit
+    # a genuine collision it may have escalated to a later candidate, so
+    # the policy actually owned by this cluster has to be discovered by
+    # its ownership tag, not recomputed - see lib/naming.py and
+    # install_aws_lbc.py's resolve_policy_name() for how install picks the
+    # name in the first place.
+    policy_arn = find_owned_policy_arn(account_id, cluster_name, profile)
 
     if not deprovision_aws_load_balancers(cluster_name, region, profile):
         die("Aborting: cluster is not in a clean state for CRD/Helm teardown.")

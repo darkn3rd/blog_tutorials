@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from lib import aws, helm, k8s, log, naming
+from lib import aws, helm, k8s, log
 from lib.errors import die
 from lib.python_version import verify_python
 
@@ -309,11 +309,11 @@ def delete_auth_association(aws_clients: aws.AwsClients, k8s_client: k8s.K8sClie
         log.section("No IAM binding detected, skipping IAM role/association cleanup.")
 
 
-def delete_iam_policy(aws_clients: aws.AwsClients, policy_arn: str) -> None:
-    log.section(f"Deleting IAM Policy: {policy_arn}...")
-    if not aws.policy_exists(aws_clients, policy_arn):
-        log.info("  IAM Policy not found, skipping.")
+def delete_iam_policy(aws_clients: aws.AwsClients, policy_arn: str | None) -> None:
+    if not policy_arn:
+        log.section("No IAM Policy owned by this cluster found, skipping.")
         return
+    log.section(f"Deleting IAM Policy: {policy_arn}...")
     aws.delete_policy(aws_clients, policy_arn)
     log.info("  IAM Policy deleted.")
 
@@ -334,8 +334,13 @@ def main() -> None:
     k8s_client = k8s.K8sClient.create()
 
     account_id = aws.get_account_id(aws_clients)
-    policy_name = naming.policy_name(cluster_name)
-    policy_arn = f"arn:aws:iam::{account_id}:policy/{policy_name}"
+    # Not naming.policy_name(cluster_name) (attempt-0 only): if install hit a
+    # genuine collision it may have escalated to a later candidate, so the
+    # policy actually owned by this cluster has to be discovered by its
+    # ownership tag, not recomputed - see lib/naming.py and
+    # aws.resolve_policy_name() for how install picks the name in the first
+    # place.
+    policy_arn = aws.find_owned_policy_arn(aws_clients, account_id, cluster_name)
 
     # deprovision_load_balancers() deletes every load-balancer-provisioning
     # resource wholesale, polls detect_load_balancers() until it reports

@@ -73,8 +73,8 @@ tiers:
     suites: [positive]
 
   negative:
-    cases: [cli-eksctl-irsa, cli-eksctl-podid, terraform-irsa, terraform-podid, python-direct-api-irsa, python-exec-cli-eksctl-irsa]
-    suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock]
+    cases: [cli-eksctl-irsa, cli-eksctl-podid, terraform-irsa, terraform-podid, python-direct-api-irsa, python-exec-cli-eksctl-irsa, python-exec-cli-awscli-irsa]
+    suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock, negative-name-collision]
 
   release:
     cases: all

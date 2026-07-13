@@ -27,6 +27,7 @@ tests/
     negative_collision.sh
     negative_extra_lbs.sh
     negative_finalizer_lock.sh
+    negative_name_collision.sh
   logs/                 # gitignored, created at runtime - see Logs below
 ```
 
@@ -117,7 +118,7 @@ Three sections:
 tiers:
   smoke:         { cases: [cli-eksctl-irsa, cli-eksctl-podid], suites: [positive] }
   full-positive: { cases: all, suites: [positive] }
-  negative:      { cases: [...], suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock] }
+  negative:      { cases: [...], suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock, negative-name-collision] }
   release:       { cases: all, suites: all }
 ```
 
@@ -221,6 +222,20 @@ Each run overwrites the previous run's logs for a given case. `summary.json`:
   a legitimate, expected finding pointing at that gap, not a suite defect —
   the timeout wrapper exists precisely so it surfaces as a bounded failure
   instead of hanging the whole run.
+* **`negative_name_collision.sh`** — `python-*` cases only (no-op for
+  `cli-*`/`terraform`). Pre-creates a bogus, untagged IAM policy (and, for
+  `python-direct-api`/`python-exec-cli-awscli`, role) at the exact
+  attempt-0 name the installer's own `naming.policy_name()`/`role_name()`
+  would compute for a synthetic cluster name, then calls that installer's
+  own `resolve_policy_name()`/`resolve_role_name()` against the same
+  synthetic name and asserts it escalates to a different candidate instead
+  of reusing or clobbering the bogus resource. Also confirms the
+  uninstall-side `find_owned_policy_arn()` returns nothing for a cluster
+  that owns nothing (no false positives). Runs directly against real IAM
+  through the installers' own production functions — not a bash
+  reimplementation of the hashing algorithm and not mocks — so it can't
+  silently drift from what actually ships. See `03_python/*/lib/naming.py`
+  for the full design (ownership tagging, deterministic hash escalation).
 
 ## Cluster provisioning
 
