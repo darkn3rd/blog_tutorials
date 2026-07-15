@@ -12,6 +12,7 @@ without hand-maintaining API versions per kind.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,6 +22,7 @@ from kubernetes import config as k8s_config
 from kubernetes import dynamic
 from kubernetes.client import ApiException
 from kubernetes.dynamic.exceptions import NotFoundError, ResourceNotFoundError
+from kubernetes.dynamic.resource import ResourceList
 
 from lib.errors import die
 
@@ -170,25 +172,65 @@ def delete_service_account(k8s: K8sClient, name: str, namespace: str) -> None:
 # ── Generic kind resolution (DynamicClient) ────────────────────────────────
 
 
+_VERSION_RE = re.compile(r"^v(\d+)(?:(alpha|beta)(\d+))?$")
+
+
+def _version_priority(group_version: str) -> tuple[int, int, int]:
+    """Sort key for a Kubernetes API version string (the part after the
+    last "/" in group_version) - GA beats beta beats alpha, and higher
+    major/pre-release numbers win within a tier. Same ordering
+    kubectl/client-go use to pick a CRD's preferred served version.
+    Anything that doesn't match the vN[alpha|beta]M pattern sorts last.
+    """
+    match = _VERSION_RE.match(group_version.rsplit("/", 1)[-1])
+    if not match:
+        return (-1, 0, 0)
+    major, stability, pre = match.groups()
+    return ({"beta": 1, "alpha": 0}.get(stability, 2), int(major), int(pre or 0))
+
+
 def resolve_resource(k8s: K8sClient, kind: str):
     """Returns the DynamicClient resource for `kind`, or None if its CRD
     isn't installed, by discovery rather than a hardcoded API group.
+
+    Some CRDs (Gateway API's Gateway/GatewayClass/HTTPRoute in particular)
+    serve more than one API version at once for backward compatibility -
+    DynamicClient.resources.get(kind=...) raises ResourceNotUniqueError in
+    that case since it has no api_version to disambiguate on. This picks
+    the highest-priority served version instead of hardcoding one per kind
+    (which would need updating every time a CRD's version set changes
+    upstream - exactly the kind of drift discovery is meant to avoid here).
     """
     try:
-        return k8s.dynamic.resources.get(kind=kind)
+        results = [r for r in k8s.dynamic.resources.search(kind=kind) if not isinstance(r, ResourceList)]
     except (ResourceNotFoundError, NotFoundError):
         return None
+    if not results:
+        return None
+    results.sort(key=lambda r: _version_priority(r.group_version), reverse=True)
+    return results[0]
 
 
 def list_all_of_kind(k8s: K8sClient, kind: str) -> list[tuple[str | None, str]]:
     """Returns (namespace, name) tuples for every live instance of `kind`
     (namespace is None for cluster-scoped kinds, e.g. GatewayClass). Empty
     list if the kind's CRD isn't installed.
+
+    resolve_resource() finding a match doesn't guarantee the CRD is still
+    live: DynamicClient's discovery is cached to a file (keyed only by API
+    server host, so it persists across separate process runs, e.g. a
+    second uninstall_aws_lbc.py invocation shortly after a first one
+    already deleted the CRD) and isn't invalidated just because the CRD
+    disappeared out from under it. A 404 here means exactly that stale
+    state, not a real error - treat it the same as "CRD not installed".
     """
     resource = resolve_resource(k8s, kind)
     if resource is None:
         return []
-    items = resource.get().items
+    try:
+        items = resource.get().items
+    except (ApiException, NotFoundError):
+        return []
     return [(getattr(item.metadata, "namespace", None), item.metadata.name) for item in items]
 
 

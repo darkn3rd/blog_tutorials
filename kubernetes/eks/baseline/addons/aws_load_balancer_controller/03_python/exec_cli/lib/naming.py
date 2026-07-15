@@ -35,6 +35,7 @@ this escalation.
 from __future__ import annotations
 
 import hashlib
+import re
 
 IAM_ROLE_NAME_MAX_LENGTH = 64
 IAM_POLICY_NAME_MAX_LENGTH = 128
@@ -56,35 +57,54 @@ OWNER_TAG_KEY = "aws-load-balancer-controller-installer/cluster"
 MAX_NAME_ATTEMPTS = 6
 
 
-def _hashed_name(prefix: str, seed: str, max_length: int) -> str:
-    suffix = hashlib.sha256(seed.encode()).hexdigest()[:8]
-    # seed usually starts with the cluster name (readable prefix worth
+# IAM role/policy names only allow this character set - anything else (a
+# literal "#" from an attempt marker in particular - see candidate_name()
+# below) makes the resulting ARN invalid, which the IAM API rejects with
+# InvalidInputException rather than the NoSuchEntity a not-found check
+# expects, crashing resolve_*_name()/find_owned_policy_arn() instead of
+# just treating it as "doesn't exist".
+_IAM_NAME_UNSAFE_RE = re.compile(r"[^\w+=,.@-]")
+
+
+def _hashed_name(prefix: str, display: str, hash_seed: str, max_length: int) -> str:
+    """display is what actually appears in the generated name (truncated
+    to fit, IAM-safe characters only); hash_seed is only fed to the hash,
+    so it's free to contain characters (like "#") that must never end up
+    in the name itself - see candidate_name()'s attempt>=1 case.
+    """
+    suffix = hashlib.sha256(hash_seed.encode()).hexdigest()[:8]
+    safe_display = _IAM_NAME_UNSAFE_RE.sub("", display)
+    # display usually starts with the cluster name (readable prefix worth
     # keeping if there's room), but isn't guaranteed to - budget against
-    # the actual seed length, not an assumed structure.
+    # the actual display length, not an assumed structure.
     budget = max_length - len(prefix) - len(suffix) - 2  # two "-" separators
     if budget < 1:
         raise ValueError(
             f"prefix '{prefix}' alone leaves no room for a scoped name "
             f"within {max_length} characters"
         )
-    return f"{prefix}-{seed[:budget]}-{suffix}"
+    return f"{prefix}-{safe_display[:budget]}-{suffix}"
 
 
 def candidate_name(prefix: str, cluster_name: str, max_length: int, attempt: int) -> str:
     """Returns the attempt'th deterministic candidate name for (prefix,
     cluster_name). attempt=0 is "<prefix>-<cluster_name>" (or the
     truncated+hashed form if that's too long); attempt>=1 is always a
-    hashed form seeded by (cluster_name, attempt), so retries are
-    reproducible - install and uninstall/re-install always land on the
+    hashed form, its suffix seeded by (cluster_name, attempt) so retries
+    are reproducible - install and uninstall/re-install always land on the
     same Nth candidate for the same cluster, without needing to persist
-    which attempt succeeded anywhere.
+    which attempt succeeded anywhere. The attempt marker only ever feeds
+    the hash (via hash_seed) - it must never appear in the visible
+    display portion of the name, which stays cluster_name alone regardless
+    of attempt, or a bare "#1" etc. would make the generated name itself
+    IAM-invalid.
     """
     if attempt == 0:
         name = f"{prefix}-{cluster_name}"
         if len(name) <= max_length:
             return name
-        return _hashed_name(prefix, cluster_name, max_length)
-    return _hashed_name(prefix, f"{cluster_name}#{attempt}", max_length)
+        return _hashed_name(prefix, cluster_name, cluster_name, max_length)
+    return _hashed_name(prefix, cluster_name, f"{cluster_name}#{attempt}", max_length)
 
 
 def candidate_names(prefix: str, cluster_name: str, max_length: int):

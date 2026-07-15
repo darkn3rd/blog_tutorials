@@ -69,5 +69,5 @@ kubectl delete svc,deploy demo-gwhttp-app
 
 kubectl config set-context --current --namespace=default
 kubectl delete ns demo-gwhttp
-
 ```
+

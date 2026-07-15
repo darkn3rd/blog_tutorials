@@ -86,6 +86,20 @@ Always provisions a fresh cluster first and destroys it after every case
 finishes, unless `--keep-cluster` is passed (skips both, reuses whatever's
 already up — requires `logs/cluster.env` to already exist).
 
+### Targeting a cluster you already have — `--existing-cluster`
+
+```bash
+export EKS_CLUSTER_NAME=my-cluster EKS_REGION=us-east-2 KUBECONFIG=~/.kube/config
+./run_matrix.sh --case cli-eksctl-irsa --existing-cluster
+```
+
+For a cluster this framework didn't provision and doesn't own (no
+`CLUSTER_PROVISIONER_ROOT` needed). Valid with `--case`/`--all`/`--tier`.
+Requires `EKS_CLUSTER_NAME`/`EKS_REGION`/`KUBECONFIG` already set — never
+reads or writes `logs/cluster.env`. Checks reachability up front
+(`kubectl cluster-info`) and **fails immediately** if the cluster isn't up,
+rather than trying to provision one. Never auto-destroys.
+
 ### Recommended first run
 
 A full cluster provision/destroy cycle is not fast or free (~15-20 min up,
@@ -145,7 +159,7 @@ Every phase script calls into this — phases themselves never branch on
 |---|---|---|---|---|
 | `install_lbc` | `install_aws_lbc.sh <eksctl\|aws-cli> <auth_mode>` | `terraform apply` in [`irsa/`](../irsa) or [`podid/`](../podid) | `03_python/direct_api/install_aws_lbc.py <auth_mode>` (boto3/kubernetes-client) | `03_python/exec_cli/install_aws_lbc.py <eksctl\|aws-cli> <auth_mode>` (subprocess calling `aws`/`kubectl`/`eksctl`) |
 | `uninstall_lbc` | `uninstall_aws_lbc.sh` | `terraform destroy` in the same root | `03_python/direct_api/uninstall_aws_lbc.py` | `03_python/exec_cli/uninstall_aws_lbc.py` (self-detects auth mode and eksctl/CloudFormation ownership - one function serves both `exec-cli` tool variants) |
-| `validate_lbc` / `deploy_demos` / `validate_demos` / `cleanup_demos` | same for all four — install-method-agnostic (`scripts/validate_*.sh`, `demos/cli/*.sh`) |
+| `validate_lbc` / `deploy_demos` / `validate_demos` / `cleanup_demos` | same for all four — install-method-agnostic (`01_cli/scripts/validate_*.sh`, `demos/cli/*.sh`, `demos/test_demos.sh`) |
 | `verify_clean` | independent oracle, not a reuse of any installer's internals — asserts zero demo namespaces, Gateway API objects/CRDs, Helm release, AWS load balancers, and the IAM policy/role, by kind rather than by name wherever the name is user-choosable. IAM policy/role naming is install-method-aware: fixed names for `cli-*`/`terraform`, cluster-scoped names (`AWSLoadBalancerControllerIAMPolicy-<cluster>`, and for `python-direct-api`/`python-exec-cli-awscli` also `AmazonEKSLoadBalancerControllerRole-<cluster>`) for every `python-*` method - see `03_python/*/lib/naming.py`. `python-exec-cli-eksctl` reuses the same CloudFormation stack names as `cli-eksctl`, since eksctl's own naming convention doesn't care which wrapper invoked it. |
 
 `python-direct-api` needs a Python venv (`.venv`) with its `requirements.txt`

@@ -57,20 +57,24 @@ install_lbc() {
 }
 
 # ensure_python_venv <dir>
-# Creates .venv and installs requirements.txt if not already done - mirrors
-# how install_lbc_terraform() calls `terraform init` every time (cheap
-# no-op when already initialized) rather than assuming a one-time manual
-# setup step outside this framework. Only needed for 03_python/direct_api
-# (boto3/kubernetes/PyYAML) - 03_python/exec_cli has no pip dependencies at
-# all (subprocess + stdlib only), so it just uses system python3 directly.
+# Creates .venv if missing, then installs requirements.txt every time -
+# mirrors how install_lbc_terraform() calls `terraform init` every time
+# (cheap no-op when nothing changed) rather than assuming a one-time manual
+# setup step outside this framework. Re-running pip install on an
+# already-satisfied venv is fast (pip skips anything already installed at
+# the right version), so this stays cheap while also picking up a
+# requirements.txt change (e.g. a newly added dependency) on an existing
+# venv without the caller having to know to delete it first. Only needed
+# for 03_python/direct_api (boto3/kubernetes/PyYAML) - 03_python/exec_cli
+# has no pip dependencies at all (subprocess + stdlib only), so it just
+# uses system python3 directly.
 ensure_python_venv() {
   local dir="${1:?dir is required}"
   if [[ ! -x "$dir/.venv/bin/python" ]]; then
     echo "  Creating Python venv in $dir..."
-    (cd "$dir" && python3 -m venv .venv \
-      && ./.venv/bin/pip install --quiet --upgrade pip \
-      && ./.venv/bin/pip install --quiet -r requirements.txt)
+    (cd "$dir" && python3 -m venv .venv && ./.venv/bin/pip install --quiet --upgrade pip)
   fi
+  (cd "$dir" && ./.venv/bin/pip install --quiet -r requirements.txt)
 }
 
 install_lbc_python_direct_api() {
@@ -226,7 +230,7 @@ uninstall_lbc_terraform() {
 validate_lbc() {
   : "${EKS_CLUSTER_NAME:?EKS_CLUSTER_NAME is required}"
   : "${EKS_REGION:?EKS_REGION is required}"
-  local scripts_dir="$PROJECT_DIR/scripts"
+  local scripts_dir="$PROJECT_DIR/01_cli/scripts"
   local rc=0
 
   "$scripts_dir/validate_crds.sh" || rc=1
@@ -241,7 +245,7 @@ validate_lbc() {
 # Terraform-based alternative but isn't used here for simplicity/speed.
 
 deploy_demos() {
-  "$PROJECT_DIR/demos/cli/create_demos.sh"
+  "$PROJECT_DIR/demos/cli/deploy_demos.sh"
 }
 
 cleanup_demos() {
