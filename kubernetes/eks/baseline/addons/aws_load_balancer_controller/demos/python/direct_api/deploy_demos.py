@@ -7,6 +7,14 @@ out to kubectl:
   - Gateway+TCPRoute/NLB    (namespace: $GW_NLB_NAMESPACE)
   - Gateway+HTTPRoute/ALB   (namespace: $GW_ALB_NAMESPACE)
 
+Every kind with a typed model in the kubernetes client (Namespace, Deployment,
+Service, Ingress) is built as a typed object (V1Service, V1Ingress, ...) and
+passed straight to its matching create_namespaced_<kind>() method - no YAML,
+no dicts. Only the Gateway API demos fall back to the DynamicClient: kinds
+like Gateway, TCPRoute and LoadBalancerConfiguration have no generated
+model/method in the kubernetes client, so a generic apply is the only option
+for those.
+
 Verify with ../../test_demos.sh afterward.
 
 Works against a cluster with the AWS Load Balancer Controller installed,
@@ -112,67 +120,92 @@ def expose_clusterip(core_v1: client.CoreV1Api, ns: str, app_name: str) -> None:
             raise
 
 
-def create_svc_nlb(core_v1: client.CoreV1Api, apps_v1: client.AppsV1Api, dyn: dynamic.DynamicClient, ns: str) -> None:
+def create_svc_nlb(core_v1: client.CoreV1Api, apps_v1: client.AppsV1Api, ns: str) -> None:
     ensure_namespace(core_v1, ns)
     deploy_app(apps_v1, ns, "demo-nlb-app")
 
     log(f"==> Creating NLB Service in {ns}...")
-    apply_yaml(
-        dyn,
-        f"""\
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
-    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
-    service.beta.kubernetes.io/aws-load-balancer-type: external
-  labels:
-    app: demo-nlb-app
-  name: demo-nlb-app
-  namespace: {ns}
-spec:
-  ports:
-  - port: 80
-  selector:
-    app: demo-nlb-app
-  type: LoadBalancer
-""",
+    body = client.V1Service(
+        metadata=client.V1ObjectMeta(
+            name="demo-nlb-app",
+            namespace=ns,
+            labels={"app": "demo-nlb-app"},
+            annotations={
+                "service.beta.kubernetes.io/aws-load-balancer-type": "external",
+                "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type": "ip",
+                "service.beta.kubernetes.io/aws-load-balancer-scheme": "internet-facing",
+            },
+        ),
+        spec=client.V1ServiceSpec(
+            type="LoadBalancer",
+            selector={"app": "demo-nlb-app"},
+            ports=[client.V1ServicePort(port=80)],
+        ),
     )
+    try:
+        core_v1.create_namespaced_service(ns, body)
+    except ApiException as exc:
+        if exc.status == 409:
+            existing = core_v1.read_namespaced_service("demo-nlb-app", ns)
+            body.metadata.resource_version = existing.metadata.resource_version
+            body.spec.cluster_ip = existing.spec.cluster_ip
+            core_v1.replace_namespaced_service("demo-nlb-app", ns, body)
+        else:
+            raise
 
 
-def create_ing_alb(core_v1: client.CoreV1Api, apps_v1: client.AppsV1Api, dyn: dynamic.DynamicClient, ns: str) -> None:
+def create_ing_alb(
+    core_v1: client.CoreV1Api,
+    apps_v1: client.AppsV1Api,
+    networking_v1: client.NetworkingV1Api,
+    ns: str,
+) -> None:
     ensure_namespace(core_v1, ns)
     deploy_app(apps_v1, ns, "demo-alb-app")
     expose_clusterip(core_v1, ns, "demo-alb-app")
 
     log(f"==> Creating ALB Ingress in {ns}...")
-    apply_yaml(
-        dyn,
-        f"""\
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    kubernetes.io/ingress.class: alb
-  name: demo-alb-app
-  namespace: {ns}
-spec:
-  rules:
-  - host: demo.example.com
-    http:
-      paths:
-      - backend:
-          service:
-            name: demo-alb-app
-            port:
-              number: 80
-        path: /
-        pathType: Prefix
-""",
+    body = client.V1Ingress(
+        metadata=client.V1ObjectMeta(
+            name="demo-alb-app",
+            namespace=ns,
+            annotations={
+                "kubernetes.io/ingress.class": "alb",
+                "alb.ingress.kubernetes.io/scheme": "internet-facing",
+                "alb.ingress.kubernetes.io/target-type": "ip",
+            },
+        ),
+        spec=client.V1IngressSpec(
+            rules=[
+                client.V1IngressRule(
+                    host="demo.example.com",
+                    http=client.V1HTTPIngressRuleValue(
+                        paths=[
+                            client.V1HTTPIngressPath(
+                                path="/",
+                                path_type="Prefix",
+                                backend=client.V1IngressBackend(
+                                    service=client.V1IngressServiceBackend(
+                                        name="demo-alb-app",
+                                        port=client.V1ServiceBackendPort(number=80),
+                                    )
+                                ),
+                            )
+                        ]
+                    ),
+                )
+            ]
+        ),
     )
+    try:
+        networking_v1.create_namespaced_ingress(ns, body)
+    except ApiException as exc:
+        if exc.status == 409:
+            existing = networking_v1.read_namespaced_ingress("demo-alb-app", ns)
+            body.metadata.resource_version = existing.metadata.resource_version
+            networking_v1.replace_namespaced_ingress("demo-alb-app", ns, body)
+        else:
+            raise
 
 
 def create_gw_nlb(core_v1: client.CoreV1Api, apps_v1: client.AppsV1Api, dyn: dynamic.DynamicClient, ns: str) -> None:
@@ -361,11 +394,12 @@ def main() -> None:
     config.load_kube_config()
     api_client = client.ApiClient()
     core_v1 = client.CoreV1Api(api_client)
+    networking_v1 = client.NetworkingV1Api(api_client)
     apps_v1 = client.AppsV1Api(api_client)
     dyn = dynamic.DynamicClient(api_client)
 
-    create_svc_nlb(core_v1, apps_v1, dyn, svc_nlb_ns)
-    create_ing_alb(core_v1, apps_v1, dyn, ing_alb_ns)
+    create_svc_nlb(core_v1, apps_v1, svc_nlb_ns)
+    create_ing_alb(core_v1, apps_v1, networking_v1, ing_alb_ns)
     create_gw_nlb(core_v1, apps_v1, dyn, gw_nlb_ns)
     create_gw_alb(core_v1, apps_v1, dyn, gw_alb_ns)
 

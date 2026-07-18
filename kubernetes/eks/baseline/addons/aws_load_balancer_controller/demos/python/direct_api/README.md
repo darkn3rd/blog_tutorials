@@ -1,9 +1,14 @@
 # AWS LBC Demos with the Kubernetes Python client
 
 These demos deploy four scenarios by calling the Kubernetes API directly via the
-**kubernetes** Python client instead of shelling out to `kubectl`. Each demo lands in its
-own namespace and allows the **AWS Load Balancer Controller** (**AWS LBC**) to provision a
-different kind of AWS load balancer:
+**kubernetes** Python client instead of shelling out to `kubectl`. Every kind that has a
+typed model in the client - `Namespace`, `Deployment`, `Service`, `Ingress` - is built as a
+typed object (`V1Service`, `V1Ingress`, ...) and passed straight to its matching
+`create_namespaced_<kind>()` method: no YAML, no dicts. Custom resources (`Gateway`,
+`TCPRoute`, `LoadBalancerConfiguration`, ...) have no typed `create_namespaced_<kind>()`
+method to call, so those fall back to the `DynamicClient`'s generic apply. Each demo lands
+in its own namespace and allows the **AWS Load Balancer Controller** (**AWS LBC**) to
+provision a different kind of AWS load balancer:
 
 | Demo | Namespace (default) | Produces |
 | --- | --- | --- |
