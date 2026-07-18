@@ -3,11 +3,11 @@
 The **AWS Load Balancer Controller** manages AWS Elastic Load Balancing (ELBv2) resources natively inside an Amazon EKS cluster. It satisfies Kubernetes resource requirements by provisioning high-performance network load balancers across two distinct OSI layers:
 
 ### 🌐 Layer 4 Routing (Network Load Balancer - NLB)
-* **Legacy/Standard:** `Service` resources configured as `type: LoadBalancer`.
+* **Classic:** `Service` resources configured as `type: LoadBalancer`.
 * **Gateway API:** `Gateway` resources coupled with `TCPRoute` configurations.
 
 ### 🚀 Layer 7 Routing (Application Load Balancer - ALB)
-* **Legacy/Standard:** Traditional `Ingress` resources.
+* **Legacy:** Traditional `Ingress` resources.
 * **Gateway API:** `Gateway` resources coupled with `HTTPRoute` or `GRPCRoute` configurations.
 
 ## Prerequisites
