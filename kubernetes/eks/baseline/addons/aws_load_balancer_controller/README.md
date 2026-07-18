@@ -1,13 +1,13 @@
 # AWS Load Balancer Controller
 
-The **AWS Load Balancer Controller** manages AWS Elastic Load Balancing (ELBv2) resources natively inside an Amazon EKS cluster. It satisfies Kubernetes resource requirements by provisioning high-performance network load balancers across two distinct OSI layers:
+The **AWS Load Balancer Controller** manages AWS Elastic Load Balancing (ELBv2) resources natively inside an Amazon EKS cluster. It satisfies Kubernetes resource requirements by provisioning AWS Elastic Load Balancers (NLB or ALB) across two distinct OSI layers:
 
 ### 🌐 Layer 4 Routing (Network Load Balancer - NLB)
 * **Classic:** `Service` resources configured as `type: LoadBalancer`.
 * **Gateway API:** `Gateway` resources coupled with `TCPRoute` configurations.
 
 ### 🚀 Layer 7 Routing (Application Load Balancer - ALB)
-* **Legacy:** Traditional `Ingress` resources.
+* **Classic:** Traditional `Ingress` resources.
 * **Gateway API:** `Gateway` resources coupled with `HTTPRoute` or `GRPCRoute` configurations.
 
 ## Prerequisites
@@ -39,7 +39,7 @@ You can setup and install AWS Load Balancer Controller with the following paths:
 
 ### ELBv2 Demos
 
-After the AWS Load Balancer is installed, you test it by deploying service, ingress, or gateway manifests that triggering provisionign of either ALB or NLB.
+After the AWS Load Balancer is installed, you test it by deploying service, ingress, or gateway manifests that trigger provisioning of either ALB or NLB.
 
 * [Overview](./demos/README.md)
   * [Terraform](./demos/tf/README.md) - bring up the demos or use one at a time with `terraform -target`

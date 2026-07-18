@@ -2,7 +2,7 @@
 
 This area explores methods to install the AWS Load Balancer Controller (LBC) using Python:
 
-* Command Line Tools (`exec_cli`) - this python script will run in a similar way to a shell scripts and use CLI tools to interact with either AWS API or Kubernetes API 
+* Command Line Tools (`exec_cli`) - this python script will run in a similar way to a shell script and use CLI tools to interact with either AWS API or Kubernetes API 
 * Direct API (`direct_api`) - this python script will interact with the client APIs directly.
 
 

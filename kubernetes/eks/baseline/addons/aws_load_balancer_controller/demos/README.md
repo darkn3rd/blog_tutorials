@@ -6,7 +6,7 @@ Load Balancer Controller installed:
 * a Service of type `LoadBalancer` (NLB), 
 * an `Ingress` (ALB) 
 * Gateway API with a `TCPRoute` (NLB) 
-* Gatewway API with a `HTTPRoute` (ALB)
+* Gateway API with a `HTTPRoute` (ALB)
 
 | | [`cli/`](cli/README.md) | [`python/`](python/README.md) | [`tf/`](tf/README.md) |
 | --- | --- | --- | --- |
@@ -39,5 +39,5 @@ existing in the cluster, not on how they got there:
 ./test_demos.sh
 ```
 
-This script will Wait for each demo's load balancer address to appear, waits for DNS to resolve, then runs `curl` against the address. It will report **PASS** or **FAIL** per demo with bounded timeouts (won't hang forever if AWS
+This script will wait for each demo's load balancer address to appear, wait for DNS to resolve, and then run `curl` against the address. It will report **PASS** or **FAIL** per demo with bounded timeouts (won't hang forever if AWS
 never finishes provisioning).

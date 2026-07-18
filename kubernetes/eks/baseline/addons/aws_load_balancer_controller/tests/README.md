@@ -10,7 +10,7 @@ This area covers test automation for AWS Load Balancer Controller (LBC).  These 
   * Inspec Audit Scripts
   * ad-hoc test scripts, such as negative tests
 
-The supported test cases will test install method and auth mode (IRSA or Pod-Identity).  These scripts have help find bugs with *stale IAM policy collisions*, *CloudFormation ownership drift*, *class-name-dependent Gateway API deletion*, *finalier-lock hangs*, etc.  Each pahse drive the same 7-function contract regardless of how the LBC was install, so that *AWS CLI isntall scripts* or *Terraform provision scripts* are exercised through identical validation, demo, and cleanup steps.
+The supported test cases will test install method and auth mode (IRSA or Pod-Identity).  These scripts have helped find bugs with *stale IAM policy collisions*, *CloudFormation ownership drift*, *class-name-dependent Gateway API deletion*, *finalizer-lock hangs*, etc.  Each phase drives the same 7-function contract regardless of how the LBC was installed, so that *AWS CLI install scripts* or *Terraform provision scripts* are exercised through identical validation, demo, and cleanup steps.
 
 ## Layout
 
@@ -48,7 +48,7 @@ export CLUSTER_PROVISIONER_ROOT="../../../minimal"
 export AWS_PROFILE="myprofile"
 ```
 
-The `CLUSTER_PROVISIONER_ROOT` is the directory containing the minimal provisioning directories.  ONly the `05_terraform_modules` is supported at this time (see [Cluster provisioning](#cluster-provisioning)
+The `CLUSTER_PROVISIONER_ROOT` is the directory containing the minimal provisioning directories.  Only the `05_terraform_modules` is supported at this time (see [Cluster provisioning](#cluster-provisioning)
 below); the other four are clearly-marked stubs.
 
 During phase 00, the following will be generated:
@@ -81,7 +81,7 @@ When finished, use the `--destroy-cluster` argument to deprovision the cluster.
 
 ### Batch runs
 
-You can run several tests with either the `--all` or the ``--tier` argument. 
+You can run several tests with either the `--all` or the `--tier` argument. 
 
 ```bash
 ./run_matrix.sh --all
@@ -89,11 +89,11 @@ You can run several tests with either the `--all` or the ``--tier` argument.
 ./run_matrix.sh --tier release           # kick off, check back later/overnight
 ```
 
-Fro these tests, a fresh cluster will be provisioned and then destroyed after every case finsihes, unless the `--keep-cluster` argument is passed.  The `logs/cluster.env` must already exist for this option.
+For these tests, a fresh cluster will be provisioned and then destroyed after every case finishes, unless the `--keep-cluster` argument is passed.  The `logs/cluster.env` must already exist for this option.
 
 ### BYOC (Bring Your Own Cluster)
 
-If you already have a cluster theat meets the requirements for LBC, you can use that one instead with the `--existing-cluster` argument. 
+If you already have a cluster that meets the requirements for LBC, you can use that one instead with the `--existing-cluster` argument. 
 
 ```bash
 export EKS_CLUSTER_NAME=my-cluster

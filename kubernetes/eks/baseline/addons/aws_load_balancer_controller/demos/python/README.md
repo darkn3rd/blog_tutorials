@@ -1,12 +1,12 @@
 # AWS LBC Demos (Python)
 
-This area explores methods to deploy Kubernetes applications using the Kuberentes API:
+This area explores methods to deploy Kubernetes applications using the Kubernetes API:
 
 * Shell Exec (`exec_cli`) - python scripts orchestrate calling tools much in the same way a shell script would work.
 * Direct methods use the official Kubernetes client (`kubernetes-python-client`)
   * API (`direct_api`) - uses Kubernetes API python classes to build Kubernetes objects
   * Embedded Srings (`direct_fstrings`) - uses manifests stored as multi-line fstrings that are then sent to Kuberentes API
-  * Tempaltes (`direct_jinja2`) - uses external templated manfiest files with Jinja2 that are processed and then sent to the Kubernetes API. 
+  * Templates (`direct_jinja2`) - uses external templated manifest files with Jinja2 that are processed and then sent to the Kubernetes API. 
 
 Four independent ways to deploy the same four demo scenarios from Python:
 
