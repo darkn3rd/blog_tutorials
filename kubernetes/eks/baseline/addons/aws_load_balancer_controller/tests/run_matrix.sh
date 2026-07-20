@@ -7,6 +7,26 @@
 #   ./run_matrix.sh --all [--suites <suite,...>] [--keep-cluster]
 #   ./run_matrix.sh --tier <name> [--keep-cluster]
 #   ./run_matrix.sh --destroy-cluster
+#   ./run_matrix.sh --list [--tier <name>]
+#   ./run_matrix.sh (--case <name> | --all | --tier <name>) --existing-cluster
+#
+# --list enumerates what's defined in matrix.yaml (every case with its
+# install_method/auth_mode, every tier with its resolved case/suite list,
+# and every suites/*.sh file) and exits - no AWS credentials, cluster, or
+# CLUSTER_PROVISIONER_ROOT required. --list --tier <name> narrows this to
+# just that tier's resolved cases/suites - a dry run of what --tier <name>
+# would actually execute, without spending any cluster time.
+#
+# --existing-cluster targets a cluster this framework did not provision and
+# does not own - CLUSTER_PROVISIONER_ROOT is not needed. Requires
+# EKS_CLUSTER_NAME, EKS_REGION, and KUBECONFIG to already be set in the
+# environment (normally these come from tests/logs/cluster.env, written by
+# phase 00 - this mode never touches that file, reads or writes). Never
+# provisions and never destroys; instead it checks reachability up front
+# (`kubectl cluster-info` against the given KUBECONFIG) and dies immediately
+# with a clear message if the cluster isn't up, rather than silently trying
+# to provision one. Implies --keep-cluster's "never auto-destroy" behavior
+# regardless of mode.
 #
 # --suites overrides which suites run (default: positive only) for --case/
 # --all - e.g. --case cli-eksctl-podid --suites negative-collision,negative-finalizer-lock
@@ -40,7 +60,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TESTS_DIR="$SCRIPT_DIR"
 LOGS_DIR="$TESTS_DIR/logs"
 
-die() { echo "❌ $*" >&2; exit 1; }
+# Closes the write end of the pipe _tool_output_filter (set up below) reads
+# from, forcing it to flush and exit, then waits for it - bash does not do
+# this on its own before a process-substitution subshell's parent exits, so
+# without this a fully-completed run's last few output lines can print
+# AFTER the shell prompt reappears, making it look stuck when it isn't.
+# No-op before TOOL_OUTPUT_FILTER_PID is set (i.e. before the exec below
+# has run) since there's nothing to drain yet.
+_drain_output_filter() {
+  if [[ -n "${TOOL_OUTPUT_FILTER_PID:-}" ]]; then
+    exec 1>&3 2>&3
+    wait "$TOOL_OUTPUT_FILTER_PID" 2>/dev/null
+  fi
+}
+die() { echo "❌ $*" >&2; _drain_output_filter; exit 1; }
 # shellcheck source=../01_cli/scripts/lib/bash_version.sh
 source "$SCRIPT_DIR/../01_cli/scripts/lib/bash_version.sh"
 verify_bash
@@ -56,6 +89,61 @@ for arg in "$@"; do
   case "$arg" in
     -h | --help) usage ;;
   esac
+done
+
+# --list is handled here too, before the AWS_PROFILE requirement and the
+# timestamp-wrapped output setup below - enumerating matrix.yaml needs
+# neither, and unwrapped output is easier to read/parse for a listing.
+for arg in "$@"; do
+  if [[ "$arg" == "--list" ]]; then
+    # shellcheck source=lib/yaml.sh
+    source "$TESTS_DIR/lib/yaml.sh"
+    verify_yq
+
+    list_tier=""
+    _args=("$@")
+    for ((_i = 0; _i < ${#_args[@]}; _i++)); do
+      if [[ "${_args[_i]}" == "--tier" ]]; then
+        list_tier="${_args[_i+1]:-}"
+        [[ -n "$list_tier" ]] || die "--tier requires a value."
+      fi
+    done
+
+    print_case_line() {
+      local name="$1" install_method auth_mode
+      install_method="$(matrix_case_field "$name" install_method)"
+      auth_mode="$(matrix_case_field "$name" auth_mode)"
+      printf '  %-32s install_method=%-24s auth_mode=%s\n' "$name" "$install_method" "$auth_mode"
+    }
+
+    if [[ -n "$list_tier" ]]; then
+      matrix_tier_exists "$list_tier" || die "Tier '$list_tier' not found in matrix.yaml."
+      echo "Tier: $list_tier"
+      echo "Cases:"
+      while IFS= read -r name; do print_case_line "$name"; done < <(matrix_tier_cases "$list_tier")
+      echo "Suites:"
+      while IFS= read -r suite; do echo "  $suite"; done < <(matrix_tier_suites "$list_tier")
+    else
+      echo "Cases:"
+      while IFS= read -r name; do print_case_line "$name"; done < <(matrix_all_case_names)
+
+      echo
+      echo "Tiers:"
+      while IFS= read -r tier; do
+        echo "  $tier"
+        printf '    cases:  %s\n' "$(matrix_tier_cases "$tier" | paste -sd, -)"
+        printf '    suites: %s\n' "$(matrix_tier_suites "$tier" | paste -sd, -)"
+      done < <(matrix_all_tier_names)
+
+      echo
+      echo "Suites (tests/suites/*.sh):"
+      for f in "$TESTS_DIR"/suites/*.sh; do
+        [[ -e "$f" ]] || continue
+        echo "  $(basename "$f" .sh | tr '_' '-')"
+      done
+    fi
+    exit 0
+  fi
 done
 
 # fd 3 preserves the real terminal, saved before this script's own stdout is
@@ -103,6 +191,13 @@ _tool_output_filter() {
   done
 }
 exec > >(_tool_output_filter) 2>&1
+# Bash doesn't wait for a process-substitution subshell before the script's
+# own exit - without this, the interactive shell's prompt can reappear
+# before _tool_output_filter finishes flushing the last few lines, making a
+# fully-completed (and passing) run look like it's still hanging. $! right
+# after the exec above is this subshell's PID; TOOL_OUTPUT_FILTER_PID is
+# waited on at the very end, right before this script's own exit.
+TOOL_OUTPUT_FILTER_PID=$!
 
 # shellcheck source=lib/yaml.sh
 source "$TESTS_DIR/lib/yaml.sh"
@@ -117,6 +212,7 @@ command -v jq >/dev/null 2>&1 || die "jq is required but not found in PATH."
 MODE=""
 TARGET=""
 KEEP_CLUSTER="false"
+EXISTING_CLUSTER="false"
 SUITES_OVERRIDE=""
 
 while [[ $# -gt 0 ]]; do
@@ -131,6 +227,8 @@ while [[ $# -gt 0 ]]; do
       MODE="destroy-cluster"; shift ;;
     --keep-cluster)
       KEEP_CLUSTER="true"; shift ;;
+    --existing-cluster)
+      EXISTING_CLUSTER="true"; shift ;;
     --suites)
       SUITES_OVERRIDE="${2:?--suites requires a value}"; shift 2 ;;
     -h|--help) usage ;;
@@ -141,6 +239,8 @@ done
 [[ -n "$MODE" ]] || die "One of --case <name>, --all, --tier <name>, or --destroy-cluster is required. Pass --help for usage."
 [[ -z "$SUITES_OVERRIDE" || "$MODE" == "case" || "$MODE" == "all" ]] \
   || die "--suites is only valid with --case or --all - --tier already defines its own suites in matrix.yaml."
+[[ "$EXISTING_CLUSTER" == "false" || "$MODE" != "destroy-cluster" ]] \
+  || die "--existing-cluster is not valid with --destroy-cluster - there's nothing for this framework to destroy on a cluster it doesn't own."
 
 if [[ "$MODE" == "destroy-cluster" ]]; then
   [[ -f "$LOGS_DIR/cluster.env" ]] || die "No $LOGS_DIR/cluster.env found - nothing to destroy."
@@ -148,7 +248,9 @@ if [[ "$MODE" == "destroy-cluster" ]]; then
   # &3, not the inherited (already-wrapped) stdout - 09_destroy_cluster.sh
   # timestamps its own output already; see the fd 3 comment above.
   "$TESTS_DIR/phases/09_destroy_cluster.sh" >&3 2>&3
-  exit $?
+  destroy_rc=$?
+  _drain_output_filter
+  exit $destroy_rc
 fi
 
 # ── Resolve case list + suite list ──────────────────────────────────────────
@@ -233,28 +335,40 @@ run_provision() {
   echo "✅ Cluster provisioned."
 }
 
-case "$MODE" in
-  case)
-    if cluster_is_reachable; then
-      echo "Reusing already-provisioned, reachable cluster (this mode never auto-destroys - run --destroy-cluster when done)."
-    else
-      echo "No reachable cluster found."
-      run_provision
-    fi
-    ;;
-  all|tier)
-    if [[ "$KEEP_CLUSTER" == "false" ]]; then
-      run_provision
-    else
-      [[ -f "$LOGS_DIR/cluster.env" ]] || die "--keep-cluster given but $LOGS_DIR/cluster.env not found. Run without --keep-cluster at least once first."
-      echo "Reusing existing cluster (--keep-cluster)."
-    fi
-    ;;
-esac
+if [[ "$EXISTING_CLUSTER" == "true" ]]; then
+  : "${EKS_CLUSTER_NAME:?--existing-cluster requires EKS_CLUSTER_NAME to already be set}"
+  : "${EKS_REGION:?--existing-cluster requires EKS_REGION to already be set}"
+  : "${KUBECONFIG:?--existing-cluster requires KUBECONFIG to already be set}"
+  echo "Targeting an existing, externally-managed cluster (--existing-cluster) - skipping provisioning."
+  if ! kubectl cluster-info >/dev/null 2>&1; then
+    die "Cluster '$EKS_CLUSTER_NAME' is not reachable via KUBECONFIG=$KUBECONFIG. --existing-cluster requires it to already be up - this framework will not provision one for you."
+  fi
+  echo "✅ Existing cluster is reachable: $EKS_CLUSTER_NAME"
+  export EKS_CLUSTER_NAME EKS_REGION KUBECONFIG
+else
+  case "$MODE" in
+    case)
+      if cluster_is_reachable; then
+        echo "Reusing already-provisioned, reachable cluster (this mode never auto-destroys - run --destroy-cluster when done)."
+      else
+        echo "No reachable cluster found."
+        run_provision
+      fi
+      ;;
+    all|tier)
+      if [[ "$KEEP_CLUSTER" == "false" ]]; then
+        run_provision
+      else
+        [[ -f "$LOGS_DIR/cluster.env" ]] || die "--keep-cluster given but $LOGS_DIR/cluster.env not found. Run without --keep-cluster at least once first."
+        echo "Reusing existing cluster (--keep-cluster)."
+      fi
+      ;;
+  esac
 
-# shellcheck source=/dev/null
-source "$LOGS_DIR/cluster.env"
-export EKS_CLUSTER_NAME EKS_REGION KUBECONFIG
+  # shellcheck source=/dev/null
+  source "$LOGS_DIR/cluster.env"
+  export EKS_CLUSTER_NAME EKS_REGION KUBECONFIG
+fi
 
 # ── Run each case ────────────────────────────────────────────────────────
 
@@ -320,11 +434,15 @@ for case_name in "${CASES[@]}"; do
 done
 
 # ── Cluster teardown ─────────────────────────────────────────────────────
-# Never for --case (that mode's whole point is staying up across repeated
-# ad-hoc runs) - only --all/--tier auto-destroy, and only without
-# --keep-cluster.
+# Never for --existing-cluster (this framework doesn't own it - see the
+# usage comment at the top) or --case (that mode's whole point is staying up
+# across repeated ad-hoc runs) - only --all/--tier auto-destroy, and only
+# without --keep-cluster.
 
-if [[ "$MODE" != "case" && "$KEEP_CLUSTER" == "false" ]]; then
+if [[ "$EXISTING_CLUSTER" == "true" ]]; then
+  echo
+  echo "Cluster left up (--existing-cluster never provisions or destroys a cluster it doesn't own)."
+elif [[ "$MODE" != "case" && "$KEEP_CLUSTER" == "false" ]]; then
   echo
   echo "===== Destroying cluster ====="
   # See run_provision()'s comment - tee to &3, not a silent capture.
@@ -355,4 +473,5 @@ for entry in "${CASE_RESULTS[@]}"; do
   fi
 done
 
+_drain_output_filter
 exit $overall_rc

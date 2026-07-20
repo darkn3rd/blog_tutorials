@@ -38,6 +38,11 @@ matrix_case_field() {
   yq eval ".cases[] | select(.name == \"${name}\") | .${field}" "$MATRIX_FILE"
 }
 
+# matrix_all_tier_names -> stdout, one per line
+matrix_all_tier_names() {
+  yq eval '.tiers | keys | .[]' "$MATRIX_FILE"
+}
+
 # matrix_tier_exists <tier> -> 0/1
 matrix_tier_exists() {
   local tier="${1:?tier is required}"

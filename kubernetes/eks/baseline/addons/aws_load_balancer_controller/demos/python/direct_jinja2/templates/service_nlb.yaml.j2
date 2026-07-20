@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+  labels:
+    app: {{ app_name }}
+  name: {{ app_name }}
+  namespace: {{ ns }}
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: {{ app_name }}
+  type: LoadBalancer

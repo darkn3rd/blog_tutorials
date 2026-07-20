@@ -46,9 +46,19 @@ BAD_POLICY_DOC='{
 }'
 
 collision_via_bad_policy_version() {
-  local account_id policy_arn original_version bad_version rc=0
+  local account_id policy_name policy_arn original_version bad_version rc=0
   account_id="$(aws sts get-caller-identity --query Account --output text)"
-  policy_arn="arn:aws:iam::${account_id}:policy/AWSLoadBalancerControllerIAMPolicy"
+  # Fixed name for cli-*; cluster-scoped for every python-* install method
+  # regardless of tool_mode (see 03_python/*/lib/naming.py). validate_lbc
+  # itself doesn't need to know this - it discovers the policy from the
+  # live ServiceAccount - but this suite has to construct the ARN to push
+  # a bad version onto, so it needs to match whichever name install_lbc
+  # actually used for this case.
+  policy_name="AWSLoadBalancerControllerIAMPolicy"
+  case "$INSTALL_METHOD" in
+    python-*) policy_name="AWSLoadBalancerControllerIAMPolicy-${EKS_CLUSTER_NAME}" ;;
+  esac
+  policy_arn="arn:aws:iam::${account_id}:policy/${policy_name}"
 
   original_version="$(aws iam get-policy --policy-arn "$policy_arn" --query 'Policy.DefaultVersionId' --output text)"
   [[ -n "$original_version" && "$original_version" != "None" ]] || die "Could not resolve current default policy version - is LBC actually installed?"
@@ -109,7 +119,7 @@ collision_via_terraform_drift() {
 }
 
 case "$INSTALL_METHOD" in
-  cli-eksctl|cli-aws) collision_via_bad_policy_version ;;
+  cli-eksctl|cli-aws|python-direct-api|python-exec-cli-eksctl|python-exec-cli-awscli) collision_via_bad_policy_version ;;
   terraform) collision_via_terraform_drift ;;
   *) die "Unknown install_method '$INSTALL_METHOD'." ;;
 esac

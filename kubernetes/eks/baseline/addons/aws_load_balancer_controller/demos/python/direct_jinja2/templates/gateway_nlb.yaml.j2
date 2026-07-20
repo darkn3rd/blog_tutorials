@@ -1,0 +1,64 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: aws-nlb-class
+spec:
+  controllerName: gateway.k8s.aws/nlb
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ app_name }}-gateway
+  namespace: {{ ns }}
+spec:
+  gatewayClassName: aws-nlb-class
+  infrastructure:
+    parametersRef:
+      group: gateway.k8s.aws
+      kind: LoadBalancerConfiguration
+      name: {{ app_name }}-lb-config
+  listeners:
+    - name: tcp-80
+      protocol: TCP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+        kinds:
+          - kind: TCPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: {{ app_name }}-route
+  namespace: {{ ns }}
+spec:
+  parentRefs:
+    - name: {{ app_name }}-gateway
+      sectionName: tcp-80
+  rules:
+    - backendRefs:
+        - name: {{ app_name }}
+          kind: Service
+          port: 80
+---
+apiVersion: gateway.k8s.aws/v1beta1
+kind: LoadBalancerConfiguration
+metadata:
+  name: {{ app_name }}-lb-config
+  namespace: {{ ns }}
+spec:
+  scheme: internet-facing
+---
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ app_name }}-tg-config
+  namespace: {{ ns }}
+spec:
+  targetReference:
+    group: ""
+    kind: Service
+    name: {{ app_name }}
+  defaultConfiguration:
+    targetType: ip

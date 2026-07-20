@@ -20,8 +20,9 @@ source "$TESTS_DIR/lib/contract.sh"
 
 echo "==> Checking required tools..."
 required_tools=(aws kubectl helm jq yq)
-[[ "$INSTALL_METHOD" == "cli-eksctl" ]] && required_tools+=(eksctl)
+[[ "$INSTALL_METHOD" == "cli-eksctl" || "$INSTALL_METHOD" == "python-exec-cli-eksctl" ]] && required_tools+=(eksctl)
 [[ "$INSTALL_METHOD" == "terraform" ]] && required_tools+=(terraform)
+[[ "$INSTALL_METHOD" == python-* ]] && required_tools+=(python3)
 missing=()
 for tool in "${required_tools[@]}"; do
   command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")

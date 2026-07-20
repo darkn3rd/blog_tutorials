@@ -1,0 +1,71 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: aws-alb
+spec:
+  controllerName: gateway.k8s.aws/alb
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ app_name }}-gw
+  namespace: {{ ns }}
+spec:
+  gatewayClassName: aws-alb
+  infrastructure:
+    parametersRef:
+      group: gateway.k8s.aws
+      kind: LoadBalancerConfiguration
+      name: {{ app_name }}-lb-config
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ app_name }}-route
+  namespace: {{ ns }}
+spec:
+  hostnames:
+    - demo.example.com
+  parentRefs:
+    - name: {{ app_name }}-gw
+      sectionName: http
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ app_name }}
+          port: 80
+---
+apiVersion: gateway.k8s.aws/v1beta1
+kind: LoadBalancerConfiguration
+metadata:
+  name: {{ app_name }}-lb-config
+  namespace: {{ ns }}
+spec:
+  scheme: internet-facing
+---
+apiVersion: gateway.k8s.aws/v1beta1
+kind: TargetGroupConfiguration
+metadata:
+  name: {{ app_name }}-tg-config
+  namespace: {{ ns }}
+spec:
+  defaultConfiguration:
+    targetType: ip
+    healthCheckConfig:
+      healthCheckProtocol: HTTP
+      healthCheckPort: "80"
+      healthCheckPath: /
+  targetReference:
+    group: ""
+    kind: Service
+    name: {{ app_name }}

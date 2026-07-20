@@ -1,13 +1,16 @@
-# LBC install/uninstall test matrix
+# Testing for AWS Load Balancer Controller
 
-Automates verification across every install-method x auth-mode combination
-this project supports, plus targeted negative scenarios reproducing bugs
-already found and fixed by hand (stale IAM policy collisions, CloudFormation
-ownership drift, class-name-dependent Gateway API deletion, finalizer-lock
-hangs). Each phase drives the same 7-function contract regardless of how LBC
-was installed, so `install_aws_lbc.sh`/`uninstall_aws_lbc.sh` and the
-Terraform [`irsa/`](../irsa)/[`podid/`](../podid) roots are exercised through
-identical validation/demo/cleanup steps.
+This area covers test automation for AWS Load Balancer Controller (LBC).  These scripts will automate:
+
+* Provisioning EKS Cluster
+* Installing AWS Load Balancer Controller with explicit options
+* Deploying Demos that demonstrated functionality of the LBC
+* Running Tests
+  * Validation scripts
+  * Inspec Audit Scripts
+  * ad-hoc test scripts, such as negative tests
+
+The supported test cases will test install method and auth mode (IRSA or Pod-Identity).  These scripts have helped find bugs with *stale IAM policy collisions*, *CloudFormation ownership drift*, *class-name-dependent Gateway API deletion*, *finalizer-lock hangs*, etc.  Each phase drives the same 7-function contract regardless of how the LBC was installed, so that *AWS CLI install scripts* or *Terraform provision scripts* are exercised through identical validation, demo, and cleanup steps.
 
 ## Layout
 
@@ -27,6 +30,7 @@ tests/
     negative_collision.sh
     negative_extra_lbs.sh
     negative_finalizer_lock.sh
+    negative_name_collision.sh
   logs/                 # gitignored, created at runtime - see Logs below
 ```
 
@@ -35,30 +39,35 @@ orchestrated by `run_matrix.sh`.
 
 ## Required Local Tools
 
-`aws`, `kubectl`, `helm`, `jq`, `yq` (mikefarah/yq v4), `terraform`, `eksctl`.
+`aws`, `kubectl`, `helm`, `jq`, `yq` (mikefarah/yq v4), `terraform`, `eksctl`, `python3`.
 
 ## Required Environment Variables
 
 ```bash
-export CLUSTER_PROVISIONER_ROOT="/path/to/kubernetes/eks/baseline/minimal"
+export CLUSTER_PROVISIONER_ROOT="../../../minimal"
 export AWS_PROFILE="myprofile"
 ```
 
-`CLUSTER_PROVISIONER_ROOT` is the directory containing
-`01_eksctl/02_awscli_eksctl/03_terraform_eksctl/04_terraform_native/05_terraform_modules`
-— machine-specific, not stored in `matrix.yaml`. Only `05_terraform_modules`
-is implemented today (see [Cluster provisioning](#cluster-provisioning)
+The `CLUSTER_PROVISIONER_ROOT` is the directory containing the minimal provisioning directories.  Only the `05_terraform_modules` is supported at this time (see [Cluster provisioning](#cluster-provisioning)
 below); the other four are clearly-marked stubs.
 
-`EKS_REGION`/`EKS_CLUSTER_NAME`/`KUBECONFIG` are **not** set by hand — phase
-00 generates a unique cluster per run and writes all three (plus which
-`.tfvars` file it used) to `logs/cluster.env`, which every other phase reads.
+During phase 00, the following will be generated:
+
+* Environment Variables
+  * `EKS_REGION`
+  * `EKS_CLUSTER_NAME`
+  * `KUBECONFIG`
+* Environment File (`logs/cluster.env`)
+* Terraform Variable Definition (`.tfvars`)
+
 
 ## Usage
 
 Two different workflows, matching two different ways you'd actually use this:
 
-### Ad-hoc / discrete testing — `--case`
+### Ad-hoc / discrete testing
+
+You can choose a discrete case with the `--case` argument. 
 
 ```bash
 ./run_matrix.sh --case cli-eksctl-irsa
@@ -66,14 +75,13 @@ Two different workflows, matching two different ways you'd actually use this:
 ./run_matrix.sh --destroy-cluster        # when you're done for the day
 ```
 
-Provisions a cluster **only if none is currently up and reachable**
-(`logs/cluster.env` plus a live `kubectl cluster-info` check — a stale file
-left over from an already-destroyed cluster doesn't fool it) and **never**
-destroys it afterward. Run `--case` repeatedly against the same cluster
-without paying the ~15-20 minute provision cost every time. `--destroy-cluster`
-is the explicit teardown command for whenever you're actually done.
+These will only provision a cluster when no cluster is reachable, using the `logs/cluster.env` plus a live `kubectl cluster-info` to check.
 
-### Batch runs — `--all` / `--tier`
+When finished, use the `--destroy-cluster` argument to deprovision the cluster. 
+
+### Batch runs
+
+You can run several tests with either the `--all` or the `--tier` argument. 
 
 ```bash
 ./run_matrix.sh --all
@@ -81,9 +89,21 @@ is the explicit teardown command for whenever you're actually done.
 ./run_matrix.sh --tier release           # kick off, check back later/overnight
 ```
 
-Always provisions a fresh cluster first and destroys it after every case
-finishes, unless `--keep-cluster` is passed (skips both, reuses whatever's
-already up — requires `logs/cluster.env` to already exist).
+For these tests, a fresh cluster will be provisioned and then destroyed after every case finishes, unless the `--keep-cluster` argument is passed.  The `logs/cluster.env` must already exist for this option.
+
+### BYOC (Bring Your Own Cluster)
+
+If you already have a cluster that meets the requirements for LBC, you can use that one instead with the `--existing-cluster` argument. 
+
+```bash
+export EKS_CLUSTER_NAME=my-cluster
+export EKS_REGION=us-east-2
+export KUBECONFIG=~/.kube/config
+
+./run_matrix.sh --case cli-eksctl-irsa --existing-cluster
+```
+
+For a cluster that the framework did not provision, the `CLUSTER_PROVISIONER_ROOT` env var is not needed.  
 
 ### Recommended first run
 
@@ -104,7 +124,8 @@ Three sections:
 
 * **`cluster`** — which provisioner (`cluster.provisioner`, maps to a
   `CLUSTER_PROVISIONER_ROOT` subdirectory) and default `eks_version`/`eks_region`.
-* **`cases`** — the 6 `install_method` (`cli-eksctl` | `cli-aws` | `terraform`)
+* **`cases`** — the 12 `install_method` (`cli-eksctl` | `cli-aws` | `terraform`
+  | `python-direct-api` | `python-exec-cli-eksctl` | `python-exec-cli-awscli`)
   x `auth_mode` (`irsa` | `pod-identity`) combinations.
 * **`tiers`** — named `(cases, suites)` presets for `--tier`. `cases: all` and
   `suites: all` both expand at run time — `all` cases means every entry
@@ -116,7 +137,7 @@ Three sections:
 tiers:
   smoke:         { cases: [cli-eksctl-irsa, cli-eksctl-podid], suites: [positive] }
   full-positive: { cases: all, suites: [positive] }
-  negative:      { cases: [...], suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock] }
+  negative:      { cases: [...], suites: [negative-collision, negative-extra-lbs, negative-finalizer-lock, negative-name-collision] }
   release:       { cases: all, suites: all }
 ```
 
@@ -139,22 +160,35 @@ verify_clean <install_method>
 Every phase script calls into this — phases themselves never branch on
 `install_method`. Dispatch summary:
 
-| Function | `cli-eksctl` / `cli-aws` | `terraform` |
-|---|---|---|
-| `install_lbc` | `install_aws_lbc.sh <eksctl\|aws-cli> <auth_mode>` | `terraform apply` in [`irsa/`](../irsa) or [`podid/`](../podid) |
-| `uninstall_lbc` | `uninstall_aws_lbc.sh` | `terraform destroy` in the same root |
-| `validate_lbc` / `deploy_demos` / `validate_demos` / `cleanup_demos` | same for both — install-method-agnostic (`scripts/validate_*.sh`, `demos/cli/*.sh`) |
-| `verify_clean` | independent oracle, not a reuse of `uninstall_aws_lbc.sh`'s internals — asserts zero demo namespaces, Gateway API objects/CRDs, Helm release, AWS load balancers, and the IAM policy/role, by kind rather than by name wherever the name is user-choosable |
+| Function | `cli-eksctl` / `cli-aws` | `terraform` | `python-direct-api` | `python-exec-cli-eksctl` / `python-exec-cli-awscli` |
+|---|---|---|---|---|
+| `install_lbc` | `install_aws_lbc.sh <eksctl\|aws-cli> <auth_mode>` | `terraform apply` in [`irsa/`](../irsa) or [`podid/`](../podid) | `03_python/direct_api/install_aws_lbc.py <auth_mode>` (boto3/kubernetes-client) | `03_python/exec_cli/install_aws_lbc.py <eksctl\|aws-cli> <auth_mode>` (subprocess calling `aws`/`kubectl`/`eksctl`) |
+| `uninstall_lbc` | `uninstall_aws_lbc.sh` | `terraform destroy` in the same root | `03_python/direct_api/uninstall_aws_lbc.py` | `03_python/exec_cli/uninstall_aws_lbc.py` (self-detects auth mode and eksctl/CloudFormation ownership - one function serves both `exec-cli` tool variants) |
+| `validate_lbc` / `deploy_demos` / `validate_demos` / `cleanup_demos` | same for all four — install-method-agnostic (`01_cli/scripts/validate_*.sh`, `demos/cli/*.sh`, `demos/test_demos.sh`) |
+| `verify_clean` | independent oracle, not a reuse of any installer's internals — asserts zero demo namespaces, Gateway API objects/CRDs, Helm release, AWS load balancers, and the IAM policy/role, by kind rather than by name wherever the name is user-choosable. IAM policy/role naming is install-method-aware: fixed names for `cli-*`/`terraform`, cluster-scoped names (`AWSLoadBalancerControllerIAMPolicy-<cluster>`, and for `python-direct-api`/`python-exec-cli-awscli` also `AmazonEKSLoadBalancerControllerRole-<cluster>`) for every `python-*` method - see `03_python/*/lib/naming.py`. `python-exec-cli-eksctl` reuses the same CloudFormation stack names as `cli-eksctl`, since eksctl's own naming convention doesn't care which wrapper invoked it. |
 
-**Never** run `uninstall_aws_lbc.sh` against a `terraform`-installed case —
-it owns those resources via Terraform state, not CloudFormation. Mixing the
-two reintroduces the exact ownership-drift bug class this project already
-hit once with CloudFormation, just through Terraform state instead.
+### Python Scripts
 
-`.tfvars` files for both cluster provisioning and the `irsa`/`podid` roots
+The `python-direct-api` needs a Python venv (`.venv`) with its `requirements.txt` installed.  The `install_lbc` and `uninstall_lbc` will create and populate it automatically on first use (`ensure_python_venv()` in `lib/contract.sh`) if it doesn't already exist. This is similar to how  `install_lbc_terraform()` calls `terraform init`
+every time. 
+
+The `python-exec-cli-*` has no pip dependencies at all (subprocess + stdlib only), so it just uses system `python3` directly.
+
+### Mixing Methods
+
+Absolutely **NEVER** run one install method's uninstaller against another method's
+case. 
+
+The `uninstall_aws_lbc.sh` script owns its resources via CloudFormation (when
+eksctl-created) or direct IAM calls; the `terraform destroy` owns them via Terraform state; and the Python uninstallers assume whatever their own
+matching installer created. 
+
+Mixing any of these reintroduces the exact ownership-drift bug class this project already hit once with CloudFormation.
+
+The variables definition files (`.tfvars`) for both cluster provisioning and the `irsa`/`podid` roots
 are written per-run/per-case (`test_<datestamp>.tfvars`,
 `test_<case-name>.tfvars`) and passed via `-var-file=`, never as
-`terraform.tfvars` directly — both directories already have their own
+`terraform.tfvars` directly, as both directories already have their own
 `terraform.tfvars` for manual/non-test use, and overwriting that in place
 would clobber it silently.
 
@@ -189,15 +223,18 @@ Each run overwrites the previous run's logs for a given case. `summary.json`:
 
 ## Negative suites (`suites/`)
 
-* **`negative_collision.sh`** — for `cli-*` cases, temporarily pushes a bad
-  IAM policy version and confirms `validate_iam_policy.sh` catches it. For
-  `terraform` cases, detaches the policy from the Terraform-managed role
-  out-of-band and confirms `terraform plan -detailed-exitcode` reports drift.
+* **`negative_collision.sh`** — for `cli-*` and every `python-*` case,
+  temporarily pushes a bad IAM policy version and confirms
+  `validate_iam_policy.sh` catches it (the ARN it pushes onto is
+  install-method-aware, matching whichever policy-naming convention that
+  case actually used). For `terraform` cases, detaches the policy from the
+  Terraform-managed role out-of-band and confirms
+  `terraform plan -detailed-exitcode` reports drift.
 * **`negative_extra_lbs.sh`** — deploys demo-shaped resources with randomly
-  suffixed names/namespaces (not the 4 canonical ones). For `cli-*` cases
-  they're left for phase 08's wholesale uninstall to catch (the actual
-  regression test); for `terraform` cases the suite cleans up after itself,
-  since `terraform destroy` only knows about its own state.
+  suffixed names/namespaces (not the 4 canonical ones). For `cli-*` and
+  `python-*` cases they're left for phase 08's wholesale uninstall to catch
+  (the actual regression test); for `terraform` cases the suite cleans up
+  after itself, since `terraform destroy` only knows about its own state.
 * **`negative_finalizer_lock.sh`** — force-removes the Helm release before
   deprovisioning, stranding a Gateway with a live finalizer, then asserts
   `uninstall_lbc` self-heals within a hard timeout instead of hanging.
@@ -208,22 +245,38 @@ Each run overwrites the previous run's logs for a given case. `summary.json`:
   a legitimate, expected finding pointing at that gap, not a suite defect —
   the timeout wrapper exists precisely so it surfaces as a bounded failure
   instead of hanging the whole run.
+* **`negative_name_collision.sh`** — `python-*` cases only (no-op for
+  `cli-*`/`terraform`). Pre-creates a bogus, untagged IAM policy (and, for
+  `python-direct-api`/`python-exec-cli-awscli`, role) at the exact
+  attempt-0 name the installer's own `naming.policy_name()`/`role_name()`
+  would compute for a synthetic cluster name, then calls that installer's
+  own `resolve_policy_name()`/`resolve_role_name()` against the same
+  synthetic name and asserts it escalates to a different candidate instead
+  of reusing or clobbering the bogus resource. Also confirms the
+  uninstall-side `find_owned_policy_arn()` returns nothing for a cluster
+  that owns nothing (no false positives). Runs directly against real IAM
+  through the installers' own production functions — not a bash
+  reimplementation of the hashing algorithm and not mocks — so it can't
+  silently drift from what actually ships. See `03_python/*/lib/naming.py`
+  for the full design (ownership tagging, deterministic hash escalation).
 
 ## Cluster provisioning
 
-`phases/00_provision_cluster.sh` / `09_destroy_cluster.sh` dispatch on
+The  `phases/00_provision_cluster.sh` and `09_destroy_cluster.sh` dispatch on
 `cluster.provisioner` in `matrix.yaml` to a subdirectory under
-`CLUSTER_PROVISIONER_ROOT`. Only `terraform-modules` (→
-`05_terraform_modules`) is implemented; `eksctl`, `awscli-eksctl`,
-`terraform-eksctl`, and `terraform-native` are stubs that error clearly
-(`... has no provisioning logic yet ...`) until filled in, following
-`provision_terraform_modules()`/`destroy_terraform_modules()` as the
-template.
+`CLUSTER_PROVISIONER_ROOT`. 
+
+Only **05_terraform_modules** (VPC/EKS = tf with public domain modules) is implemented.  These other methods are not supported:
+
+* **01_eksctl**: VPC = eksctl, EKS = eksctl
+* **02_awscli_eksctl**: VPC = aws cli, EKS = eksctl
+* **03_terraform_eksctl**: VPC = tf, EKS = eksctl
+* **04_terraform_native**: VPC = tf, EKS = tf (custom modules)
 
 ## Extending
 
 * **New case**: add an entry under `cases:` in `matrix.yaml` — no script
-  changes needed as long as `install_method` is one of the three
+  changes needed as long as `install_method` is one of the six
   `lib/contract.sh` already dispatches.
 * **New tier**: add an entry under `tiers:` — `cases`/`suites` can be
   explicit lists or `all`.
@@ -233,8 +286,3 @@ template.
 * **New cluster provisioner**: fill in the corresponding case in
   `phases/00_provision_cluster.sh` and `09_destroy_cluster.sh`.
 
-## See also
-
-* [`../README.md`](../README.md) — the Terraform LBC install project itself
-* [`../install_aws_lbc.sh`](../install_aws_lbc.sh) / [`../uninstall_aws_lbc.sh`](../uninstall_aws_lbc.sh) — the CLI-driven install/uninstall this framework tests
-* [`../demos/`](../demos) — the demo apps `deploy_demos`/`validate_demos`/`cleanup_demos` drive
