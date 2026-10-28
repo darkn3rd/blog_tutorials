@@ -40,8 +40,43 @@ vagrant init ubuntu-local && vagrant up
 
 ---
 
+### Release to GitHub
+`make` does the same steps for the architecture of the machine it runs on:
+
+```bash
+make release    # validate -> build -> smoke-test -> publish
+make help       # shows the variables you can override (ARCH, UBUNTU_VERSION, BUILD_DIR, REPO, BOX_NAME)
+```
+
+Extra prerequisites: GNU Make, the [GitHub CLI](https://cli.github.com/) logged in with write access to the repo (`gh auth login`), and `jq`.
+On Windows, run it from Git Bash with Make installed.
+
+Run `make release` once on each architecture. Each run uploads its box to the release `ubuntu-<version>` and merges itself into one catalog, so the catalog ends up listing both:
+
+```
+https://github.com/<owner>/<repo>/releases/download/ubuntu-catalog/ubuntu.json
+```
+
+Publishing the same version again replaces that version's box for the architecture. Use it from any Vagrantfile; Vagrant picks the box that matches the host:
+
+```ruby
+Vagrant.configure("2") do |config|
+  config.vm.box         = "<owner>/ubuntu"
+  config.vm.box_url     = "https://github.com/<owner>/<repo>/releases/download/ubuntu-catalog/ubuntu.json"
+  config.vm.box_version = "26.04.1"
+end
+```
+
+If you rebuild a version you've already added locally, remove the cached copy first: `vagrant box remove <owner>/ubuntu --box-version 26.04.1 --all`.
+
+---
+
 ### Layout
 ```
+Makefile            # release flow
+bin/
+├── publish.sh      # upload box, merge into the catalog
+└── smoke-test.sh   # boot the box with Vagrant
 ubuntu/
 ├── versions.pkr.hcl    # required plugins
 ├── variables.pkr.hcl   # arch, ubuntu_version, build_dir, headless
