@@ -1,0 +1,22 @@
+# Changes apply when the VM is recreated: make destroy up
+minimumLimaVersion: 2.0.0
+
+# Follows the newest Ubuntu LTS known to the installed Lima version.
+base:
+- template:_images/ubuntu-lts
+
+cpus: 2
+memory: 4GiB
+disk: 20GiB
+
+containerd:
+  system: false
+  user: false
+
+# The project folder is mounted at /workspace by the Makefile, because that
+# path has to be absolute and differs per checkout.
+mounts: []
+
+portForwards:
+- guestPort: 80
+  hostPort: 8080

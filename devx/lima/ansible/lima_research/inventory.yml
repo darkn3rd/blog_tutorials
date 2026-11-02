@@ -1,0 +1,5 @@
+# Lima writes an SSH config per instance; "lima-<name>" is the host alias in it.
+all:
+  hosts:
+    lima-dev:
+      ansible_ssh_common_args: "-F {{ lookup('env', 'HOME') }}/.lima/dev/ssh.config"

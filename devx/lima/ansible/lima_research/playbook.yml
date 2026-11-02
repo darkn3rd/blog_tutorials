@@ -1,0 +1,61 @@
+---
+- name: Provision the Lima VM
+  hosts: all
+  become: true
+
+  vars:
+    site_root: /var/www/example
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+  tasks:
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+        lock_timeout: 120
+
+    - name: Create the site root
+      ansible.builtin.file:
+        path: "{{ site_root }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy the web page
+      ansible.builtin.copy:
+        src: site/index.html
+        dest: "{{ site_root }}/index.html"
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Copy the site config
+      ansible.builtin.copy:
+        src: site/nginx.conf
+        dest: /etc/nginx/sites-available/example
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Enable the site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/example
+        dest: /etc/nginx/sites-enabled/example
+        state: link
+      notify: Reload nginx
+
+    - name: Disable the default site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
+    - name: Start nginx on boot
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
