@@ -14,7 +14,7 @@ up:
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi
 
 provision:
-	ansible-playbook playbook.yml
+	ansible-playbook playbook.yaml
 
 ssh:
 	limactl shell --workdir $(WORKSPACE) $(VM) || true
@@ -28,5 +28,5 @@ halt:
 destroy:
 	limactl delete --force $(VM)
 
-test:
+verify:
 	curl --include --fail http://localhost:8080

@@ -1,6 +1,7 @@
+#!/usr/bin/env ansible-playbook
 ---
-- name: Provision the Lima VM
-  hosts: all
+- name: Configure the development web server
+  hosts: web
   become: true
 
   vars:
