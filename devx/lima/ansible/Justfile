@@ -1,0 +1,53 @@
+VM := "dev"
+WORKSPACE := "/workspace"
+PROVISION := env("PROVISION", "false")
+
+# List the recipes
+default:
+    @just --list
+
+# Install Lima and Ansible if they're missing
+deps:
+    @command -v limactl >/dev/null || brew install lima
+    @command -v ansible-playbook >/dev/null || brew install ansible
+    @echo "Lima and Ansible are installed."
+
+# Print the macOS, Lima and Ansible versions
+versions:
+    @printf "macOS: %8s\nlimactl: %5s\nansible: %5s\n" \
+        $(sw_vers --productVersion) \
+        $(limactl --version | cut -d' ' -f3) \
+        $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+
+# Download the VM image and launch the VM
+up:
+    @if limactl list -q | grep -qx '{{VM}}'; then \
+        limactl start --tty=false {{VM}}; \
+    else \
+        limactl start --tty=false --name={{VM}} --set '.mounts=[{"location":"{{justfile_directory()}}","mountPoint":"{{WORKSPACE}}","writable":true}]' lima.yaml; \
+    fi
+    @if [ "{{PROVISION}}" = true ]; then just provision; fi
+
+# Run the Ansible playbook on the guest
+provision:
+    ansible-playbook playbook.yaml
+
+# Check the web page with curl
+verify:
+    curl --include --fail http://localhost:8080
+
+# Log into the guest
+ssh:
+    limactl shell --workdir {{WORKSPACE}} {{VM}} || true
+
+# Show the VM status
+status:
+    limactl list {{VM}}
+
+# Shut down the guest
+halt:
+    limactl stop {{VM}}
+
+# Delete the VM
+destroy:
+    limactl delete --force {{VM}}

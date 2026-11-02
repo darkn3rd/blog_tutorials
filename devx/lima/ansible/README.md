@@ -5,25 +5,113 @@ Ansible from the host.
 
 ## Requirements
 
+You need [Lima](https://lima-vm.io/) and [Ansible](https://docs.ansible.com/), plus `make`, which comes with Apple's command line tools (`xcode-select --install`).
+
+The simplest way to get them is to run this from this folder. It only installs what's missing, using [Homebrew](https://brew.sh/):
+
+```bash
+make deps
+```
+
+### Other ways to install
+
+Use any one of these instead.
+
+**Homebrew, directly:**
+
 ```bash
 brew install lima ansible
+```
+
+**Homebrew, using this project's `Brewfile`:**
+
+```bash
+brew bundle
+```
+
+This may also upgrade Lima or Ansible if you already have older versions.
+
+**[mise](https://mise.jdx.dev/) for Lima, with Ansible from Homebrew if it's missing:**
+
+```bash
+mise trust      # allow mise to load this project's mise.toml
+mise install    # install lima
+mise run deps   # install ansible if it's missing
+```
+
+**[uv](https://docs.astral.sh/uv/) or [pipx](https://pipx.pypa.io/) for Ansible, if you already have Lima:**
+
+```bash
+uv tool install ansible-core
+```
+
+```bash
+pipx install --include-deps ansible
 ```
 
 ## Usage
 
 ```bash
+make versions   # print macOS, lima, and ansible versions
 make up         # download vm image and launch vm
 make provision  # run ansible playbook on guest
-make test       # run curl to verify
+make verify     # run curl to verify
 make ssh        # log into guest
 make halt       # shutdown guest
-make destroy    # destory vm 
+make destroy    # destroy vm
 ```
 
-Note that luanching the system will not automatically provision the systems.  To enable this by default, set `PROVISION=true`
+Note that launching the system will not automatically provision the systems.  To enable this by default, set `PROVISION=true`
 
 ```bash
 PROVISION=true make up
+```
+
+### Using mise
+
+[mise](https://mise.jdx.dev/) can manage both the commands and the Lima install from `mise.toml`, without needing `make`.
+
+```bash
+mise tasks      # list the tasks
+
+mise run deps
+mise run versions
+mise run up
+mise run provision
+mise run verify
+mise run ssh
+mise run halt
+mise run destroy
+```
+
+`PROVISION` works the same way:
+
+```bash
+PROVISION=true mise run up
+```
+
+### Using just
+
+[just](https://just.systems/) runs the same commands from the `Justfile`, without needing `make` or `mise`.
+
+```bash
+brew install just
+
+just            # list the recipes
+just deps
+just versions
+just up
+just provision
+just verify
+just ssh
+just halt
+just destroy
+```
+
+`PROVISION` works here too:
+
+```bash
+PROVISION=true just up
 ```
 
 ## Measured results
