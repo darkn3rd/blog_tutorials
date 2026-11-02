@@ -1,0 +1,54 @@
+[tools]
+lima = "2.2"
+
+[tasks.deps]
+description = "Install Lima and Ansible if they're missing"
+run = [
+  "mise install",
+  "command -v ansible-playbook >/dev/null || brew install ansible",
+]
+
+[tasks.versions]
+description = "Print the macOS, Lima and Ansible versions"
+run = '''
+printf "macOS: %8s\nlimactl: %5s\nansible: %5s\n" \
+  $(sw_vers --productVersion) \
+  $(limactl --version | cut -d' ' -f3) \
+  $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+'''
+
+[tasks.up]
+description = "Download the VM image and launch the VM"
+run = '''
+if limactl list -q | grep -qx dev; then
+  limactl start --tty=false dev
+else
+  limactl start --tty=false --name=dev --set '.mounts=[{"location":"'"$PWD"'","mountPoint":"/workspace","writable":true}]' lima.yaml
+fi
+if [ "${PROVISION:-false}" = true ]; then mise run provision; fi
+'''
+
+[tasks.provision]
+description = "Run the Ansible playbook on the guest"
+run = "ansible-playbook playbook.yaml"
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "curl --include --fail http://localhost:8080"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "limactl shell --workdir /workspace dev || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "limactl list dev"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "limactl stop dev"
+
+[tasks.destroy]
+description = "Delete the VM"
+run = "limactl delete --force dev"

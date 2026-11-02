@@ -3,7 +3,21 @@ WORKSPACE := /workspace
 MOUNTS := .mounts=[{"location":"$(CURDIR)","mountPoint":"$(WORKSPACE)","writable":true}]
 PROVISION ?= false
 
-.PHONY: up provision ssh status halt destroy
+.PHONY: deps versions up provision verify ssh status halt destroy
+
+deps:
+	@for pair in limactl:lima ansible-playbook:ansible; do \
+		command -v "$${pair%%:*}" >/dev/null && continue; \
+		command -v brew >/dev/null || { echo "$${pair##*:} is missing and Homebrew isn't installed. See the README for other ways to install it." >&2; exit 1; }; \
+		brew install "$${pair##*:}" || exit 1; \
+	done
+	@echo "Lima and Ansible are installed."
+
+versions:
+	@printf "macOS: %8s\nlimactl: %5s\nansible: %5s\n" \
+		$$(sw_vers --productVersion) \
+		$$(limactl --version | cut -d' ' -f3) \
+		$$(ansible --version | sed -n '1s/.* //; 1s/]//p')
 
 up:
 	@if limactl list -q | grep -qx '$(VM)'; then \
@@ -14,7 +28,7 @@ up:
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi
 
 provision:
-	ansible-playbook playbook.yml
+	ansible-playbook playbook.yaml
 
 ssh:
 	limactl shell --workdir $(WORKSPACE) $(VM) || true
@@ -28,5 +42,5 @@ halt:
 destroy:
 	limactl delete --force $(VM)
 
-test:
+verify:
 	curl --include --fail http://localhost:8080

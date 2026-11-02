@@ -1,0 +1,2 @@
+brew "lima"
+brew "ansible"
