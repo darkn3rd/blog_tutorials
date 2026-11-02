@@ -67,7 +67,7 @@ Note that launching the system will not automatically provision the systems.  To
 PROVISION=true make up
 ```
 
-### Using mise
+### Optional: Using mise
 
 [mise](https://mise.jdx.dev/) can manage both the commands and the Lima install from `mise.toml`, without needing `make`.
 
@@ -90,7 +90,7 @@ mise run destroy
 PROVISION=true mise run up
 ```
 
-### Using just
+### Optional: Using just
 
 [just](https://just.systems/) runs the same commands from the `Justfile`, without needing `make` or `mise`.
 
