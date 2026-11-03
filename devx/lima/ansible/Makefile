@@ -14,10 +14,10 @@ deps:
 	@echo "Lima and Ansible are installed."
 
 versions:
-	@printf "macOS: %8s\nlimactl: %5s\nansible: %5s\n" \
-		$$(sw_vers --productVersion) \
-		$$(limactl --version | cut -d' ' -f3) \
-		$$(ansible --version | sed -n '1s/.* //; 1s/]//p')
+	@printf "%-14s%s\n" \
+		macOS: $$(sw_vers --productVersion) \
+		Lima: $$(limactl --version | cut -d' ' -f3) \
+		ansible-core: $$(ansible --version | sed -n '1s/.* //; 1s/]//p')
 
 up:
 	@if limactl list -q | grep -qx '$(VM)'; then \
