@@ -1,5 +1,8 @@
 # Lima writes an SSH config per instance; "lima-<name>" is the host alias in it.
+# Lima keeps instances in $LIMA_HOME, which defaults to ~/.lima.
 web:
   hosts:
     lima-dev:
-      ansible_ssh_common_args: "-F {{ lookup('env', 'HOME') }}/.lima/dev/ssh.config"
+      ansible_ssh_common_args: >-
+        -F "{{ lookup('env', 'LIMA_HOME') or
+             (lookup('env', 'HOME') ~ '/.lima') }}/dev/ssh.config"
