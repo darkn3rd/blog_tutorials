@@ -1,6 +1,6 @@
 ---
 - name: Configure the development web server
-  hosts: all
+  hosts: web
   become: true
 
   vars:

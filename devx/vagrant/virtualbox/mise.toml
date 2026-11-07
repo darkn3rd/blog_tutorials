@@ -26,8 +26,15 @@ vagrant up --provider=virtualbox "$flag"
 '''
 
 [tasks.provision]
-description = "Run the Ansible playbook on the guest"
+description = "Run the Ansible playbook through Vagrant"
 run = "vagrant provision"
+
+[tasks.playbook]
+description = "Run the Ansible playbook directly from the host"
+run = [
+  "vagrant ssh-config > .vagrant/ssh.config",
+  "ansible-playbook playbook.yaml",
+]
 
 [tasks.verify]
 description = "Check the web page with curl"

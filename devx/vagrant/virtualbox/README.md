@@ -30,6 +30,7 @@ mise run deps
 | --- | --- |
 | `Vagrantfile` | Defines the VM: the box, CPUs, memory, forwarded port, shared folder and provisioner |
 | `playbook.yaml` | The Ansible playbook that configures the VM |
+| `inventory.yaml` | The inventory for running `ansible-playbook` directly |
 | `ansible.cfg` | Ansible settings |
 | `site/` | The web page and web server config that the playbook copies into the VM |
 | `Makefile` | Short commands for the steps below |
@@ -45,6 +46,7 @@ folder is shared into the VM at `/workspace`.
 | `make up` | `mise run up` | `vagrant up --provider=virtualbox --no-provision` |
 | `make up PROVISION=true` | `PROVISION=true mise run up` | `vagrant up --provider=virtualbox --provision` |
 | `make provision` | `mise run provision` | `vagrant provision` |
+| `make playbook` | `mise run playbook` | `ansible-playbook playbook.yaml`, without Vagrant |
 | `make ssh` | `mise run ssh` | `vagrant ssh`, starting in `/workspace` |
 | `make status` | `mise run status` | `vagrant status` |
 | `make halt` | `mise run halt` | `vagrant halt` |
@@ -66,19 +68,46 @@ curl --include http://localhost:8080
 
 ## How provisioning works
 
-Vagrant has a built-in Ansible provisioner. It writes an inventory for the VM and runs
-`ansible-playbook` from your Mac, so there's no inventory file in this project.
+There are two ways to run the playbook, and both put the VM in a `web` group, which is
+the group the playbook targets.
+
+### Through Vagrant
+
+`make provision` runs `vagrant provision`. Vagrant's built-in Ansible provisioner writes
+its own inventory, with the `web` group set by `ansible.groups` in the `Vagrantfile`, and
+runs `ansible-playbook` from your Mac.
 
 Plain `vagrant up` provisions a new VM on its first boot only. Here `make up` doesn't
 provision unless `PROVISION=true` is set, so creating the VM and configuring it are
-separate steps. Run `make provision` to apply the playbook at any time.
+separate steps.
+
+### Directly with Ansible
+
+`make playbook` runs Ansible without Vagrant's provisioner. It does two things:
+
+```bash
+vagrant ssh-config > .vagrant/ssh.config
+ansible-playbook playbook.yaml
+```
+
+`vagrant ssh-config` prints the SSH settings for the VM: its address, port, user and
+key. `inventory.yaml` passes that file to SSH, and `ansible.cfg` makes `inventory.yaml`
+the default inventory. The SSH port can change when the VM restarts, so `make playbook`
+saves the settings again each time.
+
+Once `.vagrant/ssh.config` exists, you can also run any Ansible command yourself, such as:
+
+```bash
+ansible web -m ping
+```
 
 ## Changing the configuration
 
-Edit `site/index.html`, then run:
+Edit `site/index.html`, then run either of these:
 
 ```bash
 make provision
+make playbook
 ```
 
 Ansible copies the new page into the VM. Because the file changed, the task notifies the
