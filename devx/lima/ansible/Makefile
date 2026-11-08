@@ -3,7 +3,7 @@ WORKSPACE := /workspace
 MOUNTS := .mounts=[{"location":"$(CURDIR)","mountPoint":"$(WORKSPACE)","writable":true}]
 PROVISION ?= false
 
-.PHONY: deps versions up provision verify ssh status halt destroy
+.PHONY: deps versions up provision verify ssh status halt destroy purge
 
 deps:
 	@for pair in limactl:lima ansible-playbook:ansible; do \
@@ -44,3 +44,6 @@ destroy:
 
 verify:
 	curl --include --fail http://localhost:8080
+
+purge:
+	limactl prune
