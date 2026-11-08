@@ -1,0 +1,14 @@
+#cloud-config
+# The user gets the host's UID so that it can write to the 9p project mount.
+users:
+  - name: ubuntu
+    uid: @UID@
+    groups: [adm, sudo]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @SSH_KEY@
+
+mounts:
+  - [workspace, /workspace, 9p, "trans=virtio,version=9p2000.L,msize=524288,nofail", "0", "0"]

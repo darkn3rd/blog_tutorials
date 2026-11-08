@@ -2,7 +2,7 @@ WORKSPACE := /workspace
 PROVISION ?= false
 PROVISION_FLAG := $(if $(filter true,$(PROVISION)),--provision,--no-provision)
 
-.PHONY: up provision playbook ssh status halt destroy purge
+.PHONY: up provision playbook verify ssh status halt destroy purge
 
 up:
 	vagrant up --provider=virtualbox $(PROVISION_FLAG)
@@ -13,6 +13,9 @@ provision:
 playbook:
 	vagrant ssh-config > .vagrant/ssh.config
 	ansible-playbook playbook.yaml
+
+verify:
+	curl --include --fail http://localhost:8080
 
 ssh:
 	vagrant ssh -- -t 'cd $(WORKSPACE) && exec bash -l'

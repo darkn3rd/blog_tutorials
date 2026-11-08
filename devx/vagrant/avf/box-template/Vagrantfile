@@ -1,0 +1,12 @@
+Vagrant.configure("2") do |config|
+  config.ssh.username = "vagrant"
+  config.ssh.keys_only = true
+  config.ssh.insert_key = false
+  config.ssh.private_key_path = File.expand_path("box/insecure_private_key", __dir__)
+
+  config.vm.provider :avf do |avf|
+    avf.headless = true
+    avf.guest = :linux
+    avf.disk_image_path = File.expand_path("box/disk.img", __dir__)
+  end
+end

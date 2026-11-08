@@ -1,0 +1,70 @@
+# mise has no Vagrant tool, so deps installs everything with Homebrew and Vagrant.
+
+[tasks.deps]
+description = "Install Vagrant, QEMU, the vagrant-qemu plugin and Ansible if they're missing"
+run = [
+  "command -v vagrant >/dev/null || brew install --cask vagrant",
+  "command -v qemu-system-aarch64 >/dev/null || brew install qemu",
+  "vagrant plugin list | grep -q '^vagrant-qemu ' || vagrant plugin install vagrant-qemu",
+  "command -v ansible-playbook >/dev/null || brew install ansible",
+]
+
+[tasks.versions]
+description = "Print the macOS, Vagrant, vagrant-qemu, QEMU and Ansible versions"
+run = '''
+printf "%-14s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  Vagrant: $(vagrant --version | cut -d' ' -f2) \
+  vagrant-qemu: $(vagrant plugin list | sed -n 's/^vagrant-qemu (\([^,)]*\).*/\1/p') \
+  QEMU: $(qemu-system-aarch64 --version | sed -n '1s/.*version \([^ ]*\).*/\1/p') \
+  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+'''
+
+[tasks.up]
+description = "Download the box and launch the VM"
+run = '''
+if [ "${PROVISION:-false}" = true ]; then flag=--provision; else flag=--no-provision; fi
+vagrant up --provider=qemu "$flag"
+'''
+
+[tasks.provision]
+description = "Run the Ansible playbook through Vagrant"
+run = "vagrant provision"
+
+[tasks.playbook]
+description = "Run the Ansible playbook directly from the host"
+run = [
+  "vagrant ssh-config > .vagrant/ssh.config",
+  "ansible-playbook playbook.yaml",
+]
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "curl --include --fail http://localhost:8080"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "vagrant ssh -- -t 'cd /workspace && exec bash -l' || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "vagrant status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "vagrant halt"
+
+[tasks.destroy]
+description = "Delete the VM"
+run = "vagrant destroy --force"
+
+[tasks.purge]
+description = "Delete the downloaded box"
+run = '''
+if vagrant box list | grep -q '^bento/ubuntu-26.04 *(libvirt'; then
+  vagrant box remove bento/ubuntu-26.04 --provider libvirt --all --force
+else
+  echo "No cached box to remove."
+fi
+'''

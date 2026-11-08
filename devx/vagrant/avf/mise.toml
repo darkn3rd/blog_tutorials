@@ -1,0 +1,58 @@
+# The Makefile builds the local box from file dependencies, so the VM tasks here run make.
+
+[tasks.deps]
+description = "Install Vagrant, QEMU (for qemu-img), the AVF plugin and Ansible if they're missing"
+run = [
+  "xcode-select -p >/dev/null 2>&1 || { echo 'Install the Xcode command line tools first: xcode-select --install' >&2; exit 1; }",
+  "command -v vagrant >/dev/null || brew install --cask vagrant",
+  "command -v qemu-img >/dev/null || brew install qemu",
+  "vagrant plugin list | grep -q '^vagrant-provider-avf ' || vagrant plugin install vagrant-provider-avf",
+  "command -v ansible-playbook >/dev/null || brew install ansible",
+]
+
+[tasks.versions]
+description = "Print the macOS, Vagrant, AVF provider and Ansible versions"
+run = '''
+printf "%-14s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  Vagrant: $(vagrant --version | cut -d' ' -f2) \
+  avf-provider: $(vagrant plugin list | sed -n 's/^vagrant-provider-avf (\([^,)]*\).*/\1/p') \
+  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+'''
+
+[tasks.up]
+description = "Build the box if needed, start the VM and wait for it"
+run = "make up"
+
+[tasks.provision]
+description = "Run the Ansible playbook on the guest"
+run = "make provision"
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "make verify"
+
+[tasks.url]
+description = "Print the web page's address"
+run = "make url"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "make ssh || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "make status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "make halt"
+
+[tasks.destroy]
+description = "Delete the VM, keeping the box"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the local box and the downloaded image"
+run = "make purge"

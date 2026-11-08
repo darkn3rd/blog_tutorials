@@ -1,0 +1,52 @@
+# The Makefile builds the VM from file dependencies, so the VM tasks here run make.
+
+[tasks.deps]
+description = "Install VirtualBox, QEMU (for qemu-img) and Ansible if they're missing"
+run = [
+  "command -v VBoxManage >/dev/null || brew install --cask virtualbox",
+  "command -v qemu-img >/dev/null || brew install qemu",
+  "command -v ansible-playbook >/dev/null || brew install ansible",
+]
+
+[tasks.versions]
+description = "Print the macOS, VirtualBox, qemu-img and Ansible versions"
+run = '''
+printf "%-14s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  VirtualBox: $(VBoxManage --version | cut -d'r' -f1) \
+  qemu-img: $(qemu-img --version | sed -n '1s/.*version \([^ ]*\).*/\1/p') \
+  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+'''
+
+[tasks.up]
+description = "Download the image, create or start the VM and wait for it"
+run = "make up"
+
+[tasks.provision]
+description = "Run the Ansible playbook on the guest"
+run = "make provision"
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "make verify"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "make ssh || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "make status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "make halt"
+
+[tasks.destroy]
+description = "Delete the VM, keeping the downloaded image"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the downloaded image"
+run = "make purge"

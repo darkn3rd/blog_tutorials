@@ -1,0 +1,7 @@
+{
+  "provider": "avf",
+  "architecture": "arm64",
+  "guest": "linux",
+  "format": "efi-disk",
+  "release": "26.04"
+}
