@@ -1,0 +1,54 @@
+{# Each app server gets its own accent color, so it's easy to see which one answered. #}
+{% set colors = ['#5fd7ff', '#87ff5f', '#ffaf5f'] %}
+{% set accent = colors[groups['app'].index(inventory_hostname) % colors | length] %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ ansible_facts['hostname'] }}</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #1c1c1c;
+        color: #d0d0d0;
+        font: 16px/1.5 ui-monospace, Menlo, Consolas, monospace;
+      }
+      main { display: flex; gap: 3em; flex-wrap: wrap; padding: 2em; }
+      pre { margin: 0; color: {{ accent }}; }
+      .key { color: {{ accent }}; font-weight: bold; }
+      .colors span { display: inline-block; width: 2em; height: 1em; }
+      footer { margin-top: 1.5em; color: #808080; }
+    </style>
+  </head>
+  <body>
+    <main>
+<pre>
+  .--------------------.
+  | [] ========  o o o |
+  |--------------------|
+  | [] ========  o o o |
+  |--------------------|
+  | [] ========  o o o |
+  '--------------------'
+</pre>
+      <div>
+        <div><span class="key">vagrant</span>@<span class="key">{{ ansible_facts['hostname'] }}</span></div>
+        <div>------------------</div>
+        <div><span class="key">Hostname</span>: {{ ansible_facts['hostname'] }}</div>
+        <div><span class="key">IP address</span>: {{ private_ip }}</div>
+        <div><span class="key">OS</span>: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }} {{ ansible_facts['architecture'] }}</div>
+        <div><span class="key">Kernel</span>: {{ ansible_facts['kernel'] }}</div>
+        <div><span class="key">CPUs</span>: {{ ansible_facts['processor_vcpus'] }}</div>
+        <div><span class="key">Memory</span>: {{ ansible_facts['memtotal_mb'] }} MiB</div>
+        <div><span class="key">Web server</span>: nginx</div>
+        <div class="colors">
+          <span style="background:#d75f5f"></span><span style="background:#87ff5f"></span><span style="background:#ffd75f"></span><span style="background:#5fafff"></span><span style="background:#d787d7"></span><span style="background:#5fd7ff"></span>
+        </div>
+        <footer>Reload the page to reach the next server.</footer>
+      </div>
+    </main>
+  </body>
+</html>

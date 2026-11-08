@@ -1,0 +1,13 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure the app servers
+  hosts: app
+  become: true
+  roles:
+    - appserver
+
+- name: Configure the load balancer
+  hosts: loadbalancer
+  become: true
+  roles:
+    - haproxy

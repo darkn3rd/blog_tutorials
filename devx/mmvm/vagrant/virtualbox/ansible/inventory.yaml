@@ -1,0 +1,18 @@
+# Used when running ansible-playbook directly. `make playbook` saves the output of
+# `vagrant ssh-config` to .vagrant/ssh.config; the host names below match the ones in it.
+all:
+  vars:
+    ansible_ssh_common_args: '-F "{{ inventory_dir }}/.vagrant/ssh.config"'
+  children:
+    app:
+      hosts:
+        web1:
+          private_ip: 192.168.56.11
+        web2:
+          private_ip: 192.168.56.12
+        web3:
+          private_ip: 192.168.56.13
+    loadbalancer:
+      hosts:
+        lb:
+          private_ip: 192.168.56.10
