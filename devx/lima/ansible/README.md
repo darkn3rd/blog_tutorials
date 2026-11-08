@@ -59,6 +59,7 @@ make verify     # run curl to verify
 make ssh        # log into guest
 make halt       # shutdown guest
 make destroy    # destroy vm
+make purge      # delete downloaded images
 ```
 
 Note that launching the system will not automatically provision the systems.  To enable this by default, set `PROVISION=true`
@@ -82,6 +83,7 @@ mise run verify
 mise run ssh
 mise run halt
 mise run destroy
+mise run purge
 ```
 
 `PROVISION` works the same way:
@@ -106,6 +108,7 @@ just verify
 just ssh
 just halt
 just destroy
+just purge
 ```
 
 `PROVISION` works here too:

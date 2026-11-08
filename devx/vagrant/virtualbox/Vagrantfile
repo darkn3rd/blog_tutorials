@@ -1,0 +1,21 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-26.04"
+
+  config.vm.define "dev"
+
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/workspace"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 2
+    vb.memory = 4096
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.compatibility_mode = "2.0"
+    ansible.playbook = "playbook.yaml"
+    ansible.groups = { "web" => ["dev"] }
+  end
+end

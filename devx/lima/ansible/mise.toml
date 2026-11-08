@@ -52,3 +52,7 @@ run = "limactl stop dev"
 [tasks.destroy]
 description = "Delete the VM"
 run = "limactl delete --force dev"
+
+[tasks.purge]
+description = "Delete Lima's downloaded images"
+run = "limactl prune"

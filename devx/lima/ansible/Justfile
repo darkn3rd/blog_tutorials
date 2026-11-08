@@ -51,3 +51,7 @@ halt:
 # Delete the VM
 destroy:
     limactl delete --force {{VM}}
+
+# Delete Lima's downloaded images
+purge:
+    limactl prune
