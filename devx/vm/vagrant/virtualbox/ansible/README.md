@@ -47,6 +47,7 @@ folder is shared into the VM at `/workspace`.
 | `make up PROVISION=true` | `PROVISION=true mise run up` | `vagrant up --provider=virtualbox --provision` |
 | `make provision` | `mise run provision` | `vagrant provision` |
 | `make playbook` | `mise run playbook` | `ansible-playbook playbook.yaml`, without Vagrant |
+| `make verify` | `mise run verify` | `curl --include --fail http://localhost:8080` |
 | `make ssh` | `mise run ssh` | `vagrant ssh`, starting in `/workspace` |
 | `make status` | `mise run status` | `vagrant status` |
 | `make halt` | `mise run halt` | `vagrant halt` |

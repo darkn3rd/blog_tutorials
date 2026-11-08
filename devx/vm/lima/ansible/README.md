@@ -62,6 +62,8 @@ make destroy    # destroy vm
 make purge      # delete downloaded images
 ```
 
+`make purge` runs `limactl prune`, which empties Lima's whole download cache, including images that other Lima VMs use.
+
 Note that launching the system will not automatically provision the systems.  To enable this by default, set `PROVISION=true`
 
 ```bash

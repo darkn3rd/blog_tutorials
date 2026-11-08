@@ -1,0 +1,6 @@
+#cloud-config
+ssh_authorized_keys:
+  - @SSH_KEY@
+
+mounts:
+  - [workspace, /workspace, vboxsf, "uid=1000,gid=1000,nofail", "0", "0"]

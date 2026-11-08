@@ -1,0 +1,23 @@
+Vagrant.configure("2") do |config|
+  # vagrant-qemu reads libvirt-format boxes, so this uses the box's libvirt build.
+  config.vm.box = "bento/ubuntu-26.04"
+
+  config.vm.define "dev"
+
+  config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+
+  # rsync needs no password or extra host software, but only copies host to guest.
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/workspace", type: "rsync"
+
+  config.vm.provider "qemu" do |qe|
+    qe.smp = "2"
+    qe.memory = "4G"
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.compatibility_mode = "2.0"
+    ansible.playbook = "playbook.yaml"
+    ansible.groups = { "web" => ["dev"] }
+  end
+end

@@ -1,0 +1,17 @@
+# The AVF provider has no provision action or web port forwarding, so the Makefile
+# runs Ansible itself and the page is served from the VM's NAT address.
+Vagrant.configure("2") do |config|
+  config.vm.box = "local/ubuntu-26.04-arm64"
+  config.vm.box_check_update = false
+
+  config.vm.define "dev"
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/workspace", type: :avf_virtiofs
+
+  config.vm.provider :avf do |avf|
+    avf.cpus = 2
+    avf.memory_mb = 4096
+    avf.disk_gb = 20
+  end
+end
