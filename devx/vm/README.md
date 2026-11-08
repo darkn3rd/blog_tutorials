@@ -73,38 +73,33 @@ details.
 
 ## Timings
 
-The medians of three runs. [TIMINGS.md](TIMINGS.md) has every run for each tutorial.
+[TIMINGS.md](TIMINGS.md) has the median time of each step in each tutorial, including an
+estimate of how long the image or box takes to download.
 
-| Step | `lima/ansible` | `vagrant/virtualbox/ansible` |
-| --- | ---: | ---: |
-| First `make up`, with download, create and provision | 2m 17s | 7m 54s |
-| Download, estimated | 1m 44s | 5m 6s |
-| `make up PROVISION=true`, create and provision | 33.1s | 2m 50s |
-| `make provision`, no changes | 3.4s | 5.9s |
-| `make provision`, page changed | 3.7s | 6.2s |
-| `make halt` | 1.6s | 3.2s |
-| `make up`, from stopped | 6.1s | 2m 16s |
-| `make up`, while running | 0.08s | 1.6s |
-| `make destroy` | 0.09s | 3.2s |
-
-The first two rows come from a single cold run, after `make purge`. In `lima/ansible`,
-`make provision` runs `ansible-playbook` from the Mac; in `vagrant/virtualbox/ansible` it
-runs `vagrant provision`.
-
-### Running the benchmark
-
-`bench.sh` times the same steps in any of the tutorials: create the VM, provision it, provision
-again with no changes, provision after a page change, halt, start, and destroy. Run it from
-a tutorial folder:
+To time the tutorials yourself, run:
 
 ```bash
-cd vagrant/virtualbox/ansible
-../../../bench.sh
+./bench-all.sh
 ```
 
-Add `--cold` to delete the downloaded image or box first with `make purge`, so the first
-`make up` includes the download. The script prints a table and appends the results to
-`timings.csv` next to itself.
+It runs `bench.sh` in each tutorial listed in `bench.yaml`, one after another, so they all
+share the same connection. Each tutorial gets one cold run, which deletes the image or box
+with `make purge` first so the first `make up` includes the download, and three warm runs.
+Creating the VM with `make up` and provisioning it with `make provision` are timed as
+separate steps.
+The results go to `<name>.timings.csv`, such as `vagrant_vbox_ansible.timings.csv`, and
+`bench-all.sh` then rewrites `TIMINGS.md` from them.
+
+- **Choose tutorials** by setting `skip: true` in `bench.yaml`, or by naming them:
+  `./bench-all.sh lima_ansible vagrant_vbox_ansible`.
+- **Change the number of runs** with `cold_runs` and `warm_runs` in `bench.yaml`.
+- **Rewrite `TIMINGS.md`** from the existing results without running anything:
+  `./bench-all.sh --report`.
+- **Time one tutorial** by running `bench.sh` from its folder, for example
+  `cd vagrant/virtualbox/ansible && ../../../bench.sh --cold`.
+
+Port 8080 must be free, because each tutorial serves its page there. `bench-all.sh` needs
+`yq` (`brew install yq`).
 
 ## Planned
 

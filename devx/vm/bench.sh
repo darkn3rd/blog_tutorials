@@ -5,19 +5,22 @@
 #   cd devx/vm/vagrant/virtualbox/ansible
 #   ../../../bench.sh
 #
+# Creating the VM (`make up`) and provisioning it (`make provision`) are timed separately.
 # By default the VM image or box must already be downloaded. With --cold, the script
 # deletes the cached image with `make purge` and times one extra `make up` that includes
 # the download, then destroys the VM and runs the usual steps, so
 # download time ≈ cold up - warm up.
 #
-# Results print as a Markdown table and are appended to timings.csv next to this script.
+# Results print as a Markdown table and are appended to timings.csv next to this script,
+# or to the file named by TIMINGS_CSV. bench-all.sh sets TIMINGS_CSV for each tutorial.
 set -uo pipefail
 
 cold=false
 [ "${1:-}" = --cold ] && cold=true
 
-project=$(basename "$(dirname "$PWD")")/$(basename "$PWD")
-csv=$(cd "$(dirname "$0")" && pwd)/timings.csv
+script_dir=$(cd "$(dirname "$0")" && pwd)
+project=${PWD#"$script_dir"/}
+csv=${TIMINGS_CSV:-$script_dir/timings.csv}
 log=$(mktemp)
 page=site/index.html
 backup=$(mktemp)
@@ -65,14 +68,15 @@ if $cold; then
     cat "$log" >&2
     exit 1
   fi
-  step "up, download, create and provision" make up PROVISION=true
+  step "up, download and create"         make up
   cold_secs=$last
   echo "Resetting: make destroy" >&2
   make destroy >/dev/null 2>&1
 fi
 
-step "up, create and provision"         make up PROVISION=true
+step "up, create"                       make up
 warm_secs=$last
+step "provision, first run"             make provision
 step "provision, no changes"            make provision
 perl -pi -e 's#</h1>#!</h1>#' "$page"
 step "provision, page changed"          make provision

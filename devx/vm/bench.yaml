@@ -1,0 +1,24 @@
+# Tutorials that bench-all.sh times, in order. `name` is the prefix of each results file,
+# <name>.timings.csv. Set `skip: true` to leave a tutorial out.
+
+# Each cold run deletes the image or box first, so it includes the download, and it also
+# counts as one warm run. With cold_runs: 1 and warm_runs: 3, each tutorial gets one cold
+# run and two more warm runs.
+cold_runs: 1
+warm_runs: 3
+
+tutorials:
+  - name: lima_ansible
+    path: lima/ansible
+  - name: qemu_ansible
+    path: qemu/ansible
+  - name: vbox_ansible
+    path: virtualbox/ansible
+  - name: vagrant_vbox_ansible
+    path: vagrant/virtualbox/ansible
+  - name: vagrant_qemu_ansible
+    path: vagrant/qemu/ansible
+  - name: vagrant_avf_ansible
+    path: vagrant/avf/ansible
+    skip: true
+    reason: SSH to the VM fails in testing
