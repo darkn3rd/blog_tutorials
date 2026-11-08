@@ -2,8 +2,8 @@
 # Time the same VM lifecycle in any project that has make targets up, provision, halt,
 # destroy and purge, plus site/index.html. Run it from the project folder:
 #
-#   cd devx/vagrant/virtualbox
-#   ../../bench.sh
+#   cd devx/vm/vagrant/virtualbox/ansible
+#   ../../../bench.sh
 #
 # By default the VM image or box must already be downloaded. With --cold, the script
 # deletes the cached image with `make purge` and times one extra `make up` that includes
