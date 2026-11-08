@@ -51,6 +51,7 @@ folder is shared into the VM at `/workspace`.
 | `make status` | `mise run status` | `vagrant status` |
 | `make halt` | `mise run halt` | `vagrant halt` |
 | `make destroy` | `mise run destroy` | `vagrant destroy --force` |
+| `make purge` | `mise run purge` | `vagrant box remove`, deleting the downloaded box |
 
 The first `make up` downloads the box, which takes a while.
 
