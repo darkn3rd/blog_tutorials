@@ -1,0 +1,49 @@
+# Four VMs on one private network: three app servers behind a load balancer.
+APP_SERVERS = {
+  "web1" => "192.168.56.11",
+  "web2" => "192.168.56.12",
+  "web3" => "192.168.56.13",
+}
+LB_IP = "192.168.56.10"
+
+Vagrant.configure("2") do |config|
+  # Settings shared by every VM
+  config.vm.box = "bento/ubuntu-26.04"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 1
+    vb.memory = 1024
+  end
+
+  # The app servers: web1, web2 and web3
+  APP_SERVERS.each do |name, ip|
+    config.vm.define name do |web|
+      web.vm.hostname = name
+      web.vm.network "private_network", ip: ip
+    end
+  end
+
+  # The load balancer. It's defined last, so it's the last VM `vagrant up` creates,
+  # and its provisioner configures all four VMs in one Ansible run.
+  config.vm.define "lb" do |lb|
+    lb.vm.hostname = "lb"
+    lb.vm.network "private_network", ip: LB_IP
+    lb.vm.network "forwarded_port", guest: 80, host: 8080
+    lb.vm.network "forwarded_port", guest: 8404, host: 8404
+
+    lb.vm.provision "ansible" do |ansible|
+      ansible.compatibility_mode = "2.0"
+      ansible.playbook = "playbook.yaml"
+      ansible.limit = "all"
+      ansible.groups = {
+        "app" => APP_SERVERS.keys,
+        "loadbalancer" => ["lb"],
+      }
+      # Pass each VM's address to Ansible as the variable private_ip,
+      # e.g. "web1" => { "private_ip" => "192.168.56.11" }
+      all_ips = APP_SERVERS.merge("lb" => LB_IP)
+      ansible.host_vars = all_ips.transform_values { |ip| { "private_ip" => ip } }
+    end
+  end
+end

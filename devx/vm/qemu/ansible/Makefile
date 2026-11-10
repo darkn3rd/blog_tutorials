@@ -19,7 +19,7 @@ MONITOR := $(VM_DIR)/monitor.sock
 
 FIRMWARE_DIR := $(shell brew --prefix qemu)/share/qemu
 
-SSH := ssh -i $(KEY) -p $(SSH_PORT) -o BatchMode=yes -o ConnectTimeout=5 \
+SSH := ssh -i $(KEY) -p $(SSH_PORT) -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 \
 	-o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
 	ubuntu@127.0.0.1
 RUNNING := test -f $(PID) && kill -0 "$$(cat $(PID))" 2>/dev/null

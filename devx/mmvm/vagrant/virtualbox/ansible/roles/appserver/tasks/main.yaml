@@ -1,0 +1,22 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    lock_timeout: 120
+
+# The page is built from facts Ansible gathered about this VM, so each app server
+# shows its own hostname, IP address and system details.
+- name: Write the system info page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    mode: "0644"
+
+- name: Start nginx on boot
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true

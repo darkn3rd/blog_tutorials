@@ -17,7 +17,7 @@ KEY := $(VM_DIR)/id_ed25519
 CREATED := $(VM_DIR)/created
 
 VBOX := VBoxManage -q
-SSH := ssh -i $(KEY) -p $(SSH_PORT) -o BatchMode=yes -o ConnectTimeout=5 \
+SSH := ssh -i $(KEY) -p $(SSH_PORT) -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 \
 	-o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
 	ubuntu@127.0.0.1
 VM_STATE := $(VBOX) showvminfo $(VM) --machinereadable 2>/dev/null | sed -n 's/^VMState="\(.*\)"$$/\1/p'
