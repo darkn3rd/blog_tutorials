@@ -6,4 +6,4 @@ web:
       ansible_port: 2222
       ansible_user: ubuntu
       ansible_ssh_private_key_file: .vm/id_ed25519
-      ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+      ansible_ssh_common_args: "-o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
