@@ -1,0 +1,24 @@
+---
+- name: Install HAProxy
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    lock_timeout: 120
+
+# The template lists every host in the "app" group as a backend server.
+# `validate` checks the new file with HAProxy before it replaces the old one.
+- name: Write the HAProxy config
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: "0644"
+    validate: haproxy -c -f %s
+  notify: Reload HAProxy
+
+- name: Start HAProxy on boot
+  ansible.builtin.service:
+    name: haproxy
+    state: started
+    enabled: true

@@ -1,0 +1,66 @@
+[tools]
+lima = "2.2"
+
+[tasks.deps]
+description = "Install Lima and Ansible if they're missing"
+run = [
+  "mise install",
+  "command -v ansible-playbook >/dev/null || brew install ansible",
+]
+
+[tasks.versions]
+description = "Print the macOS, Lima and Ansible versions"
+run = '''
+printf "%-14s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  Lima: $(limactl --version | cut -d' ' -f3) \
+  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+'''
+
+[tasks.up]
+description = "Download the VM image and launch the four VMs"
+run = '''
+for vm in web1 web2 web3 lb; do
+  if limactl list -q | grep -qx "$vm"; then
+    limactl start --tty=false "$vm"
+  elif [ "$vm" = lb ]; then
+    limactl start --tty=false --name="$vm" lima/loadbalancer.yaml
+  else
+    limactl start --tty=false --name="$vm" lima/appserver.yaml
+  fi || exit 1
+done
+if [ "${PROVISION:-false}" = true ]; then mise run provision; fi
+'''
+
+[tasks.provision]
+description = "Run the Ansible playbook on all four VMs"
+run = "ansible-playbook playbook.yaml"
+
+[tasks.verify]
+description = "Request the page six times through the load balancer"
+run = '''
+for i in 1 2 3 4 5 6; do
+  curl --silent --fail http://localhost:8080 | grep '<title>'
+done
+'''
+
+[tasks.ssh]
+description = "Log into a VM (VM=web1 mise run ssh); defaults to lb"
+run = "limactl shell ${VM:-lb} || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "limactl list web1 web2 web3 lb"
+
+[tasks.halt]
+description = "Shut down the VMs"
+run = "for vm in web1 web2 web3 lb; do limactl stop $vm; done"
+
+[tasks.destroy]
+description = "Delete the VMs"
+run = "limactl delete --force web1 web2 web3 lb"
+
+[tasks.purge]
+description = "Delete Lima's downloaded images"
+run = "limactl prune"

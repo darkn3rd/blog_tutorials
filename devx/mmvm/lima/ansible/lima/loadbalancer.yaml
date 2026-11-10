@@ -1,0 +1,31 @@
+# The template for lb.
+# Changes apply when the VM is recreated: make destroy up
+minimumLimaVersion: 2.0.0
+
+# Follows the newest Ubuntu LTS known to the installed Lima version.
+base:
+- template:_images/ubuntu-lts
+
+cpus: 1
+memory: 1GiB
+disk: 10GiB
+
+containerd:
+  system: false
+  user: false
+
+mounts: []
+
+# Lima's user-v2 network, which all the VMs share, in place of the default
+# network, which each VM has to itself. Lima assigns each VM an address on it.
+networks:
+- lima: user-v2
+
+# Forward the site and HAProxy's status page to the Mac, and nothing else.
+portForwards:
+- guestPort: 80
+  hostPort: 8080
+- guestPort: 8404
+  hostPort: 8404
+- guestIP: 0.0.0.0
+  ignore: true
