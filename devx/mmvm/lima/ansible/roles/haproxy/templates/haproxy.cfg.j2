@@ -1,0 +1,28 @@
+# Managed by Ansible
+
+defaults
+    mode http
+    timeout connect 5s
+    timeout client  30s
+    timeout server  30s
+
+# Visitors connect here, on port 80
+frontend web
+    bind *:80
+    default_backend app
+
+# HAProxy sends each request to the next app server in turn
+backend app
+    balance roundrobin
+    # Stop browsers caching the page, so a reload always shows the next server
+    http-response set-header Cache-Control no-store
+{% for host in groups['app'] %}
+    server {{ host }} {{ hostvars[host]['private_ip'] }}:80 check
+{% endfor %}
+
+# A status page showing each app server and whether it's up
+listen stats
+    bind *:8404
+    stats enable
+    stats uri /
+    stats refresh 5s

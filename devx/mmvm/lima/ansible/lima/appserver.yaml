@@ -1,0 +1,28 @@
+# The template for web1, web2 and web3.
+# Changes apply when the VMs are recreated: make destroy up
+minimumLimaVersion: 2.0.0
+
+# Follows the newest Ubuntu LTS known to the installed Lima version.
+base:
+- template:_images/ubuntu-lts
+
+cpus: 1
+memory: 1GiB
+disk: 10GiB
+
+containerd:
+  system: false
+  user: false
+
+mounts: []
+
+# Lima's user-v2 network, which all the VMs share, in place of the default
+# network, which each VM has to itself. Lima assigns each VM an address on it.
+networks:
+- lima: user-v2
+
+# Don't forward any ports to the Mac. Visitors reach the app servers through
+# the load balancer.
+portForwards:
+- guestIP: 0.0.0.0
+  ignore: true

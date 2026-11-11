@@ -1,0 +1,22 @@
+# Lima writes an SSH config per instance, such as ~/.lima/web1/ssh.config, and
+# "lima-<name>" is the host alias in it. Lima keeps instances in $LIMA_HOME,
+# which defaults to ~/.lima.
+all:
+  vars:
+    lima_home: "{{ lookup('env', 'LIMA_HOME') or (lookup('env', 'HOME') ~ '/.lima') }}"
+    lima_instance: "{{ inventory_hostname | replace('lima-', '') }}"
+    ansible_ssh_common_args: '-F "{{ lima_home }}/{{ lima_instance }}/ssh.config"'
+
+    # Each VM's address on the shared network, read from the facts Ansible
+    # gathers about it. Lima hands out these addresses, so they aren't fixed.
+    private_ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+
+  children:
+    app:
+      hosts:
+        lima-web1:
+        lima-web2:
+        lima-web3:
+    loadbalancer:
+      hosts:
+        lima-lb:
