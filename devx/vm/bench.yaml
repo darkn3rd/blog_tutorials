@@ -12,6 +12,8 @@ tutorials:
     path: lima/ansible
   - name: qemu_ansible
     path: qemu/ansible
+  - name: krunkit_ansible
+    path: krunkit/ansible
   - name: vbox_ansible
     path: virtualbox/ansible
   - name: vagrant_vbox_ansible
