@@ -49,6 +49,13 @@ run = "limactl list dev"
 description = "Shut down the guest"
 run = "limactl stop dev"
 
+[tasks.reload]
+description = "Restart the VM, without provisioning unless PROVISION=true"
+run = '''
+if [ "$(limactl list dev 2>/dev/null | awk 'NR == 2 {print $2}')" = Running ]; then limactl stop dev; fi
+mise run up
+'''
+
 [tasks.destroy]
 description = "Delete the VM"
 run = "limactl delete --force dev"

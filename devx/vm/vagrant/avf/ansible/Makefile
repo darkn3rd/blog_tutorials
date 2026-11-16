@@ -15,7 +15,7 @@ KEY_URL := https://raw.githubusercontent.com/sodini-io/vagrant-provider-avf/0.1.
 PLUGIN_KEY := $(firstword $(wildcard $(HOME)/.vagrant.d/gems/*/gems/vagrant-provider-avf-*/lib/vagrant_provider_avf/data/avf_insecure_key.pub))
 
 .DELETE_ON_ERROR:
-.PHONY: up start box provision verify ssh url status halt destroy remove-box purge
+.PHONY: up start box provision verify ssh url status halt reload destroy remove-box purge
 
 up: start
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi
@@ -43,6 +43,10 @@ status:
 
 halt:
 	vagrant halt
+
+reload:
+	@$(MAKE) halt
+	@$(MAKE) up
 
 destroy:
 	vagrant destroy --force

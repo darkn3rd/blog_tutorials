@@ -52,6 +52,7 @@ folder is shared into the VM at `/workspace`.
 | `make ssh` | `mise run ssh` | SSH in, starting in `/workspace` |
 | `make status` | `mise run status` | Report the VM state, or `not created` |
 | `make halt` | `mise run halt` | Shut the guest down, powering off if it ignores the request for 60s |
+| `make reload` | `mise run reload` | `make halt`, then `make up` |
 | `make destroy` | `mise run destroy` | Delete the VM and `.vm/`, keeping the downloaded image |
 | `make purge` | `mise run purge` | Delete the downloaded image |
 

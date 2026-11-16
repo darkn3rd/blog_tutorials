@@ -23,7 +23,7 @@ SSH := ssh -i $(KEY) -p $(SSH_PORT) -o IdentitiesOnly=yes -o BatchMode=yes -o Co
 VM_STATE := $(VBOX) showvminfo $(VM) --machinereadable 2>/dev/null | sed -n 's/^VMState="\(.*\)"$$/\1/p'
 
 .DELETE_ON_ERROR:
-.PHONY: up start provision verify ssh status halt destroy purge
+.PHONY: up start provision verify ssh status halt reload destroy purge
 
 up: start
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi
@@ -67,6 +67,10 @@ halt:
 		echo "Guest did not shut down; powering off." >&2; \
 		$(VBOX) controlvm $(VM) poweroff; \
 	fi
+
+reload:
+	@$(MAKE) halt
+	@$(MAKE) up
 
 destroy:
 	@if [ "$$($(VM_STATE))" = running ]; then $(VBOX) controlvm $(VM) poweroff; sleep 2; fi

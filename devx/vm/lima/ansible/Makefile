@@ -3,7 +3,7 @@ WORKSPACE := /workspace
 MOUNTS := .mounts=[{"location":"$(CURDIR)","mountPoint":"$(WORKSPACE)","writable":true}]
 PROVISION ?= false
 
-.PHONY: deps versions up provision verify ssh status halt destroy purge
+.PHONY: deps versions up provision verify ssh status halt reload destroy purge
 
 deps:
 	@for pair in limactl:lima ansible-playbook:ansible; do \
@@ -38,6 +38,10 @@ status:
 
 halt:
 	limactl stop $(VM)
+
+reload:
+	@if [ "$$(limactl list --format '{{.Status}}' $(VM) 2>/dev/null)" = Running ]; then limactl stop $(VM); fi
+	@$(MAKE) up
 
 destroy:
 	limactl delete --force $(VM)

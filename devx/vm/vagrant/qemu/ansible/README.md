@@ -54,6 +54,7 @@ folder is copied into the VM at `/workspace`.
 | `make ssh` | `mise run ssh` | `vagrant ssh`, starting in `/workspace` |
 | `make status` | `mise run status` | `vagrant status` |
 | `make halt` | `mise run halt` | `vagrant halt` |
+| `make reload` | `mise run reload` | `vagrant reload --no-provision` |
 | `make destroy` | `mise run destroy` | `vagrant destroy --force` |
 | `make purge` | `mise run purge` | `vagrant box remove`, deleting the downloaded box |
 

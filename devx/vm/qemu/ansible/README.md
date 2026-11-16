@@ -51,6 +51,7 @@ the VM at `/workspace`.
 | `make ssh` | `mise run ssh` | SSH in, starting in `/workspace` |
 | `make status` | `mise run status` | Report running, stopped or not created |
 | `make halt` | `mise run halt` | Shut the guest down, stopping QEMU if it ignores the request for 60s |
+| `make reload` | `mise run reload` | `make halt`, then `make up` |
 | `make destroy` | `mise run destroy` | Stop QEMU and delete `.vm/`, keeping the downloaded image |
 | `make purge` | `mise run purge` | Delete the downloaded image |
 
