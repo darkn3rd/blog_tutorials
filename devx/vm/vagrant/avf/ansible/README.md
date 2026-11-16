@@ -66,6 +66,7 @@ the VM at `/workspace`.
 | `make ssh` | `mise run ssh` | `vagrant ssh`, starting in `/workspace` |
 | `make status` | `mise run status` | `vagrant status` |
 | `make halt` | `mise run halt` | `vagrant halt` |
+| `make reload` | `mise run reload` | `make halt`, then `make up`; the provider has no reload |
 | `make destroy` | `mise run destroy` | `vagrant destroy --force`, keeping the box |
 | `make purge` | `mise run purge` | Delete the local box and the downloaded image |
 

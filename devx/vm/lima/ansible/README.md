@@ -58,6 +58,7 @@ make provision  # run ansible playbook on guest
 make verify     # run curl to verify
 make ssh        # log into guest
 make halt       # shutdown guest
+make reload     # restart guest
 make destroy    # destroy vm
 make purge      # delete downloaded images
 ```
@@ -84,6 +85,7 @@ mise run provision
 mise run verify
 mise run ssh
 mise run halt
+mise run reload
 mise run destroy
 mise run purge
 ```
@@ -109,6 +111,7 @@ just provision
 just verify
 just ssh
 just halt
+just reload
 just destroy
 just purge
 ```

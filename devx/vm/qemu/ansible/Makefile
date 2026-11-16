@@ -25,7 +25,7 @@ SSH := ssh -i $(KEY) -p $(SSH_PORT) -o IdentitiesOnly=yes -o BatchMode=yes -o Co
 RUNNING := test -f $(PID) && kill -0 "$$(cat $(PID))" 2>/dev/null
 
 .DELETE_ON_ERROR:
-.PHONY: up start provision verify ssh status halt destroy purge
+.PHONY: up start provision verify ssh status halt reload destroy purge
 
 up: start
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi
@@ -81,6 +81,10 @@ halt:
 		echo "Guest did not shut down; stopping QEMU." >&2; \
 		echo quit | nc -U -w 1 $(MONITOR) >/dev/null; \
 	fi
+
+reload:
+	@$(MAKE) halt
+	@$(MAKE) up
 
 destroy:
 	@if $(RUNNING); then kill "$$(cat $(PID))"; fi

@@ -2,7 +2,7 @@ WORKSPACE := /workspace
 PROVISION ?= false
 PROVISION_FLAG := $(if $(filter true,$(PROVISION)),--provision,--no-provision)
 
-.PHONY: up provision playbook verify ssh status halt destroy purge
+.PHONY: up provision playbook verify ssh status halt reload destroy purge
 
 up:
 	vagrant up --provider=qemu $(PROVISION_FLAG)
@@ -25,6 +25,9 @@ status:
 
 halt:
 	vagrant halt
+
+reload:
+	vagrant reload $(PROVISION_FLAG)
 
 destroy:
 	vagrant destroy --force

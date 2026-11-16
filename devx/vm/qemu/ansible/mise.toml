@@ -41,6 +41,10 @@ run = "make status"
 description = "Shut down the guest"
 run = "make halt"
 
+[tasks.reload]
+description = "Restart the VM, without provisioning unless PROVISION=true"
+run = "make reload"
+
 [tasks.destroy]
 description = "Delete the VM, keeping the downloaded image"
 run = "make destroy"

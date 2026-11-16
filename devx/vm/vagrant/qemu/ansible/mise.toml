@@ -55,6 +55,13 @@ run = "vagrant status"
 description = "Shut down the guest"
 run = "vagrant halt"
 
+[tasks.reload]
+description = "Restart the VM, without provisioning unless PROVISION=true"
+run = '''
+if [ "${PROVISION:-false}" = true ]; then flag=--provision; else flag=--no-provision; fi
+vagrant reload "$flag"
+'''
+
 [tasks.destroy]
 description = "Delete the VM"
 run = "vagrant destroy --force"

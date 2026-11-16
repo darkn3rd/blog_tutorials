@@ -48,6 +48,11 @@ status:
 halt:
     limactl stop {{VM}}
 
+# Restart the VM, without provisioning unless PROVISION=true
+reload:
+    @if [ "$(limactl list --format '{{{{.Status}}' {{VM}} 2>/dev/null)" = Running ]; then limactl stop {{VM}}; fi
+    @just up
+
 # Delete the VM
 destroy:
     limactl delete --force {{VM}}

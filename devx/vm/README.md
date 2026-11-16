@@ -63,6 +63,7 @@ details.
   | `make ssh` | Log into the VM |
   | `make status` | Show whether the VM is running |
   | `make halt` | Shut the VM down |
+  | `make reload` | Restart the VM, without provisioning unless `PROVISION=true` |
   | `make destroy` | Delete the VM, keeping the downloaded image or box |
   | `make purge` | Delete the downloaded image or box |
 
