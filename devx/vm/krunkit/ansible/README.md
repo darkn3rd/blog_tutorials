@@ -15,7 +15,7 @@ machine provider, and the one that gives containers GPU access on macOS.
 ## Requirements
 
 - An Apple Silicon Mac with macOS 14 or later
-- [krunkit](https://github.com/containers/krunkit)
+- [krunkit](https://github.com/containers/krunkit), tested with 1.3.2
 - [gvproxy](https://github.com/containers/gvisor-tap-vsock), for the VM's network.
   Homebrew doesn't package it on its own; it comes with Podman.
 - `qemu-img`, from QEMU, to convert Ubuntu's qcow2 image to a raw disk
@@ -25,9 +25,6 @@ Install them with Homebrew:
 
 ```bash
 brew tap slp/krun
-```
-
-```bash
 brew install krunkit podman qemu ansible
 ```
 
@@ -64,7 +61,7 @@ the VM at `/workspace`.
 | `make verify` | `mise run verify` | `curl` the web page |
 | `make ssh` | `mise run ssh` | SSH in, starting in `/workspace` |
 | `make status` | `mise run status` | Report running, stopped or not created |
-| `make halt` | `mise run halt` | Power the guest off, stopping krunkit if it doesn't within 60s, then stop gvproxy |
+| `make halt` | `mise run halt` | Shut the guest down, stopping krunkit if it ignores the request for 60s, then stop gvproxy |
 | `make reload` | `mise run reload` | `make halt`, then `make up` |
 | `make destroy` | `mise run destroy` | Stop krunkit and gvproxy and delete `.vm/`, keeping the downloaded image |
 | `make purge` | `mise run purge` | Delete the downloaded image and its raw copy |
@@ -84,8 +81,8 @@ Then open <http://localhost:8080>, or check it from the terminal:
 make verify
 ```
 
-`SSH_PORT` (default 2222), `HTTP_PORT` (8080), `CPUS`, `MEMORY` (in MiB, default 4096)
-and `DISK_SIZE` can be overridden, for example `make up HTTP_PORT=8081`. If you change the
+`SSH_PORT` (default 2222), `HTTP_PORT` (8080), `CPUS`, `MEMORY` and `DISK_SIZE` can be
+overridden, for example `make up HTTP_PORT=8081`. If you change the
 ports, pass the same values to every later `make` command.
 
 ## What the Makefile does
@@ -99,7 +96,7 @@ ports, pass the same values to every later `make` command.
 | Boot | `krunkit` with virtio-blk disks, virtio-net to gvproxy, a virtio-fs share and a serial console log |
 | Know when it's ready | Poll SSH, then `cloud-init status --wait` |
 | Track the VM state | krunkit's and gvproxy's PID files |
-| Shut down | `systemctl poweroff` over SSH, then `POST /vm/state` on krunkit's API socket |
+| Shut down | `POST /vm/state` with `Stop` on krunkit's API socket, which asks the guest to shut down; `HardStop` if it doesn't within 60s |
 
 Compared with the QEMU tutorial, krunkit has no built-in user-mode network or port
 forwarding, so gvproxy runs next to it as a second process. It also has no UEFI variable
@@ -138,9 +135,6 @@ changes and Ansible reports `changed=0`, and the handler doesn't run.
 
 ```bash
 make destroy
-```
-
-```bash
 make purge
 ```
 
