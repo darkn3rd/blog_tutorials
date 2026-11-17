@@ -33,8 +33,8 @@ destroy:
 	vagrant destroy --force
 
 purge:
-	@if vagrant box list | grep -q '^bento/ubuntu-26.04 *(virtualbox'; then \
-		vagrant box remove bento/ubuntu-26.04 --provider virtualbox --all --force; \
+	@if vagrant box list | grep -q '^hako/ubuntu-26.04 *(virtualbox'; then \
+		vagrant box remove hako/ubuntu-26.04 --provider virtualbox --all --force; \
 	else \
 		echo "No cached box to remove."; \
 	fi
