@@ -16,6 +16,7 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 | [`lima/ansible`](lima/ansible) | Lima | Apple's Virtualization framework | Ansible |
 | [`qemu/ansible`](qemu/ansible) | QEMU, from a Makefile | Apple's Hypervisor framework | Ansible |
 | [`krunkit/ansible`](krunkit/ansible) | krunkit (libkrun), from a Makefile, with gvproxy for the network | Apple's Hypervisor framework | Ansible |
+| [`vfkit/ansible`](vfkit/ansible) | vfkit, from a Makefile, with gvproxy for the network | Apple's Virtualization framework | Ansible |
 | [`virtualbox/ansible`](virtualbox/ansible) | VirtualBox, with `VBoxManage` from a Makefile | VirtualBox | Ansible |
 | [`vagrant/virtualbox/ansible`](vagrant/virtualbox/ansible) | Vagrant | VirtualBox, Vagrant's default provider | Ansible |
 | [`vagrant/qemu/ansible`](vagrant/qemu/ansible) | Vagrant with the vagrant-qemu plugin | QEMU | Ansible |
@@ -31,11 +32,11 @@ Apple provides two frameworks for running VMs:
   devices.
 - **Virtualization framework** is built on top of the Hypervisor framework and provides
   complete VMs: boot loaders, virtio disks and networking, and shared folders. Programs
-  that use it, like Lima, configure a VM rather than emulate its hardware.
+  that use it, like Lima and vfkit, configure a VM rather than emulate its hardware.
 
-The `qemu`, `krunkit` and `virtualbox` tutorials drive the hypervisor directly, so their Makefiles do
-the work a VM manager would otherwise do: download the image, create the disk, set up the
-user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
+The `qemu`, `krunkit`, `vfkit` and `virtualbox` tutorials run the VM without a VM
+manager, so their Makefiles do the work one would otherwise do: download the image, create
+the disk, set up the user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
 same hypervisors through Vagrant, for comparison.
 
 ## How they work
@@ -45,6 +46,7 @@ same hypervisors through Vagrant, for comparison.
 | `lima/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `qemu/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `krunkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
+| `vfkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `virtualbox/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
