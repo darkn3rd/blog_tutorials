@@ -14,6 +14,8 @@ tutorials:
     path: qemu/ansible
   - name: krunkit_ansible
     path: krunkit/ansible
+  - name: vfkit_ansible
+    path: vfkit/ansible
   - name: vbox_ansible
     path: virtualbox/ansible
   - name: vagrant_vbox_ansible
