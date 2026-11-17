@@ -1,0 +1,63 @@
+# mise has no Vagrant tool, so deps installs everything with Homebrew and Vagrant.
+# The tasks call make, so the Makefile stays the one place the steps are defined.
+
+[tasks.deps]
+description = "Install Vagrant and VirtualBox if they're missing"
+run = [
+  "command -v vagrant >/dev/null || brew install --cask vagrant",
+  "command -v VBoxManage >/dev/null || brew install --cask virtualbox",
+]
+
+[tasks.versions]
+description = "Print the macOS, Vagrant and VirtualBox versions"
+run = '''
+printf "%-12s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  Vagrant: $(vagrant --version | cut -d' ' -f2) \
+  VirtualBox: $(VBoxManage --version)
+'''
+
+[tasks.all]
+description = "Build the box, add it to Vagrant and test it"
+run = "make all"
+
+[tasks.image]
+description = "Download and check Ubuntu's cloud image"
+run = "make image"
+
+[tasks.base]
+description = "Wrap the cloud image in a base box, with no vagrant user yet"
+run = "make base"
+
+[tasks.build]
+description = "Build the box file from the cloud image"
+run = "make build"
+
+[tasks.add]
+description = "Add the box file to Vagrant as local/ubuntu-26.04"
+run = "make add"
+
+[tasks.test]
+description = "Start a VM from the added box and check it"
+run = "make test"
+
+[tasks.verify]
+description = "Check the test VM's user, sudo, OS and disk"
+run = "make verify"
+
+[tasks.ssh]
+description = "Log into the test VM"
+run = "make ssh || true"
+raw = true
+
+[tasks.destroy]
+description = "Delete the build and test VMs"
+run = "make destroy"
+
+[tasks.clean]
+description = "Delete the VMs, the base box and the box file"
+run = "make clean"
+
+[tasks.purge]
+description = "Also remove the added box and the downloaded image"
+run = "make purge"

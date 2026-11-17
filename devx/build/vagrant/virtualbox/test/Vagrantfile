@@ -1,0 +1,16 @@
+# Tries the finished box: an ordinary Vagrant project that names the box,
+# with no cloud-init.
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "local/ubuntu-26.04"
+  config.vm.define "test"
+
+  # The box has no Guest Additions, so there is no default synced folder.
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 2
+    vb.memory = 2048
+    vb.check_guest_additions = false
+  end
+end
