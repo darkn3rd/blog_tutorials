@@ -39,7 +39,9 @@ mise run deps
 | `Makefile` | Short commands for the steps below |
 | `mise.toml` | The same commands as mise tasks, plus `deps` and `versions` |
 
-The VM runs the `bento/ubuntu-26.04` box with 2 CPUs and 4 GiB of memory. The project
+The VM runs the [`hako/ubuntu-26.04`](https://github.com/darkn3rd/hako) box, built from
+Ubuntu's official 26.04 cloud image, with 2 CPUs and 4 GiB of memory. The box isn't on
+HashiCorp's registry, so the `Vagrantfile` sets `box_url` to its catalog. The project
 folder is copied into the VM at `/workspace`.
 
 ## Usage
@@ -115,7 +117,7 @@ and Ansible reports `changed=0`, and the handler doesn't run.
 ## Things to know
 
 - **The box is the libvirt build.** vagrant-qemu reads libvirt-format boxes, so Vagrant
-  downloads the `libvirt` arm64 build of `bento/ubuntu-26.04`.
+  downloads the `libvirt` arm64 build of `hako/ubuntu-26.04`.
 - **`/workspace` is a one-way copy.** It's synced with rsync at `vagrant up`, or when you
   run `vagrant rsync`. Files written in the guest don't reach the Mac. The playbook
   doesn't use `/workspace`, so the example isn't affected.
