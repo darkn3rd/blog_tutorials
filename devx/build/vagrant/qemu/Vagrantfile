@@ -1,0 +1,34 @@
+# Builds the box. vagrant-qemu can boot a disk image without a box, so this VM
+# boots Ubuntu's cloud image directly. Vagrant hands cloud-init a seed that creates
+# the vagrant user, the shell provisioner cleans up, and `vagrant package` turns
+# the VM's disk into a box. The Makefile runs these steps.
+#
+# Vagrant's cloud_init and disks settings are experimental. They need
+# VAGRANT_EXPERIMENTAL="cloud_init,disks", which the Makefile sets.
+
+Vagrant.configure("2") do |config|
+  config.vm.define "builder"
+
+  # Keep Vagrant's insecure key. With insert_key on, Vagrant would replace it with
+  # a new key pair and `vagrant package` would put that private key in the box.
+  config.ssh.insert_key = false
+
+  # Synced folders need software the cloud image doesn't have, and the build
+  # doesn't need one.
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider "qemu" do |qe|
+    # The downloaded image is only read: vagrant-qemu boots from a copy-on-write
+    # overlay on top of it, created at this size.
+    qe.image_path = File.expand_path("images/ubuntu-26.04-server-cloudimg-arm64.img", __dir__)
+    qe.disk_resize = "20G"
+    qe.smp = "2"
+    qe.memory = "2G"
+  end
+
+  config.vm.cloud_init :user_data,
+    content_type: "text/cloud-config",
+    path: "cloud-init/user-data"
+
+  config.vm.provision "shell", path: "scripts/cleanup.sh"
+end

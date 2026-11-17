@@ -1,0 +1,33 @@
+# Builds the box. The VirtualBox provider can only start a VM from a box, so the
+# Makefile first wraps Ubuntu's cloud image in a bare base box, which has no
+# vagrant user yet. This VM starts from that base box. Vagrant hands cloud-init a
+# seed that creates the vagrant user, the shell provisioner cleans up, and
+# `vagrant package` exports the VM as the finished box.
+#
+# Vagrant's cloud_init and disks settings are experimental. They need
+# VAGRANT_EXPERIMENTAL="cloud_init,disks", which the Makefile sets.
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "local/ubuntu-26.04-base"
+  config.vm.define "builder"
+
+  # Keep Vagrant's insecure key. With insert_key on, Vagrant would replace it with
+  # a new key pair and `vagrant package` would put that private key in the box.
+  config.ssh.insert_key = false
+
+  # The default synced folder needs the VirtualBox Guest Additions, which the
+  # cloud image doesn't have, and the build doesn't need one.
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 2
+    vb.memory = 2048
+    vb.check_guest_additions = false
+  end
+
+  config.vm.cloud_init :user_data,
+    content_type: "text/cloud-config",
+    path: "cloud-init/user-data"
+
+  config.vm.provision "shell", path: "scripts/cleanup.sh"
+end
