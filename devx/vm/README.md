@@ -15,6 +15,7 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 | --- | --- | --- | --- |
 | [`lima/ansible`](lima/ansible) | Lima | Apple's Virtualization framework | Ansible |
 | [`qemu/ansible`](qemu/ansible) | QEMU, from a Makefile | Apple's Hypervisor framework | Ansible |
+| [`krunkit/ansible`](krunkit/ansible) | krunkit (libkrun), from a Makefile, with gvproxy for the network | Apple's Hypervisor framework | Ansible |
 | [`virtualbox/ansible`](virtualbox/ansible) | VirtualBox, with `VBoxManage` from a Makefile | VirtualBox | Ansible |
 | [`vagrant/virtualbox/ansible`](vagrant/virtualbox/ansible) | Vagrant | VirtualBox, Vagrant's default provider | Ansible |
 | [`vagrant/qemu/ansible`](vagrant/qemu/ansible) | Vagrant with the vagrant-qemu plugin | QEMU | Ansible |
@@ -25,12 +26,14 @@ Apple provides two frameworks for running VMs:
 - **Hypervisor framework** is the low-level one. It gives a program the Mac's CPU
   virtualization: virtual CPUs and guest memory. The program has to provide everything
   else itself, such as the disks, network and display. QEMU emulates those devices and
-  uses the Hypervisor framework when it's started with `-accel hvf`.
+  uses the Hypervisor framework when it's started with `-accel hvf`. libkrun, which
+  krunkit runs, is a smaller monitor on the same framework that provides only virtio
+  devices.
 - **Virtualization framework** is built on top of the Hypervisor framework and provides
   complete VMs: boot loaders, virtio disks and networking, and shared folders. Programs
   that use it, like Lima, configure a VM rather than emulate its hardware.
 
-The `qemu` and `virtualbox` tutorials drive the hypervisor directly, so their Makefiles do
+The `qemu`, `krunkit` and `virtualbox` tutorials drive the hypervisor directly, so their Makefiles do
 the work a VM manager would otherwise do: download the image, create the disk, set up the
 user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
 same hypervisors through Vagrant, for comparison.
@@ -41,6 +44,7 @@ same hypervisors through Vagrant, for comparison.
 | --- | --- | --- |
 | `lima/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `qemu/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
+| `krunkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `virtualbox/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
