@@ -2,8 +2,7 @@ SSH_PORT ?= 2222
 HTTP_PORT ?= 8080
 PROVISION ?= false
 CPUS ?= 2
-# krunkit takes memory in MiB.
-MEMORY ?= 4096
+MEMORY ?= 4G
 DISK_SIZE ?= 20G
 
 IMAGE_BASE_URL ?= https://cloud-images.ubuntu.com/releases/26.04/release
@@ -97,14 +96,14 @@ status:
 		echo "not created"; \
 	fi
 
-# Ask the guest to power off over SSH, then krunkit's API, then kill krunkit.
+# "Stop" asks the guest to shut down; "HardStop" stops the VM without asking.
 halt:
 	@if $(RUNNING); then \
-		$(SSH) sudo systemctl poweroff >/dev/null 2>&1; \
+		curl -fsS --unix-socket $(API) http://krunkit/vm/state -X POST -d '{"state":"Stop"}' >/dev/null; \
 		for i in $$(seq 1 60); do $(RUNNING) || break; sleep 1; done; \
 		if $(RUNNING); then \
 			echo "Guest did not shut down; stopping krunkit." >&2; \
-			curl -fsS --unix-socket $(API) http://krunkit/vm/state -X POST -d '{"state":"Stop"}' >/dev/null; \
+			curl -fsS --unix-socket $(API) http://krunkit/vm/state -X POST -d '{"state":"HardStop"}' >/dev/null; \
 			for i in $$(seq 1 10); do $(RUNNING) || break; sleep 1; done; \
 			if $(RUNNING); then kill "$$(cat $(PID))"; fi; \
 		fi; \
