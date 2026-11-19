@@ -1,0 +1,5 @@
+.build/
+images/
+output/
+packer_cache/
+.vagrant/

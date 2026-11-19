@@ -1,0 +1,14 @@
+# Tries the finished box: an ordinary Vagrant project that names the box,
+# with no image path and no cloud-init.
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "local/ubuntu-26.04"
+  config.vm.define "test"
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider "qemu" do |qe|
+    qe.smp = "2"
+    qe.memory = "2G"
+  end
+end
