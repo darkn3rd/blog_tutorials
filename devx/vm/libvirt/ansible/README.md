@@ -1,20 +1,21 @@
 # libvirt and Ansible on Linux
 
-This project runs an Ubuntu 26.04 virtual machine with libvirt and `virsh`, with no VM
-manager on top, and configures it with Ansible. A Makefile drives every step:
-downloading the image, copying it into libvirt's storage pool, building the cloud-init
-seed, defining the VM from an XML file, booting it and shutting it down. libvirt runs
-the VM with QEMU and KVM. The playbook sets up a small web server so there is something
-to see once the VM is configured.
+This project runs an Ubuntu 26.04 virtual machine with libvirt and `virsh`, with no VM manager on top, and configures it with Ansible. A Makefile drives every step:
 
-It's the Linux counterpart of [`qemu/ansible`](../../qemu/ansible), which runs QEMU by
-hand on a Mac. Here libvirt starts QEMU, so the Makefile writes a domain XML file
-instead of QEMU flags.
+* downloading the image, 
+* copying it into libvirt's storage pool, 
+* building the cloud-init seed, 
+* defining the VM from an XML file, 
+* booting it and shutting it down. 
+
+libvirt runs the VM with QEMU and KVM. The playbook sets up a small web server so there is something to see once the VM is configured.
+
+Unlike [`qemu/ansible`](../../qemu/ansible), which starts QEMU itself, here libvirt starts QEMU, so the Makefile writes a domain XML file instead of QEMU flags.
 
 ## Requirements
 
-- Linux on x86_64, with KVM (`/dev/kvm` exists). The Makefile uses the amd64 image and
-  a `q35` machine.
+- Linux on x86_64, with KVM (`/dev/kvm` exists). 
+  - The Makefile uses the amd64 image and   a `q35` machine.
 - [libvirt](https://libvirt.org/) and QEMU, with the system libvirt running
   (`qemu:///system`) and its `default` storage pool and network
 - `mtools`, to build the cloud-init seed
@@ -27,9 +28,7 @@ On Debian or Ubuntu:
 ```bash
 sudo apt-get install -y qemu-kvm libvirt-daemon-system \
   libvirt-clients mtools rsync ansible
-```
 
-```bash
 sudo usermod -aG libvirt "$USER"
 ```
 
@@ -161,9 +160,6 @@ changes and Ansible reports `changed=0`, and the handler doesn't run.
 
 ```bash
 make destroy
-```
-
-```bash
 make purge
 ```
 

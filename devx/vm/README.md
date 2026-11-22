@@ -42,10 +42,9 @@ the disk, set up the user with cloud-init, boot and shut down. `vagrant/qemu` an
 same hypervisors through Vagrant, for comparison.
 
 Two tutorials are for a Linux host, where libvirt runs QEMU with KVM.
-`libvirt/ansible` is the counterpart of `qemu/ansible`: libvirt starts QEMU itself, so
-its Makefile writes a domain XML file and runs `virsh` instead of building QEMU flags.
-`vagrant/libvirt/ansible` is the counterpart of `vagrant/qemu/ansible`, and uses the
-same libvirt build of the box.
+`libvirt/ansible` has libvirt start QEMU, so its Makefile writes a domain XML file and
+runs `virsh` instead of building QEMU flags. `vagrant/libvirt/ansible` uses the same
+libvirt build of the box as `vagrant/qemu/ansible`.
 
 ## How they work
 
