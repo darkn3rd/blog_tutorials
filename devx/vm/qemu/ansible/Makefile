@@ -5,19 +5,24 @@ CPUS ?= 2
 MEMORY ?= 4G
 DISK_SIZE ?= 20G
 
-IMAGE_BASE_URL ?= https://cloud-images.ubuntu.com/releases/26.04/release
-IMAGE_NAME := ubuntu-26.04-server-cloudimg-arm64.img
-IMAGE ?= images/$(IMAGE_NAME)
-
 VM_DIR := .vm
 DISK := $(VM_DIR)/disk.qcow2
-VARS := $(VM_DIR)/efi-vars.fd
-SEED := $(VM_DIR)/seed.iso
 KEY := $(VM_DIR)/id_ed25519
 PID := $(VM_DIR)/qemu.pid
 MONITOR := $(VM_DIR)/monitor.sock
 
-FIRMWARE_DIR := $(shell brew --prefix qemu)/share/qemu
+# What differs between host platforms: the image, QEMU binary, machine and
+# firmware flags, and how the cloud-init seed is built.
+PLATFORM := $(shell uname -s)-$(shell uname -m)
+ifeq ($(wildcard platform/$(PLATFORM).mk),)
+$(error $(PLATFORM) isn't supported; see platform/ for the platforms that are)
+endif
+include platform/$(PLATFORM).mk
+.DEFAULT_GOAL := up
+
+IMAGE_BASE_URL ?= https://cloud-images.ubuntu.com/releases/26.04/release
+IMAGE_NAME := ubuntu-26.04-server-cloudimg-$(IMAGE_ARCH).img
+IMAGE ?= images/$(IMAGE_NAME)
 
 SSH := ssh -i $(KEY) -p $(SSH_PORT) -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 \
 	-o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
@@ -30,15 +35,12 @@ RUNNING := test -f $(PID) && kill -0 "$$(cat $(PID))" 2>/dev/null
 up: start
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi
 
-start: $(DISK) $(VARS) $(SEED)
+start: $(DISK) $(FIRMWARE) $(SEED)
 	@if $(RUNNING); then \
 		echo "VM is already running."; \
 	else \
-		qemu-system-aarch64 \
-			-machine virt -accel hvf -cpu host \
+		$(QEMU) $(MACHINE) \
 			-smp $(CPUS) -m $(MEMORY) \
-			-drive if=pflash,format=raw,readonly=on,file=$(FIRMWARE_DIR)/edk2-aarch64-code.fd \
-			-drive if=pflash,format=raw,file=$(VARS) \
 			-drive if=virtio,format=qcow2,file=$(DISK) \
 			-drive if=virtio,format=raw,readonly=on,file=$(SEED) \
 			-nic user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:$(SSH_PORT)-:22,hostfwd=tcp:127.0.0.1:$(HTTP_PORT)-:80 \
@@ -99,10 +101,6 @@ $(DISK): | $(IMAGE)
 	mkdir -p $(VM_DIR)
 	qemu-img create -q -f qcow2 -F qcow2 -b $(abspath $(IMAGE)) $@ $(DISK_SIZE)
 
-$(VARS):
-	mkdir -p $(VM_DIR)
-	cp $(FIRMWARE_DIR)/edk2-arm-vars.fd $@
-
 $(KEY):
 	mkdir -p $(VM_DIR)
 	ssh-keygen -q -t ed25519 -N '' -C qemu-example -f $@
@@ -111,7 +109,7 @@ $(SEED): cloud-init/user-data cloud-init/meta-data | $(KEY)
 	mkdir -p $(VM_DIR)/seed
 	sed -e "s|@SSH_KEY@|$$(cat $(KEY).pub)|" -e "s|@UID@|$$(id -u)|" cloud-init/user-data > $(VM_DIR)/seed/user-data
 	cp cloud-init/meta-data $(VM_DIR)/seed/meta-data
-	hdiutil makehybrid -quiet -ov -iso -joliet -default-volume-name cidata -o $@ $(VM_DIR)/seed
+	$(MAKE_SEED)
 
 purge:
 	rm -f $(IMAGE)
