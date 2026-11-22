@@ -7,7 +7,7 @@ configured by Ansible from the host.
 
 You need [Lima](https://lima-vm.io/) and [Ansible](https://docs.ansible.com/), plus `make`, which comes with Apple's command line tools (`xcode-select --install`) on macOS.
 
-On Linux, Lima runs the VM with QEMU and KVM, so you also need QEMU and access to `/dev/kvm`. Linux support hasn't been tested yet; see [Linux](#linux).
+On Linux, Lima runs the VM with QEMU and KVM, so you also need QEMU and access to `/dev/kvm`; see [Linux](#linux).
 
 The simplest way to get them is to run this from this folder. It only installs what's missing, using [Homebrew](https://brew.sh/):
 
@@ -53,9 +53,21 @@ pipx install --include-deps ansible
 
 ### Linux
 
-Nothing in `lima.yaml` is macOS-specific. Lima picks its VM type for the host: Apple's Virtualization framework on macOS, QEMU on Linux.
+Nothing in `lima.yaml` is macOS-specific. Lima picks its VM type for the host: Apple's Virtualization framework on macOS, QEMU on Linux. On Linux, `/workspace` is mounted over 9p, and `make status` shows `qemu` as the VM type.
 
-Lima isn't packaged by most distributions. Install it with [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux), so that `make deps` works as on macOS, or with mise as above. `mise run deps` also installs QEMU and Ansible with apt if they're missing.
+Tested on Pop!_OS 22.04 (x86_64) with Lima 2.3.0, QEMU 6.2.0 and ansible-core 2.12.6: `make up PROVISION=true`, `verify`, a read-write `/workspace`, `provision` with nothing to change, `halt` and `reload`.
+
+Lima isn't packaged by most distributions. Install it with any one of these:
+
+- [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux), so that `make deps` works as on macOS
+- mise, as above. `mise run deps` also installs QEMU and Ansible with apt if they're missing.
+- The release archive from [Lima's GitHub releases](https://github.com/lima-vm/lima/releases), extracted into `~/.local`, if `~/.local/bin` is on your `PATH`. Replace `2.3.0` with the latest version:
+
+```bash
+V=2.3.0
+URL=https://github.com/lima-vm/lima/releases/download/v$V
+curl -fsSL "$URL/lima-$V-Linux-x86_64.tar.gz" | tar -xzf - -C ~/.local
+```
 
 To install QEMU and Ansible yourself on Debian or Ubuntu:
 

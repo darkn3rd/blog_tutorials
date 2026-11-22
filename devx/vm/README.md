@@ -51,7 +51,7 @@ libvirt build of the box as `vagrant/qemu/ansible`.
 
 | Folder | macOS | Linux | Windows |
 | --- | --- | --- | --- |
-| `lima/ansible` | Yes | Should work; not tested yet | No |
+| `lima/ansible` | Yes | x86_64, tested | No |
 | `qemu/ansible` | Apple Silicon | x86_64, tested | No |
 | `krunkit/ansible` | Apple Silicon | No | No |
 | `vfkit/ansible` | Yes | No | No |
