@@ -34,7 +34,19 @@ SSH_OPTS := -i $(KEY) -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5
 
 .DELETE_ON_ERROR:
 .PHONY: up start create base-volume sync provision verify url ssh status \
-	halt reload destroy purge
+	halt reload destroy purge access
+
+# The checks below hide virsh's errors, so without access to libvirt they would
+# report "not created" instead of failing. Every target that runs virsh checks
+# access first.
+start create base-volume sync provision verify url ssh status halt destroy purge: access
+
+access:
+	@$(VIRSH) uri >/dev/null 2>&1 || { \
+		echo "Can't connect to libvirt at $(LIBVIRT_URI)." >&2; \
+		echo "Is your login session in the libvirt group? Check with: id -nG" >&2; \
+		echo "If not, log out and back in, or run: newgrp libvirt" >&2; \
+		exit 1; }
 
 up: start
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi

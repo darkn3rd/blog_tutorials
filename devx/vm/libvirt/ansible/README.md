@@ -173,13 +173,16 @@ downloads it again.
 
 ## Troubleshooting
 
-### Permission denied on libvirt-sock
+### Can't connect to libvirt
+
+`make` stops with `Can't connect to libvirt at qemu:///system`, and `virsh` itself
+fails with:
 
 ```text
 Failed to connect socket to '/var/run/libvirt/libvirt-sock': Permission denied
 ```
 
-Your login session isn't in the `libvirt` group yet. Check with `id -nG`. If `libvirt`
+You don't need `sudo`: your login session isn't in the `libvirt` group yet. Check with `id -nG`. If `libvirt`
 is listed in `/etc/group` for you but not by `id`, log out and back in. To use it in one
 shell without logging out:
 
