@@ -1,20 +1,35 @@
 [tools]
 lima = "2.2"
 
+# deps installs Lima with mise, and Ansible with Homebrew on macOS or apt on
+# Linux. On Linux, Lima also needs QEMU.
 [tasks.deps]
-description = "Install Lima and Ansible if they're missing"
-run = [
-  "mise install",
-  "command -v ansible-playbook >/dev/null || brew install ansible",
-]
+description = "Install Lima and Ansible if they're missing, plus QEMU on Linux"
+run = '''
+mise install
+case "$(uname -s)" in
+Darwin)
+  command -v ansible-playbook >/dev/null || brew install ansible
+  ;;
+Linux)
+  command -v "qemu-system-$(uname -m)" >/dev/null ||
+    sudo apt-get install -y qemu-system-x86 qemu-utils
+  command -v ansible-playbook >/dev/null || sudo apt-get install -y ansible
+  ;;
+esac
+'''
 
 [tasks.versions]
-description = "Print the macOS, Lima and Ansible versions"
+description = "Print the OS, Lima and Ansible versions"
 run = '''
-printf "%-14s%s\n" \
-  macOS: $(sw_vers --productVersion) \
-  Lima: $(limactl --version | cut -d' ' -f3) \
-  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+if command -v sw_vers >/dev/null; then
+  os="macOS $(sw_vers --productVersion)"
+else
+  os="$(. /etc/os-release && echo "$PRETTY_NAME")"
+fi
+printf "%-14s%s\n" OS: "$os"
+printf "%-14s%s\n" Lima: "$(limactl --version | cut -d' ' -f3)"
+printf "%-14s%s\n" ansible-core: "$(ansible --version | sed -n '1s/.* //; 1s/]//p')"
 '''
 
 [tasks.up]

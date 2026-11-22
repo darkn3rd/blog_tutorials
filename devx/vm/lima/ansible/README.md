@@ -1,11 +1,13 @@
 # Lima and Ansible
 
-An Ubuntu LTS VM on macOS, created by [Lima](https://lima-vm.io/) and configured by
-Ansible from the host.
+An Ubuntu LTS VM on macOS or Linux, created by [Lima](https://lima-vm.io/) and
+configured by Ansible from the host.
 
 ## Requirements
 
-You need [Lima](https://lima-vm.io/) and [Ansible](https://docs.ansible.com/), plus `make`, which comes with Apple's command line tools (`xcode-select --install`).
+You need [Lima](https://lima-vm.io/) and [Ansible](https://docs.ansible.com/), plus `make`, which comes with Apple's command line tools (`xcode-select --install`) on macOS.
+
+On Linux, Lima runs the VM with QEMU and KVM, so you also need QEMU and access to `/dev/kvm`. Linux support hasn't been tested yet; see [Linux](#linux).
 
 The simplest way to get them is to run this from this folder. It only installs what's missing, using [Homebrew](https://brew.sh/):
 
@@ -49,10 +51,24 @@ uv tool install ansible-core
 pipx install --include-deps ansible
 ```
 
+### Linux
+
+Nothing in `lima.yaml` is macOS-specific. Lima picks its VM type for the host: Apple's Virtualization framework on macOS, QEMU on Linux.
+
+Lima isn't packaged by most distributions. Install it with [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux), so that `make deps` works as on macOS, or with mise as above. `mise run deps` also installs QEMU and Ansible with apt if they're missing.
+
+To install QEMU and Ansible yourself on Debian or Ubuntu:
+
+```bash
+sudo apt-get install -y qemu-system-x86 qemu-utils ansible
+```
+
+If Lima can't open `/dev/kvm`, add yourself to the `kvm` group, then log out and back in.
+
 ## Usage
 
 ```bash
-make versions   # print macOS, lima, and ansible versions
+make versions   # print OS, lima, and ansible versions
 make up         # download vm image and launch vm
 make provision  # run ansible playbook on guest
 make verify     # run curl to verify
