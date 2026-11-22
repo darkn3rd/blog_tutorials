@@ -1,0 +1,27 @@
+Vagrant.configure("2") do |config|
+  # This is the same libvirt build of the box that vagrant-qemu uses on macOS.
+  # The box isn't on HashiCorp's registry, so box_url points at its catalog.
+  config.vm.box = "hako/ubuntu-26.04"
+  config.vm.box_url = "https://darkn3rd.github.io/hako/ubuntu-26.04.json"
+
+  config.vm.define "dev"
+
+  config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+
+  # libvirt's default is NFS, which needs an NFS server and sudo on the host.
+  # rsync needs neither, but only copies host to guest.
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/workspace", type: "rsync"
+
+  config.vm.provider "libvirt" do |lv|
+    lv.driver = "kvm"
+    lv.cpus = 2
+    lv.memory = 4096
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.compatibility_mode = "2.0"
+    ansible.playbook = "playbook.yaml"
+    ansible.groups = { "web" => ["dev"] }
+  end
+end

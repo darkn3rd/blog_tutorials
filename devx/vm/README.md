@@ -21,6 +21,7 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 | [`vagrant/virtualbox/ansible`](vagrant/virtualbox/ansible) | Vagrant | VirtualBox, Vagrant's default provider | Ansible |
 | [`vagrant/qemu/ansible`](vagrant/qemu/ansible) | Vagrant with the vagrant-qemu plugin | QEMU | Ansible |
 | [`vagrant/avf/ansible`](vagrant/avf/ansible) | Vagrant with the vagrant-provider-avf plugin | Apple's Virtualization framework | Ansible |
+| [`vagrant/libvirt/ansible`](vagrant/libvirt/ansible) | Vagrant with the vagrant-libvirt plugin, **on Linux** | libvirt, running QEMU with KVM | Ansible |
 
 Apple provides two frameworks for running VMs:
 
@@ -39,6 +40,9 @@ manager, so their Makefiles do the work one would otherwise do: download the ima
 the disk, set up the user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
 same hypervisors through Vagrant, for comparison.
 
+`vagrant/libvirt` is the one tutorial for a Linux host. It uses the same libvirt build of
+the box as `vagrant/qemu`, run by libvirt with KVM instead of by vagrant-qemu.
+
 ## How they work
 
 | Folder | How Ansible runs | Web page |
@@ -51,6 +55,7 @@ same hypervisors through Vagrant, for comparison.
 | `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/avf/ansible` | `ansible-playbook` from the Mac; the provider can't provision | The VM's own address, from `make url` |
+| `vagrant/libvirt/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Linux host | <http://localhost:8080> |
 
 `vagrant/avf/ansible` isn't fully tested: SSH to the VM failed in testing. Its README has the
 details.
