@@ -1,5 +1,6 @@
 Vagrant.configure("2") do |config|
-  # The box isn't on HashiCorp's registry, so box_url points at its catalog.
+  # The box isn't on HashiCorp's registry, so box_url points at its
+  # catalog.
   config.vm.box = "hako/ubuntu-26.04"
   config.vm.box_url = "https://darkn3rd.github.io/hako/ubuntu-26.04.json"
 
@@ -15,9 +16,14 @@ Vagrant.configure("2") do |config|
     vb.memory = 4096
   end
 
-  config.vm.provision "ansible" do |ansible|
+  # Ansible does not run natively on Windows, so run it inside the guest.
+  local = Vagrant::Util::Platform.windows?
+  provisioner = local ? "ansible_local" : "ansible"
+
+  config.vm.provision provisioner do |ansible|
     ansible.compatibility_mode = "2.0"
     ansible.playbook = "playbook.yaml"
     ansible.groups = { "web" => ["dev"] }
+    ansible.provisioning_path = "/workspace" if local
   end
 end
