@@ -1,9 +1,9 @@
 # Virtual machines on macOS
 
 Each tutorial here creates an Ubuntu virtual machine on a Mac, or on Linux for the two
-libvirt tutorials, with one VM tool, then configures it with one configuration tool. Folders are named by VM tool first, then by
-configuration tool, such as `vagrant/virtualbox/ansible`. Every tutorial stands on its
-own, with its own README.
+libvirt tutorials, with one VM tool, then configures it with one configuration tool.
+Folders are named by VM tool first, then by configuration tool, such as
+`vagrant/virtualbox/ansible`. Every tutorial stands on its own, with its own README.
 
 The configuration installs a small web server and copies in a page, so there is something
 to check once the VM is configured. Today every tutorial uses Ansible; other configuration
