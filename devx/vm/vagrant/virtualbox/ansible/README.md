@@ -6,7 +6,9 @@ server so there is something to see once the VM is configured.
 
 ## Requirements
 
-- macOS on Apple Silicon or Intel
+- Platform:
+  - macOS on Apple Silicon or Intel
+  - Windows 11 (see [Windows](#windows))
 - [Vagrant](https://developer.hashicorp.com/vagrant)
 - [VirtualBox](https://www.virtualbox.org/) 7.1 or later, for Apple Silicon support
 - [Ansible](https://docs.ansible.com/)
@@ -131,6 +133,36 @@ This deletes the VM. The downloaded box stays cached; to remove it as well:
 make purge
 ```
 
+## Windows
+
+First, you need to have both Vagrant and VirtualBox installed. If you have [Chocolatey](https://chocolatey.org/install) installed, you can install these with the following:
+
+```pwsh
+choco install -y virtualbox vagrant
+```
+
+Ansible doesn't run natively on Windows, so on Windows the `Vagrantfile` automatically switches to the `ansible_local` provisioner, which installs and runs Ansible inside the VM. No extra configuration is needed.
+
+The `make`, `curl`, and `vagrant` commands work fine on Windows 11.
+
+For verification, you can alternatively use the function below:
+
+```pwsh
+function Get-WebFull {
+    param(
+        [string]$Uri = 'http://localhost:8080'
+    )
+
+    $r = Invoke-WebRequest $Uri -UseBasicParsing
+    $r.Headers
+    ""
+    $r.Content
+}
+
+# Verify
+Get-WebFull "http://localhost:8080"
+```
+
 ## Troubleshooting
 
 ### Port 8080 in use
@@ -141,7 +173,20 @@ If your local server fails to start because port 8080 is already taken, check wh
 lsof -nP -iTCP:8080 -sTCP:LISTEN
 ```
 
+On Windows:
+
+```pwsh
+$c = Get-NetTCPConnection -LocalPort 8080 -State Listen `
+  -ErrorAction SilentlyContinue
+if ($c) {
+  Get-Process -Id $c.OwningProcess |
+    Select-Object Id, ProcessName, Path
+} else {
+  'Port 8080 is free'
+}
+```
+
 To resolve the conflict, you can either terminate the conflicting process or change your Vagrant configuration:
 
-* **Option 1**: Stop the conflicting process. Use the PID from the command above to kill the program (e.g., `kill -9 <PID>`).
+* **Option 1**: Stop the conflicting process. Use the PID from the command above to kill the program (e.g., `kill -9 <PID>` for macOS/Linuix, or `Stop-Process -Id <PID>` on Windows).
 * **Option 2:** Change the Vagrant port. Open your `Vagrantfile` and update the `host` value on the `forwarded_port` line to an open port, such as `8081`.
