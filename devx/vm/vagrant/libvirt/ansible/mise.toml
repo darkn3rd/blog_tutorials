@@ -1,0 +1,85 @@
+# mise has no Vagrant or libvirt tools, so deps installs them with apt and Vagrant.
+# It assumes Debian or Ubuntu, and that Vagrant is already installed (see README).
+
+[tasks.deps]
+description = "Install libvirt, the vagrant-libvirt plugin and Ansible if they're missing"
+run = [
+  "command -v vagrant >/dev/null || { echo 'Install Vagrant first; see README.md.' >&2; exit 1; }",
+  "command -v virsh >/dev/null || sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients",
+  "dpkg -s libvirt-dev >/dev/null 2>&1 || sudo apt-get install -y libvirt-dev build-essential",
+  "vagrant plugin list | grep -q '^vagrant-libvirt ' || vagrant plugin install vagrant-libvirt",
+  "command -v ansible-playbook >/dev/null || sudo apt-get install -y ansible",
+  "id -nG | grep -qw libvirt || { sudo usermod -aG libvirt \"$USER\"; echo 'Added you to the libvirt group; log out and back in.'; }",
+]
+
+[tasks.versions]
+description = "Print the Linux, Vagrant, vagrant-libvirt, libvirt, QEMU and Ansible versions"
+run = '''
+. /etc/os-release
+printf "%-17s%s\n" Linux: "$PRETTY_NAME"
+printf "%-17s%s\n" Kernel: "$(uname -r)"
+printf "%-17s%s\n" Vagrant: "$(vagrant --version | cut -d' ' -f2)"
+printf "%-17s%s\n" vagrant-libvirt: "$(vagrant plugin list | sed -n 's/^vagrant-libvirt (\([^,)]*\).*/\1/p')"
+printf "%-17s%s\n" libvirt: "$(virsh --version)"
+printf "%-17s%s\n" QEMU: "$(qemu-system-$(uname -m) --version | sed -n '1s/.*version \([^ ]*\).*/\1/p')"
+printf "%-17s%s\n" ansible-core: "$(ansible --version | sed -n '1s/.* //; 1s/]//p')"
+'''
+
+[tasks.up]
+description = "Download the box and launch the VM"
+run = '''
+if [ "${PROVISION:-false}" = true ]; then flag=--provision; else flag=--no-provision; fi
+vagrant up --provider=libvirt "$flag"
+'''
+
+[tasks.provision]
+description = "Run the Ansible playbook through Vagrant"
+run = "vagrant provision"
+
+[tasks.playbook]
+description = "Run the Ansible playbook directly from the host"
+run = [
+  "vagrant ssh-config > .vagrant/ssh.config",
+  "ansible-playbook playbook.yaml",
+]
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "curl --include --fail http://localhost:8080"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "vagrant ssh -- -t 'cd /workspace && exec bash -l' || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "vagrant status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "vagrant halt"
+
+[tasks.reload]
+description = "Restart the VM, without provisioning unless PROVISION=true"
+run = '''
+if [ "${PROVISION:-false}" = true ]; then flag=--provision; else flag=--no-provision; fi
+vagrant reload "$flag"
+'''
+
+[tasks.destroy]
+description = "Delete the VM"
+run = "vagrant destroy --force"
+
+[tasks.purge]
+description = "Delete the downloaded box and its copy in libvirt's storage pool"
+run = '''
+if vagrant box list | grep -q '^hako/ubuntu-26.04 *(libvirt'; then
+  vagrant box remove hako/ubuntu-26.04 --provider libvirt --all --force
+else
+  echo "No cached box to remove."
+fi
+virsh --connect qemu:///system vol-list default 2>/dev/null \
+  | awk '/hako-VAGRANTSLASH-ubuntu-26.04_vagrant_box_image/ { print $1 }' \
+  | xargs -r -n1 virsh --connect qemu:///system vol-delete --pool default
+'''
