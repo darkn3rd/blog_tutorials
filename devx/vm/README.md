@@ -1,7 +1,8 @@
-# Virtual machines on macOS
+# Virtual machines on macOS and Linux
 
-Each tutorial here creates an Ubuntu virtual machine on a Mac, or on Linux for the two
-libvirt tutorials, with one VM tool, then configures it with one configuration tool.
+Each tutorial here creates an Ubuntu virtual machine on a Mac or a Linux host,
+depending on the tutorial (see [Hosts](#hosts)), with one VM tool, then configures it
+with one configuration tool.
 Folders are named by VM tool first, then by configuration tool, such as
 `vagrant/virtualbox/ansible`. Every tutorial stands on its own, with its own README.
 
@@ -13,8 +14,8 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 
 | Folder | VM tool | Runs the VM with | Configuration |
 | --- | --- | --- | --- |
-| [`lima/ansible`](lima/ansible) | Lima | Apple's Virtualization framework | Ansible |
-| [`qemu/ansible`](qemu/ansible) | QEMU, from a Makefile | Apple's Hypervisor framework | Ansible |
+| [`lima/ansible`](lima/ansible) | Lima | Apple's Virtualization framework on macOS, QEMU with KVM on Linux | Ansible |
+| [`qemu/ansible`](qemu/ansible) | QEMU, from a Makefile | Apple's Hypervisor framework on macOS, KVM on Linux | Ansible |
 | [`krunkit/ansible`](krunkit/ansible) | krunkit (libkrun), from a Makefile, with gvproxy for the network | Apple's Hypervisor framework | Ansible |
 | [`vfkit/ansible`](vfkit/ansible) | vfkit, from a Makefile, with gvproxy for the network | Apple's Virtualization framework | Ansible |
 | [`virtualbox/ansible`](virtualbox/ansible) | VirtualBox, with `VBoxManage` from a Makefile | VirtualBox | Ansible |
@@ -41,24 +42,44 @@ manager, so their Makefiles do the work one would otherwise do: download the ima
 the disk, set up the user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
 same hypervisors through Vagrant, for comparison.
 
-Two tutorials are for a Linux host, where libvirt runs QEMU with KVM.
+Two tutorials run only on Linux, where libvirt runs QEMU with KVM.
 `libvirt/ansible` has libvirt start QEMU, so its Makefile writes a domain XML file and
 runs `virsh` instead of building QEMU flags. `vagrant/libvirt/ansible` uses the same
 libvirt build of the box as `vagrant/qemu/ansible`.
+
+## Hosts
+
+| Folder | macOS | Linux | Windows |
+| --- | --- | --- | --- |
+| `lima/ansible` | Yes | Should work; not tested yet | No |
+| `qemu/ansible` | Apple Silicon | x86_64, tested | No |
+| `krunkit/ansible` | Apple Silicon | No | No |
+| `vfkit/ansible` | Yes | No | No |
+| `virtualbox/ansible` | Apple Silicon | x86_64; not tested yet | No |
+| `libvirt/ansible` | No | Tested | No |
+| `vagrant/virtualbox/ansible` | Yes | Should work; not tested yet | Windows 11, tested |
+| `vagrant/qemu/ansible` | Yes | Not set up | No |
+| `vagrant/avf/ansible` | Yes, partly; see its README | No | No |
+| `vagrant/libvirt/ansible` | No | Tested | No |
+
+`qemu/ansible` and `virtualbox/ansible` keep what differs per host in
+`platform/<OS>-<arch>.mk` files, which the Makefile includes. `krunkit`, `vfkit` and
+`vagrant/avf` use Apple's frameworks, so they can't run on Linux. On Linux, VirtualBox
+and KVM can conflict; the VirtualBox READMEs explain how to tell and what to do.
 
 ## How they work
 
 | Folder | How Ansible runs | Web page |
 | --- | --- | --- |
-| `lima/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
-| `qemu/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
-| `krunkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
-| `vfkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
-| `virtualbox/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
+| `lima/ansible` | `ansible-playbook` from the host | <http://localhost:8080> |
+| `qemu/ansible` | `ansible-playbook` from the host | <http://localhost:8080> |
+| `krunkit/ansible` | `ansible-playbook` from the host | <http://localhost:8080> |
+| `vfkit/ansible` | `ansible-playbook` from the host | <http://localhost:8080> |
+| `virtualbox/ansible` | `ansible-playbook` from the host | <http://localhost:8080> |
 | `libvirt/ansible` | `ansible-playbook` from the Linux host | The VM's own address, from `make url` |
-| `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
-| `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
-| `vagrant/avf/ansible` | `ansible-playbook` from the Mac; the provider can't provision | The VM's own address, from `make url` |
+| `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the host | <http://localhost:8080> |
+| `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the host | <http://localhost:8080> |
+| `vagrant/avf/ansible` | `ansible-playbook` from the host; the provider can't provision | The VM's own address, from `make url` |
 | `vagrant/libvirt/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Linux host | <http://localhost:8080> |
 
 `vagrant/avf/ansible` isn't fully tested: SSH to the VM failed in testing. Its README has the
@@ -83,7 +104,7 @@ details.
   | `make purge` | Delete the downloaded image or box |
 
   The Ansible tutorials for Vagrant that can provision through Vagrant also have
-  `make playbook`, which runs `ansible-playbook` from the Mac instead.
+  `make playbook`, which runs `ansible-playbook` from the host instead.
 - **A `mise.toml`** with `mise run deps` to install whatever is missing, `mise run versions`,
   and a task for each make target.
 
