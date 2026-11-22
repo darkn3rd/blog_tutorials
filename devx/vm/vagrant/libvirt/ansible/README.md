@@ -29,9 +29,7 @@ CODENAME=$(. /etc/os-release
 wget -O - "$REPO/gpg" | sudo gpg --dearmor -o "$KEYRING"
 echo "deb [signed-by=$KEYRING] $REPO $CODENAME main" \
   | sudo tee /etc/apt/sources.list.d/hashicorp.list
-```
 
-```bash
 sudo apt-get update && sudo apt-get install -y vagrant
 ```
 
@@ -41,9 +39,7 @@ plugin:
 ```bash
 sudo apt-get install -y qemu-kvm libvirt-daemon-system \
   libvirt-clients libvirt-dev build-essential ansible
-```
 
-```bash
 vagrant plugin install vagrant-libvirt
 ```
 
@@ -87,7 +83,10 @@ folder is copied into the VM at `/workspace`.
 | `make playbook` | `mise run playbook` | `ansible-playbook playbook.yaml`, without Vagrant |
 | `make verify` | `mise run verify` | `curl --include --fail http://localhost:8080` |
 | `make ssh` | `mise run ssh` | `vagrant ssh`, starting in `/workspace` |
-| `make status` | `mise run status` | `vagrant status` |
+| `make status` | `mise run 
+
+Then open <http://localhost:8080>, or check it from the terminal:
+status` | `vagrant status` |
 | `make halt` | `mise run halt` | `vagrant halt` |
 | `make reload` | `mise run reload` | `vagrant reload --no-provision` |
 | `make destroy` | `mise run destroy` | `vagrant destroy --force` |
