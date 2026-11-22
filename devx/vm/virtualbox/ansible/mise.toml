@@ -1,21 +1,38 @@
 # The Makefile builds the VM from file dependencies, so the VM tasks here run make.
 
+# deps uses Homebrew on macOS and apt on Linux. Linux distributions often ship
+# a VirtualBox older than 7.1, so on Linux it points to Oracle's packages instead.
 [tasks.deps]
 description = "Install VirtualBox, QEMU (for qemu-img) and Ansible if they're missing"
-run = [
-  "command -v VBoxManage >/dev/null || brew install --cask virtualbox",
-  "command -v qemu-img >/dev/null || brew install qemu",
-  "command -v ansible-playbook >/dev/null || brew install ansible",
-]
+run = '''
+case "$(uname -s)" in
+Darwin)
+  command -v VBoxManage >/dev/null || brew install --cask virtualbox
+  command -v qemu-img >/dev/null || brew install qemu
+  command -v ansible-playbook >/dev/null || brew install ansible
+  ;;
+Linux)
+  command -v VBoxManage >/dev/null || {
+    echo 'Install VirtualBox 7.2 or later from https://www.virtualbox.org/wiki/Linux_Downloads' >&2; exit 1; }
+  command -v qemu-img >/dev/null || sudo apt-get install -y qemu-utils
+  command -v genisoimage >/dev/null || sudo apt-get install -y genisoimage
+  command -v ansible-playbook >/dev/null || sudo apt-get install -y ansible
+  ;;
+esac
+'''
 
 [tasks.versions]
-description = "Print the macOS, VirtualBox, qemu-img and Ansible versions"
+description = "Print the OS, VirtualBox, qemu-img and Ansible versions"
 run = '''
-printf "%-14s%s\n" \
-  macOS: $(sw_vers --productVersion) \
-  VirtualBox: $(VBoxManage --version | cut -d'r' -f1) \
-  qemu-img: $(qemu-img --version | sed -n '1s/.*version \([^ ]*\).*/\1/p') \
-  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+if command -v sw_vers >/dev/null; then
+  os="macOS $(sw_vers --productVersion)"
+else
+  os="$(. /etc/os-release && echo "$PRETTY_NAME")"
+fi
+printf "%-14s%s\n" OS: "$os"
+printf "%-14s%s\n" VirtualBox: "$(VBoxManage --version | cut -d'r' -f1)"
+printf "%-14s%s\n" qemu-img: "$(qemu-img --version | sed -n '1s/.*version \([^ ]*\).*/\1/p')"
+printf "%-14s%s\n" ansible-core: "$(ansible --version | sed -n '1s/.* //; 1s/]//p')"
 '''
 
 [tasks.up]

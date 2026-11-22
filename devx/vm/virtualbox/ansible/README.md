@@ -1,4 +1,4 @@
-# VirtualBox and Ansible on macOS
+# VirtualBox and Ansible on macOS and Linux
 
 This project creates an Ubuntu 26.04 virtual machine in VirtualBox using only
 `VBoxManage`, VirtualBox's command-line tool, and configures it with Ansible. A Makefile
@@ -8,16 +8,29 @@ configured.
 
 ## Requirements
 
-- An Apple Silicon Mac. The Makefile uses an arm64 image and `hdiutil`.
+- One of these hosts:
+  - An Apple Silicon Mac. The Makefile uses an arm64 image and `hdiutil`.
+  - Linux on x86_64. The Makefile uses an amd64 image, BIOS firmware and
+    `genisoimage`. This hasn't been tested yet; see
+    [VirtualBox and KVM on Linux](#virtualbox-and-kvm-on-linux).
 - [VirtualBox](https://www.virtualbox.org/) 7.2 or later
 - `qemu-img`, from QEMU, used once to convert the image into a VirtualBox disk
 - [Ansible](https://docs.ansible.com/)
 
-Install them with Homebrew:
+On macOS, install them with Homebrew:
 
 ```bash
 brew install --cask virtualbox
 brew install qemu ansible
+```
+
+On Linux, install VirtualBox from
+[Oracle's packages](https://www.virtualbox.org/wiki/Linux_Downloads), since
+distributions often ship an older version. On Debian or Ubuntu, install the rest
+with:
+
+```bash
+sudo apt-get install -y qemu-utils genisoimage ansible
 ```
 
 Or, if you use [mise](https://mise.jdx.dev/), let it install whichever are missing:
@@ -31,6 +44,7 @@ mise run deps
 | File | Purpose |
 | --- | --- |
 | `Makefile` | Downloads the image, builds the disk and seed, defines and runs the VM |
+| `platform/` | What differs per host: `Darwin-arm64.mk` and `Linux-x86_64.mk` |
 | `cloud-init/` | The guest's first-boot settings: SSH key, hostname and the `/workspace` mount |
 | `playbook.yaml` | The Ansible playbook that configures the VM |
 | `inventory.yaml` | Tells Ansible how to reach the VM, in the `web` group |
@@ -56,7 +70,8 @@ folder is shared into the VM at `/workspace`.
 | `make destroy` | `mise run destroy` | Delete the VM and `.vm/`, keeping the downloaded image |
 | `make purge` | `mise run purge` | Delete the downloaded image |
 
-The first `make up` downloads the Ubuntu cloud image, about 1 GB, into `images/`.
+The first `make up` downloads the Ubuntu cloud image, about 1 GB, into `images/`. The
+Makefile picks the arm64 or amd64 image to match the host.
 
 Create the VM and configure it:
 
@@ -80,13 +95,28 @@ every later `make` command.
 | --- | --- |
 | Get the image | `curl`, then check it against Ubuntu's `SHA256SUMS` |
 | Create the disk | `qemu-img convert -O vdi`, then `VBoxManage modifymedium --resize` |
-| Set up the guest user | A generated SSH key and a cloud-init seed ISO made with `hdiutil` |
+| Set up the guest user | A generated SSH key and a cloud-init seed ISO, made with `hdiutil` on macOS or `genisoimage` on Linux |
 | Define the VM | `createvm`, `modifyvm`, `storagectl`, `storageattach`, `sharedfolder add` |
 | Boot | `startvm --type headless` |
 | Know when it's ready | Poll SSH, then `cloud-init status --wait` |
 | Track the VM state | `showvminfo --machinereadable` |
 | Shut down | `controlvm acpipowerbutton` |
 | Delete | `unregistervm --delete` |
+
+### Platform files
+
+The Makefile includes `platform/<OS>-<arch>.mk`, named after `uname -s` and `uname -m`,
+for the parts that differ per host:
+
+| Variable | Darwin-arm64 | Linux-x86_64 |
+| --- | --- | --- |
+| `IMAGE_ARCH` | `arm64` | `amd64` |
+| `VM_TYPE` (for `createvm`) | `--platform-architecture=arm --ostype=Ubuntu_arm64` | `--platform-architecture=x86 --ostype=Ubuntu_64` |
+| `VM_HARDWARE` (for `modifyvm`) | `--chipset=armv8virtual --firmware=efi --graphicscontroller=qemuramfb` | `--chipset=ich9 --firmware=bios --graphicscontroller=vmsvga` |
+| `MAKE_SEED` | `hdiutil makehybrid` | `genisoimage` |
+
+On any other host, `make` stops and says the platform isn't supported. To add one,
+copy the closest file and adjust it.
 
 ## Changing the configuration
 
@@ -102,12 +132,12 @@ changes and Ansible reports `changed=0`, and the handler doesn't run.
 
 ## Things to know
 
-- **`qemu-img` is needed once.** Ubuntu's arm64 cloud image is in qcow2 format, which
+- **`qemu-img` is needed once.** Ubuntu's cloud images are in qcow2 format, which
   VirtualBox can't read, so the Makefile converts it to VDI.
 - **The disk is a full copy** of the image, about 2.5 GB, made when the VM is created.
 - **Guest Additions aren't needed for `/workspace`.** Ubuntu's kernel includes the
   `vboxsf` driver for VirtualBox shared folders. Files the guest creates there appear on
-  the Mac as owned by you.
+  the host as owned by you.
 - **The VM is registered with VirtualBox.** It appears in the VirtualBox app and in
   `VBoxManage list vms` as `dev`, but its files stay in `.vm/`.
 - **`.vm/` holds the VM's private SSH key.** The project folder, including that key, is
@@ -128,11 +158,40 @@ next `make up` downloads it again.
 
 ### Port 2222 or 8080 in use
 
-Check which process is using the port:
+Check which process is using the port. On macOS:
 
 ```bash
 lsof -nP -iTCP:8080 -sTCP:LISTEN
 ```
 
+On Linux:
+
+```bash
+ss -ltnp 'sport = :8080'
+```
+
 Stop that process, or create the VM on other ports, for example
 `make up SSH_PORT=2223 HTTP_PORT=8081`.
+
+### VirtualBox and KVM on Linux
+
+VirtualBox can't start a VM while KVM holds the CPU's virtualization extensions.
+`VBoxManage startvm` then fails with `VERR_VMX_IN_VMX_ROOT_MODE` on Intel, or
+`VERR_SVM_IN_USE` on AMD. Since Linux 6.12, KVM takes them as soon as its module
+loads, not only while a KVM VM runs, so this can happen even with no other VM running.
+
+Check whether the KVM modules are loaded:
+
+```bash
+lsmod | grep kvm
+```
+
+Either unload them while you use VirtualBox (use `kvm_amd` on AMD):
+
+```bash
+sudo modprobe -r kvm_intel kvm
+```
+
+Or boot with the kernel parameter `kvm.enable_virt_at_load=0`, so that KVM takes the
+extensions only while a KVM VM runs. Whether you need either depends on your kernel
+and VirtualBox versions.

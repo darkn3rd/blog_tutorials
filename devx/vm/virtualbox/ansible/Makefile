@@ -6,15 +6,23 @@ CPUS ?= 2
 MEMORY_MB ?= 4096
 DISK_SIZE_MB ?= 20480
 
-IMAGE_BASE_URL ?= https://cloud-images.ubuntu.com/releases/26.04/release
-IMAGE_NAME := ubuntu-26.04-server-cloudimg-arm64.img
-IMAGE ?= images/$(IMAGE_NAME)
-
 VM_DIR := .vm
 DISK := $(VM_DIR)/disk.vdi
 SEED := $(VM_DIR)/seed.iso
 KEY := $(VM_DIR)/id_ed25519
 CREATED := $(VM_DIR)/created
+
+# What differs between host platforms: the image, the VM's platform flags, and
+# how the cloud-init seed ISO is built.
+PLATFORM := $(shell uname -s)-$(shell uname -m)
+ifeq ($(wildcard platform/$(PLATFORM).mk),)
+$(error $(PLATFORM) isn't supported; see platform/ for the platforms that are)
+endif
+include platform/$(PLATFORM).mk
+
+IMAGE_BASE_URL ?= https://cloud-images.ubuntu.com/releases/26.04/release
+IMAGE_NAME := ubuntu-26.04-server-cloudimg-$(IMAGE_ARCH).img
+IMAGE ?= images/$(IMAGE_NAME)
 
 VBOX := VBoxManage -q
 SSH := ssh -i $(KEY) -p $(SSH_PORT) -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 \
@@ -95,12 +103,12 @@ $(SEED): cloud-init/user-data cloud-init/meta-data | $(KEY)
 	mkdir -p $(VM_DIR)/seed
 	sed "s|@SSH_KEY@|$$(cat $(KEY).pub)|" cloud-init/user-data > $(VM_DIR)/seed/user-data
 	cp cloud-init/meta-data $(VM_DIR)/seed/meta-data
-	hdiutil makehybrid -quiet -ov -iso -joliet -default-volume-name cidata -o $@ $(VM_DIR)/seed
+	$(MAKE_SEED)
 
 $(CREATED): | $(DISK) $(SEED)
-	$(VBOX) createvm --name=$(VM) --platform-architecture=arm --ostype=Ubuntu_arm64 --basefolder=$(abspath $(VM_DIR)) --register
-	$(VBOX) modifyvm $(VM) --cpus=$(CPUS) --memory=$(MEMORY_MB) --chipset=armv8virtual --firmware=efi \
-		--graphicscontroller=qemuramfb --audio-enabled=off --usb-xhci=on \
+	$(VBOX) createvm --name=$(VM) $(VM_TYPE) --basefolder=$(abspath $(VM_DIR)) --register
+	$(VBOX) modifyvm $(VM) --cpus=$(CPUS) --memory=$(MEMORY_MB) $(VM_HARDWARE) \
+		--audio-enabled=off --usb-xhci=on \
 		--nic1=nat --nic-type1=virtio --cable-connected1=on \
 		--nat-pf1=ssh,tcp,127.0.0.1,$(SSH_PORT),,22 --nat-pf1=http,tcp,127.0.0.1,$(HTTP_PORT),,80 \
 		--uart1=0x3F8 4 --uart-mode1=file $(abspath $(VM_DIR))/console.log
