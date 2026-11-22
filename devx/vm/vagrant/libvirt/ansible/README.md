@@ -163,7 +163,10 @@ and Ansible reports `changed=0`, and the handler doesn't run.
 - **The box is copied into libvirt's storage pool.** On first use, vagrant-libvirt uploads
   the box image to the `default` pool, under `/var/lib/libvirt/images`, and each VM's disk
   is a copy-on-write layer on top. `vagrant box remove` doesn't delete that copy, so
-  `make purge` deletes it with `virsh vol-delete`.
+  `make purge` deletes it with `virsh vol-delete`. In between, vagrant-libvirt prints
+  that you have to delete the image from the storage pool manually; `make purge` does
+  that next. It refuses to run while the VM still exists, since the VM's disk depends
+  on that image.
 - **It uses the system libvirt.** vagrant-libvirt connects to `qemu:///system`, which is
   why your user needs the `libvirt` group.
 - **The disk size isn't set.** It's whatever the box ships with (64 GiB, allocated as
@@ -185,13 +188,15 @@ make purge
 
 ## Troubleshooting
 
-### Permission denied on libvirt-sock
+### Can't connect to libvirt
+
+Vagrant, `virsh` or `make purge` fails with:
 
 ```text
 Failed to connect socket to '/var/run/libvirt/libvirt-sock': Permission denied
 ```
 
-Your login session isn't in the `libvirt` group yet. Check with `id -nG`. If `libvirt`
+You don't need `sudo`: your login session isn't in the `libvirt` group yet. Check with `id -nG`. If `libvirt`
 is listed in `/etc/group` for you but not by `id`, log out and back in. To use it in one
 shell without logging out:
 
