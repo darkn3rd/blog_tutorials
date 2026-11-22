@@ -1,0 +1,42 @@
+<!-- The Makefile fills in the @...@ values and saves the result to .vm/domain.xml. -->
+<domain type='kvm'>
+  <name>@NAME@</name>
+  <memory unit='MiB'>@MEMORY@</memory>
+  <vcpu>@CPUS@</vcpu>
+  <os>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='host-passthrough'/>
+  <clock offset='utc'/>
+  <devices>
+    <!-- Copy-on-write disk backed by the cloud image, both in the storage pool.
+         These are file paths, not pool references (type='volume'), because
+         AppArmor's per-VM profile misses the backing image of a volume disk. -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='@DISK@'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <!-- cloud-init reads its settings from this disk, labelled CIDATA. -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw'/>
+      <source file='@SEED@'/>
+      <target dev='vdb' bus='virtio'/>
+      <readonly/>
+    </disk>
+    <interface type='network'>
+      <source network='@NETWORK@'/>
+      <model type='virtio'/>
+    </interface>
+    <serial type='pty'/>
+    <console type='pty'/>
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+    </rng>
+  </devices>
+</domain>

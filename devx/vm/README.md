@@ -1,9 +1,9 @@
 # Virtual machines on macOS
 
-Each tutorial here creates an Ubuntu virtual machine on a Mac with one VM tool, then
-configures it with one configuration tool. Folders are named by VM tool first, then by
-configuration tool, such as `vagrant/virtualbox/ansible`. Every tutorial stands on its
-own, with its own README.
+Each tutorial here creates an Ubuntu virtual machine on a Mac, or on Linux for the two
+libvirt tutorials, with one VM tool, then configures it with one configuration tool.
+Folders are named by VM tool first, then by configuration tool, such as
+`vagrant/virtualbox/ansible`. Every tutorial stands on its own, with its own README.
 
 The configuration installs a small web server and copies in a page, so there is something
 to check once the VM is configured. Today every tutorial uses Ansible; other configuration
@@ -18,6 +18,7 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 | [`krunkit/ansible`](krunkit/ansible) | krunkit (libkrun), from a Makefile, with gvproxy for the network | Apple's Hypervisor framework | Ansible |
 | [`vfkit/ansible`](vfkit/ansible) | vfkit, from a Makefile, with gvproxy for the network | Apple's Virtualization framework | Ansible |
 | [`virtualbox/ansible`](virtualbox/ansible) | VirtualBox, with `VBoxManage` from a Makefile | VirtualBox | Ansible |
+| [`libvirt/ansible`](libvirt/ansible) | libvirt, with `virsh` from a Makefile, **on Linux** | QEMU with KVM | Ansible |
 | [`vagrant/virtualbox/ansible`](vagrant/virtualbox/ansible) | Vagrant | VirtualBox, Vagrant's default provider | Ansible |
 | [`vagrant/qemu/ansible`](vagrant/qemu/ansible) | Vagrant with the vagrant-qemu plugin | QEMU | Ansible |
 | [`vagrant/avf/ansible`](vagrant/avf/ansible) | Vagrant with the vagrant-provider-avf plugin | Apple's Virtualization framework | Ansible |
@@ -40,8 +41,10 @@ manager, so their Makefiles do the work one would otherwise do: download the ima
 the disk, set up the user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
 same hypervisors through Vagrant, for comparison.
 
-`vagrant/libvirt` is the one tutorial for a Linux host. It uses the same libvirt build of
-the box as `vagrant/qemu`, run by libvirt with KVM instead of by vagrant-qemu.
+Two tutorials are for a Linux host, where libvirt runs QEMU with KVM.
+`libvirt/ansible` has libvirt start QEMU, so its Makefile writes a domain XML file and
+runs `virsh` instead of building QEMU flags. `vagrant/libvirt/ansible` uses the same
+libvirt build of the box as `vagrant/qemu/ansible`.
 
 ## How they work
 
@@ -52,6 +55,7 @@ the box as `vagrant/qemu`, run by libvirt with KVM instead of by vagrant-qemu.
 | `krunkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vfkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `virtualbox/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
+| `libvirt/ansible` | `ansible-playbook` from the Linux host | The VM's own address, from `make url` |
 | `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/avf/ansible` | `ansible-playbook` from the Mac; the provider can't provision | The VM's own address, from `make url` |
@@ -116,5 +120,4 @@ Port 8080 must be free, because each tutorial serves its page there. `bench-all.
 ## Planned
 
 - Other configuration tools, such as Puppet, Chef and Salt
-- Linux, with libvirt
 - Windows, with WSL2
