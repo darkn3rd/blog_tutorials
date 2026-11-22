@@ -1,0 +1,68 @@
+# The Makefile builds the VM from file dependencies, so the VM tasks here run make.
+# deps assumes Debian or Ubuntu.
+
+[tasks.deps]
+description = "Install libvirt, mtools and Ansible if they're missing"
+run = [
+  "command -v virsh >/dev/null || sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients",
+  "command -v mformat >/dev/null || sudo apt-get install -y mtools",
+  "command -v rsync >/dev/null || sudo apt-get install -y rsync",
+  "command -v ansible-playbook >/dev/null || sudo apt-get install -y ansible",
+  "id -nG | grep -qw libvirt || { sudo usermod -aG libvirt \"$USER\"; echo 'Added you to the libvirt group; log out and back in.'; }",
+]
+
+[tasks.versions]
+description = "Print the Linux, libvirt, QEMU and Ansible versions"
+run = '''
+. /etc/os-release
+printf "%-14s%s\n" Linux: "$PRETTY_NAME"
+printf "%-14s%s\n" Kernel: "$(uname -r)"
+printf "%-14s%s\n" libvirt: "$(virsh --version)"
+printf "%-14s%s\n" QEMU: "$(qemu-system-x86_64 --version | sed -n '1s/.*version \([^ ]*\).*/\1/p')"
+printf "%-14s%s\n" ansible-core: "$(ansible --version | sed -n '1s/.* //; 1s/]//p')"
+'''
+
+[tasks.up]
+description = "Download the image, create or start the VM and wait for it"
+run = "make up"
+
+[tasks.provision]
+description = "Run the Ansible playbook on the guest"
+run = "make provision"
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "make verify"
+
+[tasks.url]
+description = "Print the web page's address"
+run = "make url"
+
+[tasks.sync]
+description = "Copy the project to /workspace in the guest"
+run = "make sync"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "make ssh || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "make status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "make halt"
+
+[tasks.reload]
+description = "Restart the VM, without provisioning unless PROVISION=true"
+run = "make reload"
+
+[tasks.destroy]
+description = "Delete the VM, keeping the downloaded image"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the downloaded image and its copy in the storage pool"
+run = "make purge"
