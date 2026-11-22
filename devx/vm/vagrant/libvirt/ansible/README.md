@@ -21,11 +21,14 @@ On Debian or Ubuntu, install Vagrant from HashiCorp's apt repository. Ubuntu's o
 `vagrant` package is older.
 
 ```bash
-wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-```
+REPO=https://apt.releases.hashicorp.com
+KEYRING=/usr/share/keyrings/hashicorp-archive-keyring.gpg
+CODENAME=$(. /etc/os-release
+  echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
 
-```bash
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+wget -O - "$REPO/gpg" | sudo gpg --dearmor -o "$KEYRING"
+echo "deb [signed-by=$KEYRING] $REPO $CODENAME main" \
+  | sudo tee /etc/apt/sources.list.d/hashicorp.list
 ```
 
 ```bash
@@ -36,7 +39,8 @@ Then install libvirt, the headers the plugin builds against, and Ansible, and in
 plugin:
 
 ```bash
-sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients libvirt-dev build-essential ansible
+sudo apt-get install -y qemu-kvm libvirt-daemon-system \
+  libvirt-clients libvirt-dev build-essential ansible
 ```
 
 ```bash
