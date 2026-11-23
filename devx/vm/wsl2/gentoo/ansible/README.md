@@ -13,8 +13,10 @@ the guest itself.
 ## Requirements
 
 - Windows 11 with WSL2 (`wsl --install --no-distribution` if WSL isn't set up yet)
-- [PowerShell 7](https://learn.microsoft.com/powershell/) (`pwsh`), which runs the steps
 - GNU make
+- One of:
+  - [PowerShell 7](https://learn.microsoft.com/powershell/) (`pwsh`), to run the steps with `wsl.ps1`
+  - [MSYS2](https://www.msys2.org/) or Git Bash, to run them with `wsl.sh`
 
 `curl.exe` and `tar.exe` come with Windows. Install the rest with
 [Chocolatey](https://chocolatey.org/install):
@@ -29,7 +31,10 @@ Or, if you use [mise](https://mise.jdx.dev/), let it install make if it's missin
 mise run deps
 ```
 
-Run the `make` commands from PowerShell, in this folder.
+Run the `make` commands in this folder, from PowerShell or from an MSYS2 or Git Bash
+shell. MSYS2 and Git Bash set `MSYSTEM`, and when it's set the Makefile runs the steps
+with `wsl.sh`; otherwise it runs them with `wsl.ps1`. Set `RUNNER=sh` or `RUNNER=pwsh` to
+choose. Both scripts have the same steps and options.
 
 ## Files
 
@@ -37,6 +42,7 @@ Run the `make` commands from PowerShell, in this folder.
 | --- | --- |
 | `Makefile` | The targets, and which files each step builds |
 | `wsl.ps1` | The steps the Makefile runs: download, build, import, start, provision and the rest |
+| `wsl.sh` | The same steps, for MSYS2 and Git Bash |
 | `image/etc/wsl.conf` | The WSL settings added to the stage3: systemd, hostname, mount options, default user |
 | `image.mtree` | Lists what `make image` adds to the stage3, with owners and modes: `wsl.conf`, and links that mask systemd units that don't work under WSL |
 | `guest/setup.sh` | Runs as root when the machine is created: adds the `gentoo` user and `/workspace`, and builds the locale WSL passes in |
@@ -74,7 +80,8 @@ Every target has a mise task of the same name, such as `mise run up`.
 
 To see what a step would run without running it, add `DRY_RUN=true`, for example
 `make up PROVISION=true DRY_RUN=true`. Each command that would change something is
-printed as a `What if:` line instead. Read-only queries, such as listing distros or
+printed as a `What if:` line instead. `wsl.ps1` takes this as `-WhatIf`, and `wsl.sh` as
+`--dry-run`. Read-only queries, such as listing distros or
 finding the newest stage3, still run. Make decides which steps to run from which files
 exist, so on a fresh checkout it lists every step.
 
@@ -106,14 +113,14 @@ so a change takes effect at the next `make provision`. Pass the same value to
 | Get the stage3 | `curl`, finding the newest build from `latest-stage3-amd64-systemd.txt` and checking it against its `.sha256` file |
 | Build the image | Windows' `tar.exe` (bsdtar) copies the stage3 and adds the entries in `image.mtree` |
 | Create the machine | `wsl --import`, then `guest/setup.sh` as root |
-| Keep it running | A hidden `wsl.exe` session that runs `sleep infinity` |
+| Keep it running | A `wsl.exe` session in the background that runs `sleep infinity` |
 | Know when it's ready | `systemctl is-system-running --wait` |
 | Install Ansible | `emerge-webrsync`, then `emerge --getbinpkg app-admin/ansible app-admin/sudo` |
 | Provision | `ansible-playbook` in the guest, as the `gentoo` user, with the local connection |
 | Shut down | `wsl --terminate` |
 
 Chocolatey's make runs recipes with `cmd.exe` and only honors `SHELL` for a POSIX shell,
-so each recipe is a single call to `wsl.ps1`. The download, the image and the machine's
+so each recipe is a single call to `wsl.ps1`, or to `wsl.sh` under MSYS2. The download, the image and the machine's
 virtual disk (`.vm/ext4.vhdx`) are make targets, so make only redoes a step when its
 output is missing or out of date.
 
@@ -165,8 +172,12 @@ distro on the computer shares, not anything in the Gentoo image. It needs only `
   `make destroy up` to recreate it.
 - **`make provision` starts the machine** first, creating it if needed, so nginx keeps
   running after the playbook finishes.
-- **The machine stays up until `make halt`** or `wsl --shutdown`, because of the hidden
-  `sleep infinity` session.
+- **The machine stays up until `make halt`** or `wsl --shutdown`, because of the
+  `sleep infinity` session in the background.
+- **`wsl.sh` turns off MSYS2's path conversion.** MSYS2 rewrites arguments that look like
+  Unix paths, such as `--cd /workspace`, before it runs a Windows program, so `wsl.sh`
+  sets `MSYS2_ARG_CONV_EXCL='*'`. It uses Windows' own `tar.exe`, found with
+  `cygpath -S`, because the image step needs bsdtar.
 
 ## Cleaning up
 

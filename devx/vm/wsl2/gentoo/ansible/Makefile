@@ -20,9 +20,25 @@ VHD := $(VM_DIR)/ext4.vhdx
 HTTP_PORT ?= 8080
 CHECK_CONFIG_URL ?= https://raw.githubusercontent.com/moby/moby/master/contrib/check-config.sh
 
+# MSYS2 and Git Bash set MSYSTEM. There the steps run with wsl.sh, and everywhere else
+# with wsl.ps1. Set RUNNER=pwsh or RUNNER=sh to choose.
+ifdef MSYSTEM
+RUNNER ?= sh
+else
+RUNNER ?= pwsh
+endif
+
+ifeq ($(RUNNER),sh)
+step = sh wsl.sh $(1) \
+	--name $(NAME) --mirror $(MIRROR) --flavor $(FLAVOR) --download $(DOWNLOAD) \
+	--image $(IMAGE) --vm-dir $(VM_DIR) --http-port $(HTTP_PORT) \
+	--check-config-url $(CHECK_CONFIG_URL) $(if $(filter true,$(DRY_RUN)),--dry-run)
+else
 step = $(PWSH) -NoProfile -NonInteractive -ExecutionPolicy Bypass -File wsl.ps1 $(1) \
 	-Name $(NAME) -Mirror $(MIRROR) -Flavor $(FLAVOR) -Download $(DOWNLOAD) \
-	-Image $(IMAGE) -VmDir $(VM_DIR) -HttpPort $(HTTP_PORT) $(if $(filter true,$(DRY_RUN)),-WhatIf)
+	-Image $(IMAGE) -VmDir $(VM_DIR) -HttpPort $(HTTP_PORT) \
+	-CheckConfigUrl $(CHECK_CONFIG_URL) $(if $(filter true,$(DRY_RUN)),-WhatIf)
+endif
 
 .DELETE_ON_ERROR:
 .PHONY: download image machine up start provision verify check-config ssh status \
@@ -56,7 +72,7 @@ verify:
 	curl --include --fail http://localhost:$(HTTP_PORT)
 
 check-config: start
-	$(call step,check-config) -CheckConfigUrl $(CHECK_CONFIG_URL)
+	$(call step,check-config)
 
 ssh:
 	$(call step,ssh)
