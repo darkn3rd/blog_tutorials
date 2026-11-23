@@ -1,0 +1,64 @@
+# mise runs these with cmd.exe on Windows. The Makefile builds the machine from file
+# dependencies, so the machine tasks here run make. Set PROVISION=true in the
+# environment to have `up` and `reload` run the playbook.
+
+[tasks.deps]
+description = "Install make if it's missing (WSL itself comes with Windows 11)"
+run = "where make >nul 2>nul || choco install -y make"
+
+[tasks.versions]
+description = "Print the Windows, WSL, make and guest Ansible versions"
+run = "make versions"
+
+[tasks.download]
+description = "Download the Gentoo stage3 and check its SHA256"
+run = "make download"
+
+[tasks.image]
+description = "Build the WSL image from the stage3"
+run = "make image"
+
+[tasks.machine]
+description = "Import the image as a WSL distro and set up its user"
+run = "make machine"
+
+[tasks.up]
+description = "Download, build and create as needed, then start the machine"
+run = "make up"
+
+[tasks.provision]
+description = "Install Ansible in the guest and run the playbook there"
+run = "make provision"
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "make verify"
+
+[tasks.check-config]
+description = "Run Docker's check-config.sh in the guest"
+run = "make check-config"
+
+[tasks.ssh]
+description = "Open a shell in the guest"
+run = "make ssh"
+raw = true
+
+[tasks.status]
+description = "Show the machine status"
+run = "make status"
+
+[tasks.halt]
+description = "Stop the machine"
+run = "make halt"
+
+[tasks.reload]
+description = "Restart the machine, without provisioning unless PROVISION=true"
+run = "make reload"
+
+[tasks.destroy]
+description = "Delete the machine, keeping the downloaded and built images"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the downloaded and built images"
+run = "make purge"

@@ -2,6 +2,7 @@
 
 Each tutorial here creates an Ubuntu virtual machine on a Mac, or on Linux for the two
 libvirt tutorials, with one VM tool, then configures it with one configuration tool.
+`wsl2/gentoo/ansible` is the exception: a Gentoo WSL2 distro on Windows.
 Folders are named by VM tool first, then by configuration tool, such as
 `vagrant/virtualbox/ansible`. Every tutorial stands on its own, with its own README.
 
@@ -23,6 +24,7 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 | [`vagrant/qemu/ansible`](vagrant/qemu/ansible) | Vagrant with the vagrant-qemu plugin | QEMU | Ansible |
 | [`vagrant/avf/ansible`](vagrant/avf/ansible) | Vagrant with the vagrant-provider-avf plugin | Apple's Virtualization framework | Ansible |
 | [`vagrant/libvirt/ansible`](vagrant/libvirt/ansible) | Vagrant with the vagrant-libvirt plugin, **on Linux** | libvirt, running QEMU with KVM | Ansible |
+| [`wsl2/gentoo/ansible`](wsl2/gentoo/ansible) | WSL2, with `wsl.exe` from a Makefile, **on Windows**, running Gentoo | Hyper-V, through WSL2 | Ansible |
 
 Apple provides two frameworks for running VMs:
 
@@ -60,6 +62,7 @@ libvirt build of the box as `vagrant/qemu/ansible`.
 | `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/avf/ansible` | `ansible-playbook` from the Mac; the provider can't provision | The VM's own address, from `make url` |
 | `vagrant/libvirt/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Linux host | <http://localhost:8080> |
+| `wsl2/gentoo/ansible` | `ansible-playbook` inside the guest, like Vagrant's `ansible_local` | <http://localhost:8080> |
 
 `vagrant/avf/ansible` isn't fully tested: SSH to the VM failed in testing. Its README has the
 details.
@@ -120,4 +123,4 @@ Port 8080 must be free, because each tutorial serves its page there. `bench-all.
 ## Planned
 
 - Other configuration tools, such as Puppet, Chef and Salt
-- Windows, with WSL2
+- More WSL2 distros next to `wsl2/gentoo`

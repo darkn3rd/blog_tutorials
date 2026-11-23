@@ -1,0 +1,11 @@
+#mtree
+./etc/wsl.conf type=file uid=0 gid=0 uname=root gname=root mode=0644 contents=image/etc/wsl.conf
+# The stage3 has no machine-id, so systemd treats the first start as a first boot and
+# systemd-firstboot waits at the console for answers that nobody can give under WSL.
+./etc/systemd/system/systemd-firstboot.service type=link uid=0 gid=0 uname=root gname=root mode=0777 link=/dev/null
+# WSL writes /etc/resolv.conf itself. systemd-resolved, which nsswitch.conf asks first,
+# hangs on WSL's DNS proxy, so without it lookups go straight to WSL's resolv.conf.
+# The sockets are masked too, or they would start it again.
+./etc/systemd/system/systemd-resolved.service type=link uid=0 gid=0 uname=root gname=root mode=0777 link=/dev/null
+./etc/systemd/system/systemd-resolved-monitor.socket type=link uid=0 gid=0 uname=root gname=root mode=0777 link=/dev/null
+./etc/systemd/system/systemd-resolved-varlink.socket type=link uid=0 gid=0 uname=root gname=root mode=0777 link=/dev/null

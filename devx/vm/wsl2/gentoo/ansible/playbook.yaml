@@ -1,0 +1,51 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure the development web server
+  hosts: web
+  become: true
+
+  vars:
+    site_root: /var/www/example
+    # `make provision HTTP_PORT=...` overrides this with -e.
+    http_port: 8080
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+  tasks:
+    - name: Install nginx
+      community.general.portage:
+        package: www-servers/nginx
+        getbinpkg: true
+        quiet: true
+
+    - name: Create the site root
+      ansible.builtin.file:
+        path: "{{ site_root }}"
+        state: directory
+        mode: "0755"
+
+    - name: Copy the web page
+      ansible.builtin.copy:
+        src: site/index.html
+        dest: "{{ site_root }}/index.html"
+        mode: "0644"
+      notify: Reload nginx
+
+    # Gentoo's nginx has no sites-available/sites-enabled, so the playbook replaces
+    # the main config.
+    - name: Write the nginx config
+      ansible.builtin.template:
+        src: site/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Start nginx on boot
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true

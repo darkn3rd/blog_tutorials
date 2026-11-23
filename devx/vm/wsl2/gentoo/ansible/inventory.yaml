@@ -1,0 +1,6 @@
+# Ansible runs inside the guest, like Vagrant's ansible_local, so it configures the
+# machine it runs on.
+web:
+  hosts:
+    dev:
+      ansible_connection: local

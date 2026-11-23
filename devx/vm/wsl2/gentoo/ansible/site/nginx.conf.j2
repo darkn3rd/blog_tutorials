@@ -1,0 +1,31 @@
+# Gentoo's default nginx.conf, with the example server replaced. The pid and log paths
+# are left to nginx's compiled-in defaults, which match Gentoo's systemd unit.
+user nginx nginx;
+worker_processes auto;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+}
+
+http {
+    # Gentoo ships a large mime.types, under this name.
+    types_hash_max_size 4096;
+    include /etc/nginx/mime.types.nginx;
+    default_type application/octet-stream;
+
+    sendfile on;
+
+    # WSL forwards ports that the guest listens on to localhost on Windows, with no
+    # remapping, so the guest listens on the port the page is opened on.
+    server {
+        listen {{ http_port }} default_server;
+        listen [::]:{{ http_port }} default_server;
+
+        root /var/www/example;
+        index index.html;
+
+        location / {
+            try_files $uri $uri/ =404;
+        }
+    }
+}

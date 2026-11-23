@@ -1,0 +1,3 @@
+# The guest reads these files straight from the Windows checkout, so keep LF endings
+# even if Git is set to convert them.
+* text=auto eol=lf
