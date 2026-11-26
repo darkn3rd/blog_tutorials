@@ -1,0 +1,54 @@
+<!-- GPU=virgl: a virtio-gpu that forwards OpenGL to the host's GPU (virgl). No Vulkan.
+     The Makefile fills in the @...@ values and saves the result to .vm/domain.xml. -->
+<domain type='kvm'>
+  <name>@NAME@</name>
+  <memory unit='MiB'>@MEMORY@</memory>
+  <vcpu>@CPUS@</vcpu>
+  <os firmware='efi'>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <firmware>
+      <feature enabled='no' name='secure-boot'/>
+    </firmware>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='host-passthrough'/>
+  <clock offset='utc'/>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='@DISK@'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <!-- cloud-init reads its settings from this disk, labelled CIDATA. -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw'/>
+      <source file='@SEED@'/>
+      <target dev='vdb' bus='virtio'/>
+      <readonly/>
+    </disk>
+    <interface type='network'>
+      <source network='@NETWORK@'/>
+      <model type='virtio'/>
+    </interface>
+    <serial type='pty'/>
+    <console type='pty'/>
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+    </rng>
+    <!-- OpenGL on the host's render node, without a window. To watch the guest's
+         screen instead, use <graphics type='spice'> with <listen type='none'/> and
+         <gl enable='yes'/>, and connect with virt-viewer. -->
+    <graphics type='egl-headless'>
+      <gl rendernode='@RENDERNODE@'/>
+    </graphics>
+    <video>
+      <model type='virtio' heads='1' primary='yes'>
+        <acceleration accel3d='yes'/>
+      </model>
+    </video>
+  </devices>
+</domain>

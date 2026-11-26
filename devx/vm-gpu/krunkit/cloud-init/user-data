@@ -1,0 +1,38 @@
+#cloud-config
+# The user gets the host's UID so that it can write to the virtio-fs project mount, and
+# joins render and video so that it can open the GPU at /dev/dri/renderD128.
+users:
+  - name: fedora
+    uid: @UID@
+    groups: [wheel, render, video]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @SSH_KEY@
+
+# Set here rather than as local-hostname in meta-data: cloud-init tries that one before
+# D-Bus is up, which works on a retry but leaves a warning. With hostname alone, Fedora's
+# cloud-init looks the short name up in /etc/hosts and gets localhost, so fqdn is set too.
+hostname: dev
+fqdn: dev.localdomain
+prefer_fqdn_over_hostname: false
+
+mounts:
+  - [workspace, /workspace, virtiofs, "nofail", "0", "0"]
+
+# Vulkan drivers and tools, and what gpu-bench.sh needs to build llama-bench.
+packages:
+  - mesa-vulkan-drivers
+  - vulkan-tools
+  - egl-utils
+  - gcc-c++
+  - make
+  - cmake
+  - git
+  - curl
+  - python3
+  - vulkan-headers
+  - vulkan-loader-devel
+  - glslc
+  - spirv-headers-devel

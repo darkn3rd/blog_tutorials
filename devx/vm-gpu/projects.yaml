@@ -1,0 +1,27 @@
+# Projects that gpu-bench-all.sh benchmarks, in order. `name` is the name in the results,
+# results/<name>.csv. `host` is the OS the project runs on (darwin or linux); the others
+# are left out on that machine. `args` are passed to every make command, and `skip: true`
+# leaves a project out.
+
+# llama.cpp release that every system builds, so all of them run the same code. Leave it
+# empty for the newest release.
+llama_ref: "b12791"
+
+projects:
+  - name: krunkit
+    path: krunkit
+    host: darwin
+  - name: libvirt-venus
+    path: libvirt
+    host: linux
+    args: GPU=venus
+  - name: libvirt-virgl
+    path: libvirt
+    host: linux
+    args: GPU=virgl
+  - name: libvirt-passthrough
+    path: libvirt
+    host: linux
+    args: GPU=passthrough PCI=01:00.0,01:00.1
+    skip: true
+    reason: set PCI in args to your GPU's PCI functions, then remove skip

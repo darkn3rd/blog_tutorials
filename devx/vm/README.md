@@ -117,6 +117,11 @@ The results go to `<name>.timings.csv`, such as `vagrant_vbox_ansible.timings.cs
 Port 8080 must be free, because each tutorial serves its page there. `bench-all.sh` needs
 `yq` (`brew install yq`).
 
+## GPU
+
+The tutorials here are about creating and configuring a VM, so their VMs have no GPU.
+[`../vm-gpu`](../vm-gpu) gives VMs a GPU and benchmarks it.
+
 ## Planned
 
 - Other configuration tools, such as Puppet, Chef and Salt

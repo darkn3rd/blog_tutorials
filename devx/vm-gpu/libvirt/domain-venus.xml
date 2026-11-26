@@ -1,0 +1,71 @@
+<!-- GPU=venus: a virtio-gpu that forwards Vulkan to the host's GPU (Venus).
+     The Makefile fills in the @...@ values and saves the result to .vm/domain.xml. -->
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+  <name>@NAME@</name>
+  <memory unit='MiB'>@MEMORY@</memory>
+  <vcpu>@CPUS@</vcpu>
+  <!-- Venus maps GPU memory into the guest as blobs, which needs guest RAM that QEMU
+       can share with virglrenderer. -->
+  <memoryBacking>
+    <source type='memfd'/>
+    <access mode='shared'/>
+  </memoryBacking>
+  <os firmware='efi'>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <firmware>
+      <feature enabled='no' name='secure-boot'/>
+    </firmware>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='host-passthrough'/>
+  <clock offset='utc'/>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='@DISK@'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <!-- cloud-init reads its settings from this disk, labelled CIDATA. -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw'/>
+      <source file='@SEED@'/>
+      <target dev='vdb' bus='virtio'/>
+      <readonly/>
+    </disk>
+    <interface type='network'>
+      <source network='@NETWORK@'/>
+      <model type='virtio'/>
+    </interface>
+    <serial type='pty'/>
+    <console type='pty'/>
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+    </rng>
+    <!-- OpenGL on the host's render node, without a window. -->
+    <graphics type='egl-headless'>
+      <gl rendernode='@RENDERNODE@'/>
+    </graphics>
+    <video>
+      <model type='virtio' heads='1' primary='yes'>
+        <acceleration accel3d='yes'/>
+      </model>
+      <alias name='ua-gpu'/>
+    </video>
+  </devices>
+  <!-- libvirt has no settings for Venus yet, so these are passed to QEMU's virtio-gpu
+       directly: blob resources, the Venus protocol, and the size of the window of host
+       memory that GPU buffers are mapped through. -->
+  <qemu:override>
+    <qemu:device alias='ua-gpu'>
+      <qemu:frontend>
+        <qemu:property name='blob' type='bool' value='true'/>
+        <qemu:property name='venus' type='bool' value='true'/>
+        <qemu:property name='hostmem' type='unsigned' value='@HOSTMEM@'/>
+      </qemu:frontend>
+    </qemu:device>
+  </qemu:override>
+</domain>

@@ -1,0 +1,52 @@
+<!-- GPU=passthrough: the guest gets a real GPU, and the host can't use it meanwhile.
+     The Makefile fills in the @...@ values and saves the result to .vm/domain.xml. -->
+<domain type='kvm'>
+  <name>@NAME@</name>
+  <memory unit='MiB'>@MEMORY@</memory>
+  <vcpu>@CPUS@</vcpu>
+  <!-- Most GPUs need UEFI firmware to start their option ROM in a VM. -->
+  <os firmware='efi'>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <firmware>
+      <feature enabled='no' name='secure-boot'/>
+    </firmware>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+  <cpu mode='host-passthrough'/>
+  <clock offset='utc'/>
+  <devices>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='@DISK@'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <!-- cloud-init reads its settings from this disk, labelled CIDATA. -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='raw'/>
+      <source file='@SEED@'/>
+      <target dev='vdb' bus='virtio'/>
+      <readonly/>
+    </disk>
+    <interface type='network'>
+      <source network='@NETWORK@'/>
+      <model type='virtio'/>
+    </interface>
+    <serial type='pty'/>
+    <console type='pty'/>
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+    </rng>
+    <!-- No virtual display adapter: the passed-through GPU is the only one. -->
+    <video>
+      <model type='none'/>
+    </video>
+    <!-- One <hostdev> per PCI function in PCI, such as the GPU and its HDMI audio.
+         With managed='yes', libvirt moves each one to the vfio-pci driver when the VM
+         starts and gives it back to its host driver when the VM stops. -->
+    @HOSTDEVS@
+  </devices>
+</domain>
