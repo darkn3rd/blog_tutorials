@@ -1,0 +1,74 @@
+# deps installs everything with Homebrew. Packer comes from HashiCorp's tap,
+# since Homebrew's own formula stopped at an old release.
+# The tasks call make, so the Makefile stays the one place the steps are defined.
+
+[tasks.deps]
+description = "Install Packer, Vagrant and VirtualBox if they're missing"
+run = [
+  "command -v packer >/dev/null || brew install hashicorp/tap/packer",
+  "command -v vagrant >/dev/null || brew install --cask vagrant",
+  "command -v VBoxManage >/dev/null || brew install --cask virtualbox",
+]
+
+[tasks.versions]
+description = "Print the macOS, Packer, Vagrant and VirtualBox versions"
+run = '''
+printf "%-12s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  Packer: $(packer version | sed -n '1s/Packer v//p') \
+  Vagrant: $(vagrant --version | cut -d' ' -f2) \
+  VirtualBox: $(VBoxManage --version)
+'''
+
+[tasks.all]
+description = "Build the box, add it to Vagrant and test it"
+run = "make all"
+
+[tasks.image]
+description = "Download and check Ubuntu's cloud image"
+run = "make image"
+
+[tasks.ovf]
+description = "Wrap the cloud image's disk in an OVF for Packer to import"
+run = "make ovf"
+
+[tasks.init]
+description = "Install the Packer plugins the template needs"
+run = "make init"
+
+[tasks.validate]
+description = "Check the Packer template"
+run = "make validate"
+
+[tasks.box]
+description = "Build the box file from the cloud image with Packer"
+run = "make box"
+
+[tasks.add]
+description = "Add the box file to Vagrant as local/ubuntu-26.04"
+run = "make add"
+
+[tasks.test]
+description = "Start a VM from the added box and check it"
+run = "make test"
+
+[tasks.verify]
+description = "Check the test VM's user, sudo, OS and disk"
+run = "make verify"
+
+[tasks.ssh]
+description = "Log into the test VM"
+run = "make ssh || true"
+raw = true
+
+[tasks.destroy]
+description = "Delete the test VM"
+run = "make destroy"
+
+[tasks.clean]
+description = "Delete the test VM, the OVF and the box file"
+run = "make clean"
+
+[tasks.purge]
+description = "Also remove the added box and the downloaded image"
+run = "make purge"
