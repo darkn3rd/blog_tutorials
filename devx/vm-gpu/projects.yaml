@@ -25,3 +25,23 @@ projects:
     args: GPU=passthrough PCI=01:00.0,01:00.1
     skip: true
     reason: set PCI in args to your GPU's PCI functions, then remove skip
+  - name: qemu-virgl
+    path: qemu
+    host: linux
+    args: GPU=virgl
+  - name: qemu-venus
+    path: qemu
+    host: linux
+    args: GPU=venus
+  - name: qemu-gvtg
+    path: qemu
+    host: linux
+    args: GPU=gvtg
+    skip: true
+    reason: needs an Intel iGPU with GVT-g turned on (see qemu/README.md), then remove skip
+  - name: qemu-passthrough
+    path: qemu
+    host: linux
+    args: GPU=passthrough PCI=01:00.0,01:00.1
+    skip: true
+    reason: set PCI in args to your GPU's PCI functions, then remove skip

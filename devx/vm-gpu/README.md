@@ -18,6 +18,7 @@ host's GPU, or the host's real GPU passed through.
 | --- | --- | --- | --- | --- | --- |
 | [`krunkit`](krunkit) | macOS | krunkit (libkrun) | Fedora 45 | virtio-gpu with Venus, always on | Vulkan |
 | [`libvirt`](libvirt) | Linux | libvirt, with `virsh` | Ubuntu 26.04 | `GPU=venus`, `virgl` or `passthrough` | Vulkan, OpenGL, or the real GPU's |
+| [`qemu`](qemu) | Linux | QEMU, run directly from a Makefile | Ubuntu 26.04 | `GPU=virgl`, `venus`, `gvtg` or `passthrough` | OpenGL, Vulkan, Intel's, or the real GPU's |
 
 Left out, and why:
 
@@ -27,8 +28,8 @@ Left out, and why:
 | vfkit, Lima, Vagrant with AVF | macOS | Apple's Virtualization framework gives Linux guests a 2D virtio-gpu only |
 | VirtualBox, Vagrant with VirtualBox | macOS | Not yet tested. VMSVGA with `--accelerate-3d` offers OpenGL only, no Vulkan, and no passthrough since VirtualBox 6.1 |
 
-Planned for Linux hosts: QEMU from a Makefile and Vagrant with vagrant-libvirt, which
-offer the same three modes as libvirt.
+Planned for Linux hosts: Vagrant with vagrant-libvirt, which offers the same three modes
+as libvirt.
 
 ## The benchmark
 
@@ -52,7 +53,8 @@ It runs `gpu-bench.sh` on the host first, then goes through the projects in
 `make bench`, then `make destroy`. Every system builds the same llama.cpp release, the
 one named by `llama_ref` in `projects.yaml`, or the newest one if that is empty. Results go to
 `results/<name>.csv`, and `GPU.md` is rewritten from every file there, so results copied
-from another machine show up too.
+from another machine show up too. The CSVs are kept in git, so each machine's results
+stay with the others; the run logs aren't.
 
 - **Choose projects** by name, with `host` for the machine itself:
   `./gpu-bench-all.sh host krunkit`.
@@ -65,7 +67,7 @@ Each project keeps its own copy of `gpu-bench.sh`, so it stands on its own.
 changing `gpu-bench.sh`, copy it into each project:
 
 ```bash
-for d in krunkit libvirt; do cp gpu-bench.sh "$d/"; done
+for d in krunkit libvirt qemu; do cp gpu-bench.sh "$d/"; done
 ```
 
 `gpu-bench-all.sh` needs `yq` and `python3`. Building llama.cpp with Vulkan takes several

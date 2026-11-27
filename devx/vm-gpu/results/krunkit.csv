@@ -1,0 +1,7 @@
+run_at,label,host,backend,llama_ref,llama_commit,model,mode,device,threads,test,tokens_per_s,stddev
+2026-11-26 00:00,krunkit,Linux aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,Virtio-GPU Venus (Apple M1 Max),,gpu,,
+2026-11-26 00:00,krunkit,Linux aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,"llvmpipe (LLVM 23.1.5, 128 bits)",,opengl,,
+2026-11-26 00:00,krunkit,Linux aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,gpu,Virtio-GPU Venus (Apple M1 Max),2,pp512,2169.00,
+2026-11-26 00:00,krunkit,Linux aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,gpu,Virtio-GPU Venus (Apple M1 Max),2,tg128,91.90,
+2026-11-26 00:00,krunkit,Linux aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,Apple M1 Max,2,pp512,229.00,
+2026-11-26 00:00,krunkit,Linux aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,Apple M1 Max,2,tg128,91.10,

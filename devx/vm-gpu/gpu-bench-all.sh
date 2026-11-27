@@ -23,7 +23,7 @@ command -v yq >/dev/null || { echo "gpu-bench-all.sh needs yq" >&2; exit 1; }
 
 report() {
   python3 - "$here" "$results" "$(yq -o=json '.' "$config")" <<'PY'
-import csv, glob, json, os, re, subprocess, sys
+import csv, glob, json, os, re, sys
 
 here, results, cfg = sys.argv[1], sys.argv[2], json.loads(sys.argv[3])
 projects = cfg.get("projects", [])
@@ -75,12 +75,6 @@ def info(rows, test, none="none"):
         r = get(rows, "gpu", "pp512")              # results written before the info rows
     return device(r["device"]) if r and r["device"] not in ("", "none") else none
 
-def sh(cmd):
-    try:
-        return subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout.strip()
-    except OSError:
-        return ""
-
 out = ["# GPU benchmark", "",
        "<!-- Written by gpu-bench-all.sh from results/*.csv. Don't edit by hand. -->", "",
        "Tokens per second from llama.cpp's `llama-bench`, on the host itself and in each "
@@ -97,6 +91,7 @@ if cols:
     line("GPU, generation (tg128)", lambda r: tps(get(r, "gpu", "tg128")))
     line("CPU only, prompt (pp512)", lambda r: tps(get(r, "cpu", "pp512")))
     line("CPU only, generation (tg128)", lambda r: tps(get(r, "cpu", "tg128")))
+    line("CPU", lambda r: (get(r, "cpu", "pp512") or {"device": "–"})["device"].replace("(R)", "").replace("(TM)", ""))
     line("CPU threads", lambda r: (get(r, "cpu", "pp512") or {"threads": "–"})["threads"])
     line("GPU speedup, prompt", lambda r: ratio(get(r, "gpu", "pp512"), get(r, "cpu", "pp512")))
     line("GPU speedup, generation", lambda r: ratio(get(r, "gpu", "tg128"), get(r, "cpu", "tg128")))
@@ -118,9 +113,6 @@ if cols:
             "projects configure them, not the hypervisors at equal size.",
             f"- **llama.cpp:** {', '.join(refs)}.",
             f"- **Measured** {when}" + (f", on {'; '.join(hosts)}." if hosts else ".")]
-    chip = sh("sysctl -n machdep.cpu.brand_string")
-    if chip and "host-darwin" in found:
-        out.append(f"- **Mac:** {chip}, macOS {sh('sw_vers --productVersion')}.")
 else:
     out.append("No results yet. Run `./gpu-bench-all.sh`.")
 missing = [f"`{p['name']}` ({p['host']})" for p in projects
