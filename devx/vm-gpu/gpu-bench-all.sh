@@ -1,34 +1,92 @@
 #!/usr/bin/env bash
 # Benchmark this machine's GPU, then the GPU in every project listed in projects.yaml
-# that runs on this OS, and write GPU.md. Run it from anywhere:
+# that runs on this platform, and write GPU.md. Run it from anywhere:
 #
-#   ./gpu-bench-all.sh                 # this machine, then every project for this OS
+#   ./gpu-bench-all.sh                 # this machine, then every project for this platform
 #   ./gpu-bench-all.sh krunkit         # only these, by name ("host" is this machine)
 #   ./gpu-bench-all.sh --report        # only rewrite GPU.md from results/
 #
-# Each project's VM is created with `make up`, benchmarked with `make bench`, and deleted
-# with `make destroy`. Every system builds the same llama.cpp release: llama_ref in
-# projects.yaml, or the newest one when that is empty. Results go to results/<name>.csv;
-# an earlier file is renamed with its date first. GPU.md shows every file in results/,
-# so results copied in from another machine (a Linux host, say) appear too.
+# The platform is the OS and CPU architecture of the machine running the VMs, such as
+# macos-arm64, macos-x86_64, ubuntu-x86_64 or windows-x86_64. Results go to
+# results/<platform>/<name>.csv, next to machine.txt, which describes the machine; an
+# earlier CSV is renamed with its date first. Each project's VM is created with
+# `make up`, benchmarked with `make bench`, and deleted with `make destroy`. Every system
+# builds the same llama.cpp release: llama_ref in projects.yaml, or the newest one when
+# that is empty. GPU.md has one section per platform folder, so results from other
+# machines, copied or committed into results/, show up too.
 set -uo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 config=$here/projects.yaml
-results=$here/results
-os=$(uname -s | tr '[:upper:]' '[:lower:]')
-host_label=host-$os
 
 command -v yq >/dev/null || { echo "gpu-bench-all.sh needs yq" >&2; exit 1; }
 
+# The OS (the distribution on Linux) and the CPU architecture, such as ubuntu-x86_64.
+platform_os() {
+  case $(uname -s) in
+    Darwin) echo macos ;;
+    Linux) (. /etc/os-release 2>/dev/null; echo "${ID:-linux}") ;;
+    MINGW* | MSYS* | CYGWIN*) echo windows ;;
+    *) uname -s | tr '[:upper:]' '[:lower:]' ;;
+  esac
+}
+platform_arch() {
+  case $(uname -m) in
+    arm64 | aarch64) echo arm64 ;;
+    x86_64 | amd64) echo x86_64 ;;
+    *) uname -m ;;
+  esac
+}
+os=$(platform_os)
+arch=$(platform_arch)
+platform=$os-$arch
+results=$here/results/$platform
+
+# A project runs here if it lists this platform, or linux-<arch> on any Linux.
+runs_here() {
+  local p
+  for p in $1; do
+    [ "$p" = "$platform" ] && return 0
+    case $os in macos | windows) ;; *) [ "$p" = "linux-$arch" ] && return 0 ;; esac
+  done
+  return 1
+}
+
+# One "key: value" line each for the OS, model, CPU, GPU and memory of this machine.
+describe_machine() {
+  case $(uname -s) in
+    Darwin)
+      echo "os: macOS $(sw_vers -productVersion)"
+      echo "model: $(sysctl -n hw.model)"
+      echo "cpu: $(sysctl -n machdep.cpu.brand_string)"
+      echo "gpu: $(system_profiler SPDisplaysDataType 2>/dev/null |
+                    sed -n 's/^ *Chipset Model: //p' | paste -sd, - | sed 's/,/, /g')"
+      echo "memory: $(( $(sysctl -n hw.memsize) / 1073741824 )) GB"
+      ;;
+    Linux)
+      echo "os: $(. /etc/os-release; echo "$PRETTY_NAME"), kernel $(uname -r)"
+      echo "model: $(cat /sys/class/dmi/id/sys_vendor /sys/class/dmi/id/product_name 2>/dev/null | paste -sd' ' -)"
+      echo "cpu: $(LC_ALL=C lscpu | sed -n 's/^Model name:[[:space:]]*//p' | head -1)"
+      echo "gpu: $(lspci 2>/dev/null | grep -iE 'vga|3d|display' | sed 's/^[^ ]* [^:]*: //' |
+                    paste -sd, - | sed 's/,/, /g')"
+      echo "memory: $(awk '/^MemTotal:/ { printf "%d GB", $2 / 1048576 + 0.5 }' /proc/meminfo)"
+      ;;
+  esac
+}
+
 report() {
-  python3 - "$here" "$results" "$(yq -o=json '.' "$config")" <<'PY'
+  python3 - "$here" "$(yq -o=json '.' "$config")" <<'PY'
 import csv, glob, json, os, re, sys
 
-here, results, cfg = sys.argv[1], sys.argv[2], json.loads(sys.argv[3])
+here, cfg = sys.argv[1], json.loads(sys.argv[2])
 projects = cfg.get("projects", [])
-titles = {"host-darwin": "Mac, no VM", "host-linux": "Linux host, no VM"}
-order = ["host-darwin", "host-linux"] + [p["name"] for p in projects]
+order = ["host"] + [p["name"] for p in projects]
+os_names = {"macos": "macOS", "ubuntu": "Ubuntu", "fedora": "Fedora", "debian": "Debian",
+            "windows": "Windows", "linux": "Linux"}
+
+def title(platform):
+    os_id, _, arch = platform.rpartition("-")
+    return f"{os_names.get(os_id, os_id)} {arch}"
 
 def load(path):
     with open(path) as f:
@@ -38,15 +96,10 @@ def load(path):
     last = max(r["run_at"] for r in rows)          # newest run only
     return [r for r in rows if r["run_at"] == last]
 
-found = {}
-for path in glob.glob(os.path.join(results, "*.csv")):
-    name = os.path.basename(path)[:-4]
-    if re.search(r"\.\d{8}-\d{4}$", name):        # earlier sessions, kept with their date
-        continue
-    rows = load(path)
-    if rows:
-        found[name] = rows
-cols = [n for n in order if n in found] + sorted(n for n in found if n not in order)
+def runs_on(p, platform):
+    os_id, _, arch = platform.rpartition("-")
+    linux = os_id not in ("macos", "windows")
+    return any(x == platform or (linux and x == f"linux-{arch}") for x in p.get("platforms", []))
 
 def device(s):
     s = re.sub(r"^\w+?\d+:\s*", "", s)                     # "Vulkan0: "
@@ -75,12 +128,46 @@ def info(rows, test, none="none"):
         r = get(rows, "gpu", "pp512")              # results written before the info rows
     return device(r["device"]) if r and r["device"] not in ("", "none") else none
 
+def cpu(rows):
+    r = get(rows, "cpu", "pp512")
+    if r is None:
+        return "–"
+    name = re.sub(r"^Accelerate, ", "", r["device"])   # llama-bench's name on macOS
+    return name.replace("(R)", "").replace("(TM)", "")
+
 out = ["# GPU benchmark", "",
-       "<!-- Written by gpu-bench-all.sh from results/*.csv. Don't edit by hand. -->", "",
-       "Tokens per second from llama.cpp's `llama-bench`, on the host itself and in each "
-       "project's VM, measured with `gpu-bench-all.sh`. Higher is better.", ""]
-if cols:
-    out += ["| | " + " | ".join(titles.get(n, f"`{n}`") for n in cols) + " |",
+       "<!-- Written by gpu-bench-all.sh from results/*/. Don't edit by hand. -->", "",
+       "Tokens per second from llama.cpp's `llama-bench`, on each machine itself and in each "
+       "project's VM on it, measured with `gpu-bench-all.sh`. Higher is better. Each machine "
+       "has its own table; compare the VMs within a table, not across machines.", ""]
+refs, dates, any_results = set(), [], False
+for pdir in sorted(d for d in glob.glob(os.path.join(here, "results", "*")) if os.path.isdir(d)):
+    platform = os.path.basename(pdir)
+    found = {}
+    for path in glob.glob(os.path.join(pdir, "*.csv")):
+        name = os.path.basename(path)[:-4]
+        if re.search(r"\.\d{8}-\d{4}$", name):    # earlier sessions, kept with their date
+            continue
+        rows = load(path)
+        if rows:
+            found[name] = rows
+    if not found:
+        continue
+    any_results = True
+    cols = [n for n in order if n in found] + sorted(n for n in found if n not in order)
+    out += [f"## {title(platform)}", ""]
+    machine = {}
+    mpath = os.path.join(pdir, "machine.txt")
+    if os.path.exists(mpath):
+        for line in open(mpath):
+            k, _, v = line.partition(":")
+            if v.strip():
+                machine[k.strip()] = v.strip()
+    if machine:
+        labels = (("model", ""), ("cpu", "CPU "), ("gpu", "GPU "), ("memory", ""), ("os", ""))
+        parts = [f"{prefix}{machine[k]}" for k, prefix in labels if machine.get(k)]
+        out += ["Machine: " + ", ".join(parts) + ".", ""]
+    out += ["| | " + " | ".join("This machine, no VM" if n == "host" else f"`{n}`" for n in cols) + " |",
             "| --- |" + " ---: |" * len(cols)]
     def line(label, f):
         out.append(f"| {label} | " + " | ".join(f(found[n]) for n in cols) + " |")
@@ -91,35 +178,37 @@ if cols:
     line("GPU, generation (tg128)", lambda r: tps(get(r, "gpu", "tg128")))
     line("CPU only, prompt (pp512)", lambda r: tps(get(r, "cpu", "pp512")))
     line("CPU only, generation (tg128)", lambda r: tps(get(r, "cpu", "tg128")))
-    line("CPU", lambda r: (get(r, "cpu", "pp512") or {"device": "–"})["device"].replace("(R)", "").replace("(TM)", ""))
+    line("CPU", cpu)
     line("CPU threads", lambda r: (get(r, "cpu", "pp512") or {"threads": "–"})["threads"])
     line("GPU speedup, prompt", lambda r: ratio(get(r, "gpu", "pp512"), get(r, "cpu", "pp512")))
     line("GPU speedup, generation", lambda r: ratio(get(r, "gpu", "tg128"), get(r, "cpu", "tg128")))
-    first = found[cols[0]][0]
-    dates = sorted(found[n][0]["run_at"][:10] for n in cols)
+    missing = [f"`{p['name']}`" for p in projects
+               if not p.get("skip") and runs_on(p, platform) and p["name"] not in found]
+    if missing:
+        out += ["", f"No results yet on this machine: {', '.join(missing)}."]
+    out.append("")
+    for n in cols:
+        refs.add(f"{found[n][0]['llama_ref']} ({found[n][0]['llama_commit']})")
+        dates.append(found[n][0]["run_at"][:10])
+
+if any_results:
+    dates.sort()
     when = dates[0] if dates[0] == dates[-1] else f"{dates[0]} to {dates[-1]}"
-    refs = sorted({f"{found[n][0]['llama_ref']} ({found[n][0]['llama_commit']})" for n in cols})
-    hosts = sorted({found[n][0]["host"] for n in cols if n.startswith("host-")})
-    out += ["",
+    out += ["## Notes", "",
             "- **pp512** processes a 512-token prompt and **tg128** generates 128 tokens. Each "
             "value is the mean of 3 repetitions. Prompt processing is mostly compute, so it "
             "shows a GPU best; generation is mostly memory bandwidth.",
-            f"- **Model:** `{first['model']}`, with every layer on the GPU (`-ngl 99`) for the "
+            "- **Model:** TinyLlama 1.1B, Q4_0, with every layer on the GPU (`-ngl 99`) for the "
             "GPU rows and `-dev none -ngl 0` for the CPU rows.",
             "- **GPU used none** means Vulkan found no GPU in that VM, so only the CPU rows are "
             "measured. Mesa's software renderer, llvmpipe, doesn't count as a GPU. An "
             "**OpenGL renderer** of llvmpipe means OpenGL runs on the CPU too.",
             "- **CPU threads** follows each VM's vCPUs, so the CPU rows compare the VMs as the "
             "projects configure them, not the hypervisors at equal size.",
-            f"- **llama.cpp:** {', '.join(refs)}.",
-            f"- **Measured** {when}" + (f", on {'; '.join(hosts)}." if hosts else ".")]
+            f"- **llama.cpp:** {', '.join(sorted(refs))}.",
+            f"- **Measured** {when}."]
 else:
     out.append("No results yet. Run `./gpu-bench-all.sh`.")
-missing = [f"`{p['name']}` ({p['host']})" for p in projects
-           if not p.get("skip") and p["name"] not in found]
-if missing and cols:
-    out.append(f"- **No results yet:** {', '.join(missing)}. Run `gpu-bench-all.sh` on that "
-               "OS and copy its `results/*.csv` here.")
 for p in projects:
     if p.get("skip"):
         out.append(f"- **Not measured:** `{p['name']}`" + (f", {p['reason']}." if p.get("reason") else "."))
@@ -141,6 +230,8 @@ wanted() {
   printf '%s\n' "${selection[@]}" | grep -qx "$1"
 }
 mkdir -p "$results"
+describe_machine >"$results/machine.txt"
+echo "== $platform: $(sed -n 's/^cpu: //p' "$results/machine.txt")" >&2
 
 keep_old() {
   local f=$results/$1.csv
@@ -177,22 +268,22 @@ trap '[ -n "$current" ] && make -C "$current" destroy "${current_args[@]}" </dev
 
 failed=()
 
-if wanted host || wanted "$host_label"; then
-  echo "== This machine ($host_label)" >&2
-  keep_old "$host_label"
-  log=$results/$host_label.run.log
+if wanted host; then
+  echo "== host: this machine, no VM" >&2
+  keep_old host
+  log=$results/host.run.log
   : >"$log"
-  if ! step "gpu-bench.sh" "$log" env LABEL="$host_label" LLAMA_REF="$ref" \
-         WORK="$results/host-work" RESULTS="$results" "$here/gpu-bench.sh"; then
-    failed+=("$host_label")
+  if ! step "gpu-bench.sh" "$log" env LABEL=host LLAMA_REF="$ref" \
+         WORK="$here/results/host-work" RESULTS="$results" "$here/gpu-bench.sh"; then
+    failed+=(host)
   fi
 fi
 
-while IFS=$'\t' read -r name path host args; do
+while IFS=$'\t' read -r name path platforms args; do
   [ -n "$name" ] || continue
   wanted "$name" || continue
-  if [ "$host" != "$os" ]; then
-    echo "== $name: runs on $host, skipping on $os" >&2
+  if ! runs_here "$platforms"; then
+    echo "== $name: runs on $platforms, not $platform" >&2
     continue
   fi
   dir=$here/$path
@@ -221,7 +312,8 @@ while IFS=$'\t' read -r name path host args; do
   fi
   make -C "$dir" destroy "${make_args[@]}" </dev/null >/dev/null 2>&1
   current=""
-done < <(yq -r '.projects[] | select(.skip != true) | [.name, .path, .host, (.args // "")] | @tsv' "$config")
+done < <(yq -r '.projects[] | select(.skip != true) |
+                [.name, .path, (.platforms | join(" ")), (.args // "")] | @tsv' "$config")
 
 report
 

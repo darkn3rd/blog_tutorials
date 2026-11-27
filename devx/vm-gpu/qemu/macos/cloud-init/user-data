@@ -1,0 +1,39 @@
+#cloud-config
+# The user joins render and video so that it can open the GPU at /dev/dri/renderD*.
+users:
+  - name: fedora
+    groups: [wheel, render, video]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @SSH_KEY@
+
+# Set here rather than as local-hostname in meta-data: cloud-init tries that one before
+# D-Bus is up, which works on a retry but leaves a warning. With hostname alone, Fedora's
+# cloud-init looks the short name up in /etc/hosts and gets localhost, so fqdn is set too.
+hostname: dev
+fqdn: dev.localdomain
+prefer_fqdn_over_hostname: false
+
+# Vulkan and OpenGL drivers and tools, and what gpu-bench.sh needs to build llama-bench.
+packages:
+  - mesa-vulkan-drivers
+  - vulkan-tools
+  - egl-utils
+  - pciutils
+  - gcc-c++
+  - make
+  - cmake
+  - git
+  - curl
+  - python3
+  - vulkan-headers
+  - vulkan-loader-devel
+  - glslc
+  - spirv-headers-devel
+  - rsync
+
+# `make sync` copies the project here with rsync.
+runcmd:
+  - [install, -d, -o, fedora, -g, fedora, /workspace]

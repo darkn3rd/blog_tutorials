@@ -1,2 +1,9 @@
+# Keep each platform's results (*.csv) and machine description; ignore the logs, the
+# copies of earlier sessions (name.YYYYMMDD-HHMM.csv) and the host's llama.cpp build.
 results/*
-!results/*.csv
+!results/*/
+results/*/*
+!results/*/*.csv
+!results/*/machine.txt
+results/*/*.[0-9]*.csv
+results/host-work/

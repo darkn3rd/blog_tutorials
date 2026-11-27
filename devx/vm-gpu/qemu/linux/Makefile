@@ -91,7 +91,7 @@ check:
 		test -e $(RENDERNODE) || { echo "$(RENDERNODE) doesn't exist; set RENDERNODE to a host GPU (ls /dev/dri)." >&2; exit 1; }; \
 		test -r $(RENDERNODE) -a -w $(RENDERNODE) || { echo "You can't open $(RENDERNODE); add yourself to the render group and log in again." >&2; exit 1; }; \
 		echo "Host GPU: $(RENDERNODE) ($$(basename $$(readlink -f /sys/class/drm/$$(basename $(RENDERNODE))/device/driver)))"; \
-		$(QEMU) -device virtio-vga-gl,help >/dev/null 2>&1 || { echo "This QEMU has no OpenGL support. On Ubuntu 24.04 and later, install qemu-system-modules-opengl." >&2; exit 1; }; \
+		$(QEMU) -device help 2>/dev/null | grep -q '"virtio-vga-gl"' || { echo "This QEMU has no OpenGL support. On Ubuntu 24.04 and later, install qemu-system-modules-opengl." >&2; exit 1; }; \
 		if [ "$(GPU)" = venus ] && ! $(QEMU) -device virtio-vga-gl,help 2>/dev/null | grep -q venus; then \
 			echo "This QEMU ($$($(QEMU) --version | sed -n '1s/.*version //p')) has no Venus support. It needs QEMU 9.2 or later, built with virglrenderer 1.0 or later." >&2; exit 1; \
 		fi ;; \

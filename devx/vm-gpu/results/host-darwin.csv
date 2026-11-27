@@ -1,6 +1,0 @@
-run_at,label,host,backend,llama_ref,llama_commit,model,mode,device,threads,test,tokens_per_s,stddev
-2026-11-26 14:13,host-darwin,Darwin 25.6.0 arm64,metal,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,"MTL0: Apple M1 Max (53084 MiB, 53083 MiB free)",,gpu,,
-2026-11-26 14:13,host-darwin,Darwin 25.6.0 arm64,metal,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,gpu,"MTL0: Apple M1 Max (53084 MiB, 53083 MiB free)",8,pp512,3864.01,7.88
-2026-11-26 14:13,host-darwin,Darwin 25.6.0 arm64,metal,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,gpu,"MTL0: Apple M1 Max (53084 MiB, 53083 MiB free)",8,tg128,272.68,1.50
-2026-11-26 14:13,host-darwin,Darwin 25.6.0 arm64,metal,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Accelerate, Apple M1 Max",8,pp512,828.57,5.91
-2026-11-26 14:13,host-darwin,Darwin 25.6.0 arm64,metal,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Accelerate, Apple M1 Max",8,tg128,151.29,3.68

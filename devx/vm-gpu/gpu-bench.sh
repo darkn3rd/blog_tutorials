@@ -77,12 +77,33 @@ OUT="$RESULTS/$LABEL-$BACKEND-$STAMP.txt"
 JSONL="$RESULTS/$LABEL-$BACKEND-$STAMP.jsonl"
 CSV="$RESULTS/$LABEL.csv"
 COMMIT="$(git -C "$SRC" rev-parse --short HEAD)"
+
+# The CPU model, for the results. llama-bench only names it on x86. Some hypervisors,
+# such as those on Apple silicon, hide the model from the guest and show only the vendor.
+cpu_name() {
+  local m v
+  if [ "$(uname -s)" = Darwin ]; then
+    sysctl -n machdep.cpu.brand_string
+    return
+  fi
+  m="$(LC_ALL=C lscpu 2>/dev/null | sed -n 's/^Model name:[[:space:]]*//p' | head -1)"
+  if [ -z "$m" ] || [ "$m" = "-" ]; then
+    m="$(sed -n 's/^model name[[:space:]]*:[[:space:]]*//p' /proc/cpuinfo | head -1)"
+  fi
+  if [ -z "$m" ] || [ "$m" = "-" ]; then
+    v="$(LC_ALL=C lscpu 2>/dev/null | sed -n 's/^Vendor ID:[[:space:]]*//p' | head -1)"
+    m="${v:-Unknown} CPU, model hidden from the guest"
+  fi
+  printf '%s\n' "$m"
+}
+CPU_NAME="$(cpu_name)"
 {
   echo "label: $LABEL"
   echo "host: $(uname -srm)"
   echo "backend: $BACKEND"
   echo "llama.cpp: $LLAMA_REF ($COMMIT)"
   echo "model: $(basename "$MODEL")"
+  echo "cpu: $CPU_NAME"
   echo "cpus: $JOBS"
   echo
   echo "== Devices =="
@@ -132,10 +153,10 @@ run cpu -dev none -ngl 0 2>&1 | tee -a "$OUT"
 
 # Append to $LABEL.csv and print a summary.
 python3 - "$JSONL" "$CSV" "$LABEL" "$BACKEND" "$LLAMA_REF" "$COMMIT" "$(basename "$MODEL")" \
-  "${GPU_DEVICE:-none}" "$(uname -srm)" "$GL_RENDERER" <<'PY' | tee -a "$OUT"
+  "${GPU_DEVICE:-none}" "$(uname -srm)" "$GL_RENDERER" "$CPU_NAME" <<'PY' | tee -a "$OUT"
 import csv, datetime, json, os, sys
 
-jsonl, out, label, backend, ref, commit, model, device, host, gl = sys.argv[1:]
+jsonl, out, label, backend, ref, commit, model, device, host, gl, cpu = sys.argv[1:]
 run_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 fields = ["run_at", "label", "host", "backend", "llama_ref", "llama_commit", "model",
           "mode", "device", "threads", "test", "tokens_per_s", "stddev"]
@@ -151,7 +172,7 @@ with open(jsonl) as f:
         r = json.loads(line)
         test = f"pp{r['n_prompt']}" if r.get("n_prompt") else f"tg{r['n_gen']}"
         rows.append({**base, "mode": r["mode"],
-            "device": device if r["mode"] == "gpu" else (r.get("cpu_info") or "CPU"),
+            "device": device if r["mode"] == "gpu" else cpu,
             "threads": r.get("n_threads", ""), "test": test,
             "tokens_per_s": f"{r['avg_ts']:.2f}", "stddev": f"{r['stddev_ts']:.2f}"})
 # Not a measurement: which devices this system offers, for the report.

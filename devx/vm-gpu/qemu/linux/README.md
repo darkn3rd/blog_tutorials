@@ -13,8 +13,8 @@ root.
 | `gvtg` | A slice of an Intel iGPU (GVT-g), with the guest's own Intel driver | Vulkan, OpenGL | Yes, shared |
 | `passthrough` | A whole GPU, handed over with VFIO | Whatever its driver offers | No, while the VM runs |
 
-`virgl` is the default here, unlike in [`libvirt`](../libvirt), because it works with
-the QEMU in older distributions such as Ubuntu 22.04. `venus` needs QEMU 9.2.
+`virgl` is the default because it works with the QEMU in older distributions such as
+Ubuntu 22.04. `venus` needs QEMU 9.2.
 
 There is no configuration step: cloud-init installs the Vulkan and OpenGL drivers and
 the build tools on first boot, and `make bench` builds and runs the benchmark.
@@ -137,8 +137,7 @@ matches.
 
 `CPUS`, `MEMORY` (MiB), `DISK_SIZE`, `SSH_PORT`, `RENDERNODE`, `HOSTMEM`, `GVT_TYPE`,
 `IMAGE` and `QEMU` can be overridden, for example `make up CPUS=8 MEMORY=16384`. To
-share the image that `libvirt` downloaded:
-`make up IMAGE=../libvirt/images/ubuntu-26.04-server-cloudimg-amd64.img`.
+use an image you already downloaded: `make up IMAGE=/path/to/ubuntu-26.04-server-cloudimg-amd64.img`.
 
 ## How each GPU mode is set up
 
