@@ -70,5 +70,17 @@ changing `gpu-bench.sh`, copy it into each project:
 for d in krunkit libvirt qemu; do cp gpu-bench.sh "$d/"; done
 ```
 
-`gpu-bench-all.sh` needs `yq` and `python3`. Building llama.cpp with Vulkan takes several
-minutes in a VM with 2 vCPUs, and each VM downloads the 640 MB model once.
+`gpu-bench-all.sh` needs `yq` and `python3`, and benchmarking the host needs what
+`gpu-bench.sh` lists at its top: a compiler, `cmake`, the Vulkan headers and `glslc`.
+With [mise](https://mise.jdx.dev/), `mise install` fetches `yq` without sudo, and
+`mise run deps` installs the host's packages with apt, dnf or Homebrew. Each project's
+own `mise run deps` installs its VM tool.
+
+```bash
+mise install
+mise run deps
+mise run bench-all     # or bench-host, or report
+```
+
+Building llama.cpp with Vulkan takes several minutes in a VM with 2 vCPUs, and each VM
+downloads the 640 MB model once.
