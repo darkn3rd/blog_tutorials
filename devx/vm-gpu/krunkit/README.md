@@ -38,6 +38,7 @@ mise run deps
 | `Makefile` | Downloads the image, creates the disk and seed, starts and stops krunkit and gvproxy, and runs the benchmark |
 | `cloud-init/` | The guest's first-boot settings: user, SSH key, hostname, `/workspace`, and the packages to install |
 | `gpu-bench.sh` | Builds llama.cpp's `llama-bench` with Vulkan and runs it on the GPU and on the CPU |
+| `hwinfo.sh` | Reports the virtual hardware the guest sees, GPU included, as Markdown or raw rows |
 | `mise.toml` | `deps` and `versions`, plus mise tasks that run the Makefile |
 
 The VM has 2 CPUs, 4 GiB of memory and a 20 GiB disk. The project folder is shared with
@@ -49,6 +50,7 @@ the guest at `/workspace` over virtio-fs.
 | --- | --- | --- |
 | `make up` | `mise run up` | Download the image, create the VM, boot it and wait for cloud-init to install the packages |
 | `make gpu` | `mise run gpu` | Show the virtio-gpu features and the Vulkan and OpenGL devices the guest sees |
+| `make hwinfo` | `mise run hwinfo` | Print a full report of the guest's virtual hardware: platform, firmware, CPU, video and GPU, OS and devices |
 | `make bench` | `mise run bench` | Build `llama-bench` in the guest and run it, saving the results to `results/` |
 | `make ssh` | `mise run ssh` | SSH in, starting in `/workspace` |
 | `make status` | `mise run status` | Report running, stopped or not created |

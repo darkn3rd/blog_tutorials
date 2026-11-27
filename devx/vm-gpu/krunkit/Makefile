@@ -38,7 +38,7 @@ RUNNING := { test -f $(PID) && kill -0 "$$(cat $(PID))"; } 2>/dev/null
 NET_RUNNING := { test -f $(NET_PID) && kill -0 "$$(cat $(NET_PID))"; } 2>/dev/null
 
 .DELETE_ON_ERROR:
-.PHONY: up network gpu bench ssh status halt reload destroy purge
+.PHONY: up network gpu hwinfo bench ssh status halt reload destroy purge
 
 # gvproxy is the VM's network: DHCP, DNS, NAT and SSH on 127.0.0.1.
 network:
@@ -83,6 +83,11 @@ up: $(DISK) $(SEED) network
 	@echo "Waiting for cloud-init to install the packages..."
 	@# Fedora lets only root read cloud-init's state; as another user, --wait never ends.
 	@$(SSH) sudo cloud-init status --wait >/dev/null
+
+# The full report of the virtual hardware the guest sees, GPU included, from hwinfo.sh.
+# HWINFO_ARGS=--tsv prints raw section/field/value rows instead of Markdown.
+hwinfo:
+	@$(SSH) 'sudo /workspace/hwinfo.sh $(HWINFO_ARGS)'
 
 # What the guest sees: the virtio-gpu, its features, and the Vulkan and OpenGL devices.
 gpu:

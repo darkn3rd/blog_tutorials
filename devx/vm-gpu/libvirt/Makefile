@@ -50,12 +50,12 @@ SSH_OPTS := -i $(KEY) -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5
 	-o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 
 .DELETE_ON_ERROR:
-.PHONY: up check create base-volume sync gpu bench ssh status halt reload destroy purge access
+.PHONY: up check create base-volume sync gpu hwinfo bench ssh status halt reload destroy purge access
 
 # The checks below hide virsh's errors, so without access to libvirt they would
 # report "not created" instead of failing. Every target that runs virsh checks
 # access first.
-up create base-volume sync gpu bench ssh status halt destroy purge: access
+up create base-volume sync gpu hwinfo bench ssh status halt destroy purge: access
 
 access:
 	@$(VIRSH) uri >/dev/null 2>&1 || { \
@@ -147,6 +147,11 @@ base-volume: | $(IMAGE)
 sync:
 	@$(WITH_IP) rsync -a --delete --exclude /.vm/ --exclude /images/ --exclude /results/ \
 		-e "ssh $(SSH_OPTS)" ./ ubuntu@$$ip:/workspace/
+
+# The full report of the virtual hardware the guest sees, GPU included, from hwinfo.sh.
+# HWINFO_ARGS=--tsv prints raw section/field/value rows instead of Markdown.
+hwinfo: sync
+	@$(WITH_IP) ssh $(SSH_OPTS) ubuntu@$$ip 'sudo /workspace/hwinfo.sh $(HWINFO_ARGS)'
 
 # What the guest sees: its GPUs, and the Vulkan and OpenGL devices.
 gpu:

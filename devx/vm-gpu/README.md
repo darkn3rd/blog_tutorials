@@ -73,15 +73,15 @@ the run logs aren't.
   of `projects.yaml` and removing its `skip`.
 - **Rewrite `GPU.md`** without running anything: `./gpu-bench-all.sh --report`.
 
-Each project keeps its own copy of `gpu-bench.sh`, so it stands on its own.
-`gpu-bench-all.sh` refuses to run a project whose copy differs from the one here. After
-changing `gpu-bench.sh`, copy it into each project:
+Each project keeps its own copy of `gpu-bench.sh` and `hwinfo.sh`, so it stands on its
+own. `gpu-bench-all.sh` and `hwinfo-all.sh` refuse to run a project whose copy differs
+from the one here. After changing either script, copy it into each project:
 
 ```bash
-for d in krunkit libvirt qemu/linux qemu/macos; do cp gpu-bench.sh "$d/"; done
+for d in krunkit libvirt qemu/linux qemu/macos; do cp gpu-bench.sh hwinfo.sh "$d/"; done
 ```
 
-`gpu-bench-all.sh` needs `yq` and `python3`, and benchmarking the host needs what
+`gpu-bench-all.sh` and `hwinfo-all.sh` need `yq` and `python3`, and benchmarking the host needs what
 `gpu-bench.sh` lists at its top: a compiler, `cmake`, the Vulkan headers and `glslc`.
 With [mise](https://mise.jdx.dev/), `mise install` fetches `yq` without sudo, and
 `mise run deps` installs the host's packages with apt, dnf or Homebrew. Each project's
@@ -95,3 +95,27 @@ mise run bench-all     # or bench-host, or report
 
 Building llama.cpp with Vulkan takes several minutes in a VM with 2 vCPUs, and each VM
 downloads the 640 MB model once.
+
+## Virtual hardware
+
+[HARDWARE.md](HARDWARE.md) lists what the guest sees in each project's VM, with one part
+per machine: the hypervisor and platform, how it boots, the CPU, the video and GPU
+devices with their DRM driver, render node, virtio-gpu features, Vulkan devices and
+OpenGL renderer, the OS, and the other devices.
+
+Each project's `make hwinfo` prints that report for its running VM. To collect it for
+every project on this machine, run:
+
+```bash
+./hwinfo-all.sh
+```
+
+It goes through the projects in `projects.yaml` for this platform, like
+`gpu-bench-all.sh`. For each one it creates the VM with `make up`, runs
+`make hwinfo HWINFO_ARGS=--tsv`, and deletes the VM with `make destroy`. The values are
+appended to `results/<platform>/hardware.tsv`, which is kept in git, and `HARDWARE.md`
+is rewritten from the newest run of each project on each platform.
+
+- **Choose projects** by name: `./hwinfo-all.sh krunkit qemu-virtio`.
+- **Rewrite `HARDWARE.md`** without running anything: `./hwinfo-all.sh --report`.
+- **Inspect any Linux VM** by copying `hwinfo.sh` into it and running `sudo ./hwinfo.sh`.

@@ -235,11 +235,12 @@ for card in /sys/class/drm/card*; do
     where="PCI $slot${pn:+: $pn}"
   else
     where="$(basename "$(dirname "$devpath")")/${devpath##*/}"
-    # On virtio-mmio the card hangs off the transport; the GPU driver is on its virtioN child
-    for v in "$devpath"/virtio*/driver; do
-      [ -e "$v" ] && { where="${drv:+$drv, }$where"; drv=$(basename "$(readlink -f "$v")"); }
-    done
   fi
+  # A virtio GPU's card hangs off its transport (virtio-pci or virtio-mmio); the GPU
+  # driver, virtio_gpu, is on the transport's virtioN child.
+  for v in "$devpath"/virtio*/driver; do
+    [ -e "$v" ] && { where="${drv:+$drv, }$where"; drv=$(basename "$(readlink -f "$v")"); }
+  done
   add "DRM $name" "${drv:-no driver} ($where)"
 done
 [ $cards -eq 0 ] && add "DRM devices" "none"

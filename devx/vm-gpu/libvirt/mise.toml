@@ -35,6 +35,10 @@ run = "make up"
 description = "Show the GPU, Vulkan and OpenGL devices the guest sees"
 run = "make gpu"
 
+[tasks.hwinfo]
+description = "Print a full report of the guest's virtual hardware, GPU included"
+run = "make hwinfo"
+
 [tasks.bench]
 description = "Build llama-bench in the guest and run it on the GPU and the CPU"
 run = "make bench"

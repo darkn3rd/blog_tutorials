@@ -79,7 +79,7 @@ SSH := ssh $(SSH_OPTS) ubuntu@127.0.0.1
 RUNNING := { test -f $(PID) && kill -0 "$$(cat $(PID))"; } 2>/dev/null
 
 .DELETE_ON_ERROR:
-.PHONY: up check start sync gpu bench ssh status halt reload destroy purge \
+.PHONY: up check start sync gpu hwinfo bench ssh status halt reload destroy purge \
 	vfio-bind vfio-unbind vgpu vgpu-remove
 
 # Checks that the host can do what GPU asks for, before anything starts.
@@ -157,6 +157,11 @@ start: check
 sync:
 	@rsync -a --delete --exclude /.vm/ --exclude /images/ --exclude /results/ \
 		-e "ssh $(SSH_OPTS)" ./ ubuntu@127.0.0.1:/workspace/
+
+# The full report of the virtual hardware the guest sees, GPU included, from hwinfo.sh.
+# HWINFO_ARGS=--tsv prints raw section/field/value rows instead of Markdown.
+hwinfo: sync
+	@$(SSH) 'sudo /workspace/hwinfo.sh $(HWINFO_ARGS)'
 
 # What the guest sees: its GPUs, and the Vulkan and OpenGL devices.
 gpu:
