@@ -13,7 +13,7 @@ Tokens per second from llama.cpp's `llama-bench`, on the host itself and in each
 | GPU, generation (tg128) | 273 | 91.9 | – | – |
 | CPU only, prompt (pp512) | 829 | 229 | 65.7 | 64.5 |
 | CPU only, generation (tg128) | 151 | 91.1 | 26.2 | 26.6 |
-| CPU | Apple M1 Max | Apple M1 Max | Intel Core i7-8565U CPU @ 1.80GHz | Intel Core i7-8565U CPU @ 1.80GHz |
+| CPU | Accelerate, Apple M1 Max | CPU | Intel Core i7-8565U CPU @ 1.80GHz | Intel Core i7-8565U CPU @ 1.80GHz |
 | CPU threads | 8 | 2 | 2 | 2 |
 | GPU speedup, prompt | 4.7x | 9.5x | – | – |
 | GPU speedup, generation | 1.8x | 1.0x | – | – |
