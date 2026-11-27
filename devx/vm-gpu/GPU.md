@@ -13,14 +13,14 @@ Machine: MacBookPro18,4, CPU Apple M1 Max, GPU Apple M1 Max, 64 GB, macOS 26.6.2
 | Backend | Metal | Vulkan | Vulkan |
 | GPU used | Apple M1 Max | Virtio-GPU Venus (Apple M1 Max) | none |
 | OpenGL renderer | – | llvmpipe (LLVM 23.1.5, 128 bits) | llvmpipe (LLVM 23.1.5, 128 bits) |
-| GPU, prompt (pp512) | 3,852 | 2,007 | – |
-| GPU, generation (tg128) | 270 | 89.4 | – |
-| CPU only, prompt (pp512) | 829 | 221 | 228 |
-| CPU only, generation (tg128) | 119 | 85.8 | 89.2 |
+| GPU, prompt (pp512) | 3,861 | 2,019 | – |
+| GPU, generation (tg128) | 270 | 89.3 | – |
+| CPU only, prompt (pp512) | 831 | 229 | 228 |
+| CPU only, generation (tg128) | 152 | 85.7 | 88.8 |
 | CPU | Apple M1 Max | Apple CPU, model hidden from the guest | Apple CPU, model hidden from the guest |
 | CPU threads | 8 | 2 | 2 |
-| GPU speedup, prompt | 4.6x | 9.1x | – |
-| GPU speedup, generation | 2.3x | 1.0x | – |
+| GPU speedup, prompt | 4.6x | 8.8x | – |
+| GPU speedup, generation | 1.8x | 1.0x | – |
 
 ## Ubuntu x86_64
 

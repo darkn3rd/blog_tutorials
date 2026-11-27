@@ -345,3 +345,133 @@ run_at	label	section	field	value
 2026-11-26 13:33	krunkit/ansible	Devices	Disks	vda 20G virtio, vdb 900K virtio
 2026-11-26 13:33	krunkit/ansible	Devices	Storage controllers	n/a
 2026-11-26 13:33	krunkit/ansible	Devices	File shares	/workspace (virtiofs, workspace)
+2026-11-26 22:27	qemu/ansible	Platform	Hypervisor (systemd-detect-virt)	qemu
+2026-11-26 22:27	qemu/ansible	Platform	System vendor	QEMU
+2026-11-26 22:27	qemu/ansible	Platform	System product	QEMU Virtual Machine
+2026-11-26 22:27	qemu/ansible	Platform	System version	virt-11.1
+2026-11-26 22:27	qemu/ansible	Platform	Board	n/a
+2026-11-26 22:27	qemu/ansible	Platform	Hardware description	ACPI
+2026-11-26 22:27	qemu/ansible	Platform	ACPI tables	APIC, DBG, DSDT, FACP, GTDT, IORT, MCFG, PPTT, SPCR
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Boot mode	UEFI (64-bit)
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Firmware vendor	EDK II
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Firmware version	edk2-stable202408-prebuilt.qemu.org 08/13/2024
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Secure Boot	not offered by firmware
+2026-11-26 22:27	qemu/ansible	Firmware and boot	EFI variables	29 visible
+2026-11-26 22:27	qemu/ansible	Firmware and boot	EFI boot entry	UEFI Misc Device (Boot0001)
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Bootloader	GRUB (BOOT_IMAGE= on the kernel command line)
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Kernel command line	BOOT_IMAGE=/vmlinuz-7.0.0-43-generic root=LABEL=cloudimg-rootfs ro console=tty1 console=ttyAMA0
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Init (PID 1)	systemd
+2026-11-26 22:27	qemu/ansible	Firmware and boot	Boot time (systemd-analyze)	255ms (kernel) + 2.150s (initrd) + 6.905s (userspace) = 9.311s
+2026-11-26 22:27	qemu/ansible	CPU	Architecture	aarch64
+2026-11-26 22:27	qemu/ansible	CPU	Vendor	Apple
+2026-11-26 22:27	qemu/ansible	CPU	Model	CPU part 0x000
+2026-11-26 22:27	qemu/ansible	CPU	vCPUs	2
+2026-11-26 22:27	qemu/ansible	CPU	Topology (sockets x cores x threads)	1 x 2 x 1
+2026-11-26 22:27	qemu/ansible	CPU	Notable flags	aes pmull sha1 sha2 sha3 sha512 crc32 atomics asimd paca
+2026-11-26 22:27	qemu/ansible	CPU	Nested virtualization (/dev/kvm)	no
+2026-11-26 22:27	qemu/ansible	CPU	Clocksource	arch_sys_counter
+2026-11-26 22:27	qemu/ansible	CPU	Memory	3.8 GiB
+2026-11-26 22:27	qemu/ansible	Video and GPU	DRM devices	none
+2026-11-26 22:27	qemu/ansible	Video and GPU	PCI display controllers	none
+2026-11-26 22:27	qemu/ansible	Video and GPU	Connectors	none
+2026-11-26 22:27	qemu/ansible	Video and GPU	Render nodes	none
+2026-11-26 22:27	qemu/ansible	Video and GPU	Framebuffer	none
+2026-11-26 22:27	qemu/ansible	Video and GPU	virtio-gpu features (kernel log)	none
+2026-11-26 22:27	qemu/ansible	OS	Distribution	Ubuntu 26.04.1 LTS
+2026-11-26 22:27	qemu/ansible	OS	ID / version / codename	ubuntu 26.04 resolute
+2026-11-26 22:27	qemu/ansible	OS	Kernel	7.0.0-43-generic
+2026-11-26 22:27	qemu/ansible	OS	Kernel build	#43-Ubuntu SMP PREEMPT_DYNAMIC Fri Oct 23 13:33:03 UTC 2026
+2026-11-26 22:27	qemu/ansible	OS	Hostname	dev
+2026-11-26 22:27	qemu/ansible	OS	cloud-init datasource	nocloud
+2026-11-26 22:27	qemu/ansible	Devices	virtio devices	9p (PCI, 9pnet_virtio), 2x block (PCI, virtio_blk), net (PCI, virtio_net)
+2026-11-26 22:27	qemu/ansible	Devices	Network interfaces	enp0s1: virtio_net
+2026-11-26 22:27	qemu/ansible	Devices	Disks	vda 20G virtio, vdb 900K virtio
+2026-11-26 22:27	qemu/ansible	Devices	Storage controllers	2x SCSI storage controller [0100]: Red Hat, Inc. Virtio block device [1af4:1001]
+2026-11-26 22:27	qemu/ansible	Devices	File shares	/workspace (9p, workspace)
+2026-11-26 22:27	krunkit/ansible	Platform	Hypervisor (systemd-detect-virt)	vm-other
+2026-11-26 22:27	krunkit/ansible	Platform	System vendor	Libkrun
+2026-11-26 22:27	krunkit/ansible	Platform	System product	libkrun Virtual Machine
+2026-11-26 22:27	krunkit/ansible	Platform	System version	n/a
+2026-11-26 22:27	krunkit/ansible	Platform	Board	n/a
+2026-11-26 22:27	krunkit/ansible	Platform	Device tree model	n/a
+2026-11-26 22:27	krunkit/ansible	Platform	Device tree compatible	linux, dummy-virt
+2026-11-26 22:27	krunkit/ansible	Platform	Hardware description	device tree
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Boot mode	UEFI (64-bit)
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Firmware vendor	libkrun
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Firmware version	0 01/05/2024
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Secure Boot	not offered by firmware
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	EFI variables	29 visible
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	EFI boot entry	UEFI Misc Device (Boot0001)
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Bootloader	GRUB (BOOT_IMAGE= on the kernel command line)
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Kernel command line	BOOT_IMAGE=/vmlinuz-7.0.0-43-generic root=LABEL=cloudimg-rootfs ro console=tty1 console=ttyAMA0
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Init (PID 1)	systemd
+2026-11-26 22:27	krunkit/ansible	Firmware and boot	Boot time (systemd-analyze)	220ms (kernel) + 2.040s (initrd) + 5.439s (userspace) = 7.700s
+2026-11-26 22:27	krunkit/ansible	CPU	Architecture	aarch64
+2026-11-26 22:27	krunkit/ansible	CPU	Vendor	Apple
+2026-11-26 22:27	krunkit/ansible	CPU	Model	CPU part 0x000
+2026-11-26 22:27	krunkit/ansible	CPU	vCPUs	2
+2026-11-26 22:27	krunkit/ansible	CPU	Topology (sockets x cores x threads)	- x 2 x 1
+2026-11-26 22:27	krunkit/ansible	CPU	Notable flags	aes pmull sha1 sha2 sha3 sha512 crc32 atomics asimd paca
+2026-11-26 22:27	krunkit/ansible	CPU	Nested virtualization (/dev/kvm)	no
+2026-11-26 22:27	krunkit/ansible	CPU	Clocksource	arch_sys_counter
+2026-11-26 22:27	krunkit/ansible	CPU	Memory	3.8 GiB
+2026-11-26 22:27	krunkit/ansible	Video and GPU	DRM card0	virtio_gpu (virtio-mmio, platform/a007000.virtio_mmio)
+2026-11-26 22:27	krunkit/ansible	Video and GPU	PCI display controllers	none
+2026-11-26 22:27	krunkit/ansible	Video and GPU	Connectors	none
+2026-11-26 22:27	krunkit/ansible	Video and GPU	Render nodes	/dev/dri/renderD128
+2026-11-26 22:27	krunkit/ansible	Video and GPU	Framebuffer	none
+2026-11-26 22:27	krunkit/ansible	Video and GPU	virtio-gpu features (kernel log)	[drm] features: +virgl +edid +resource_blob +host_visible, [drm] features: +context_init
+2026-11-26 22:27	krunkit/ansible	OS	Distribution	Ubuntu 26.04.1 LTS
+2026-11-26 22:27	krunkit/ansible	OS	ID / version / codename	ubuntu 26.04 resolute
+2026-11-26 22:27	krunkit/ansible	OS	Kernel	7.0.0-43-generic
+2026-11-26 22:27	krunkit/ansible	OS	Kernel build	#43-Ubuntu SMP PREEMPT_DYNAMIC Fri Oct 23 13:33:03 UTC 2026
+2026-11-26 22:27	krunkit/ansible	OS	Hostname	dev
+2026-11-26 22:27	krunkit/ansible	OS	cloud-init datasource	nocloud
+2026-11-26 22:27	krunkit/ansible	Devices	virtio devices	balloon (MMIO, virtio_balloon), 2x block (MMIO, virtio_blk), console (MMIO, virtio_console), fs (MMIO, virtiofs), gpu (MMIO, virtio_gpu), net (MMIO, virtio_net), rng (MMIO, virtio_rng)
+2026-11-26 22:27	krunkit/ansible	Devices	Network interfaces	eth0: virtio_net
+2026-11-26 22:27	krunkit/ansible	Devices	Disks	vda 20G virtio, vdb 900K virtio
+2026-11-26 22:27	krunkit/ansible	Devices	Storage controllers	n/a
+2026-11-26 22:27	krunkit/ansible	Devices	File shares	/workspace (virtiofs, workspace)
+2026-11-26 22:27	virtualbox/ansible	Platform	Hypervisor (systemd-detect-virt)	none
+2026-11-26 22:27	virtualbox/ansible	Platform	System vendor	n/a
+2026-11-26 22:27	virtualbox/ansible	Platform	System product	n/a
+2026-11-26 22:27	virtualbox/ansible	Platform	System version	n/a
+2026-11-26 22:27	virtualbox/ansible	Platform	Board	n/a
+2026-11-26 22:27	virtualbox/ansible	Platform	Hardware description	ACPI
+2026-11-26 22:27	virtualbox/ansible	Platform	ACPI tables	APIC, BGRT, DSDT, FACP, GTDT, MCFG
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Boot mode	UEFI (64-bit)
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Firmware vendor	n/a
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Firmware version	n/a
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Secure Boot	disabled
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	EFI variables	34 visible
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	EFI boot entry	UEFI VBOX HARDDISK VB7b52b557-eb0272ec (Boot0002)
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Bootloader	GRUB (BOOT_IMAGE= on the kernel command line)
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Kernel command line	BOOT_IMAGE=/vmlinuz-7.0.0-38-generic root=LABEL=cloudimg-rootfs ro console=tty1 console=ttyAMA0
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Init (PID 1)	systemd
+2026-11-26 22:27	virtualbox/ansible	Firmware and boot	Boot time (systemd-analyze)	268ms (kernel) + 2.736s (initrd) + 6.145s (userspace) = 9.150s
+2026-11-26 22:27	virtualbox/ansible	CPU	Architecture	aarch64
+2026-11-26 22:27	virtualbox/ansible	CPU	Vendor	Apple
+2026-11-26 22:27	virtualbox/ansible	CPU	Model	CPU part 0x000
+2026-11-26 22:27	virtualbox/ansible	CPU	vCPUs	2
+2026-11-26 22:27	virtualbox/ansible	CPU	Topology (sockets x cores x threads)	- x 2 x 1
+2026-11-26 22:27	virtualbox/ansible	CPU	Notable flags	aes pmull sha1 sha2 sha3 sha512 crc32 atomics asimd paca
+2026-11-26 22:27	virtualbox/ansible	CPU	Nested virtualization (/dev/kvm)	no
+2026-11-26 22:27	virtualbox/ansible	CPU	Clocksource	arch_sys_counter
+2026-11-26 22:27	virtualbox/ansible	CPU	Memory	3.7 GiB
+2026-11-26 22:27	virtualbox/ansible	Video and GPU	DRM card0	simple-framebuffer (platform/simple-framebuffer.0)
+2026-11-26 22:27	virtualbox/ansible	Video and GPU	PCI display controllers	none
+2026-11-26 22:27	virtualbox/ansible	Video and GPU	Connectors	Unknown-1 connected 1280x800
+2026-11-26 22:27	virtualbox/ansible	Video and GPU	Render nodes	none
+2026-11-26 22:27	virtualbox/ansible	Video and GPU	Framebuffer	simpledrmdrmfb
+2026-11-26 22:27	virtualbox/ansible	Video and GPU	virtio-gpu features (kernel log)	none
+2026-11-26 22:27	virtualbox/ansible	OS	Distribution	Ubuntu 26.04.1 LTS
+2026-11-26 22:27	virtualbox/ansible	OS	ID / version / codename	ubuntu 26.04 resolute
+2026-11-26 22:27	virtualbox/ansible	OS	Kernel	7.0.0-38-generic
+2026-11-26 22:27	virtualbox/ansible	OS	Kernel build	#38-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 4 09:28:02 UTC 2026
+2026-11-26 22:27	virtualbox/ansible	OS	Hostname	dev
+2026-11-26 22:27	virtualbox/ansible	OS	cloud-init datasource	nocloud
+2026-11-26 22:27	virtualbox/ansible	Devices	virtio devices	net (PCI, virtio_net)
+2026-11-26 22:27	virtualbox/ansible	Devices	Network interfaces	enp0s8: virtio_net
+2026-11-26 22:27	virtualbox/ansible	Devices	Disks	sda 20G sata VBOX HARDDISK, sr0 900K sata VBOX CD-ROM
+2026-11-26 22:27	virtualbox/ansible	Devices	Storage controllers	SATA controller [0106]: Intel Corporation 82801HM/HEM (ICH8M/ICH8M-E) SATA Controller [AHCI mode] [8086:2829]
+2026-11-26 22:27	virtualbox/ansible	Devices	File shares	/workspace (vboxsf, workspace)

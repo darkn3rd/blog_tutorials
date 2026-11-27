@@ -15,3 +15,9 @@ run_at,label,host,backend,llama_ref,llama_commit,model,mode,device,threads,test,
 2026-11-27 05:47,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,gpu,"Vulkan0: Virtio-GPU Venus (Apple M1 Max) (65536 MiB, 65536 MiB free)",2,tg128,89.41,0.25
 2026-11-27 05:47,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,pp512,220.97,3.01
 2026-11-27 05:47,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,tg128,85.80,1.64
+2026-11-27 06:36,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,"Vulkan0: Virtio-GPU Venus (Apple M1 Max) (65536 MiB, 65536 MiB free)",,gpu,,
+2026-11-27 06:36,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,"llvmpipe (LLVM 23.1.5, 128 bits)",,opengl,,
+2026-11-27 06:36,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,gpu,"Vulkan0: Virtio-GPU Venus (Apple M1 Max) (65536 MiB, 65536 MiB free)",2,pp512,2018.95,2.49
+2026-11-27 06:36,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,gpu,"Vulkan0: Virtio-GPU Venus (Apple M1 Max) (65536 MiB, 65536 MiB free)",2,tg128,89.34,0.49
+2026-11-27 06:36,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,pp512,229.30,0.24
+2026-11-27 06:36,krunkit,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,tg128,85.71,0.36

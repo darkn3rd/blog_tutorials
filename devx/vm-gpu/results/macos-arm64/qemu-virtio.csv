@@ -1,5 +1,5 @@
 run_at,label,host,backend,llama_ref,llama_commit,model,mode,device,threads,test,tokens_per_s,stddev
-2026-11-27 05:58,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,none,,gpu,,
-2026-11-27 05:58,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,"llvmpipe (LLVM 23.1.5, 128 bits)",,opengl,,
-2026-11-27 05:58,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,pp512,228.45,0.54
-2026-11-27 05:58,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,tg128,89.18,1.86
+2026-11-27 06:43,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,none,,gpu,,
+2026-11-27 06:43,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,"llvmpipe (LLVM 23.1.5, 128 bits)",,opengl,,
+2026-11-27 06:43,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,pp512,227.97,0.14
+2026-11-27 06:43,qemu-virtio,Linux 7.2.11-300.fc45.aarch64 aarch64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,"Apple CPU, model hidden from the guest",2,tg128,88.85,2.24
