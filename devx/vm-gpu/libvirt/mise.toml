@@ -1,0 +1,73 @@
+# The Makefile builds the VM from file dependencies, so the VM tasks here run make.
+# deps assumes Debian or Ubuntu.
+
+[tasks.deps]
+description = "Install libvirt, QEMU with OpenGL, UEFI firmware, mtools and rsync if they're missing"
+run = [
+  "command -v virsh >/dev/null || sudo apt-get install -y qemu-kvm libvirt-daemon-system libvirt-clients",
+  "dpkg -s ovmf >/dev/null 2>&1 || sudo apt-get install -y ovmf",
+  "dpkg -s qemu-system-modules-opengl >/dev/null 2>&1 || sudo apt-get install -y qemu-system-modules-opengl",
+  "command -v mformat >/dev/null || sudo apt-get install -y mtools",
+  "command -v rsync >/dev/null || sudo apt-get install -y rsync",
+  "id -nG | grep -qw libvirt || { sudo usermod -aG libvirt \"$USER\"; echo 'Added you to the libvirt group; log out and back in.'; }",
+]
+
+[tasks.versions]
+description = "Print the Linux, libvirt, QEMU and virglrenderer versions"
+run = '''
+. /etc/os-release
+printf "%-14s%s\n" Linux: "$PRETTY_NAME"
+printf "%-14s%s\n" Kernel: "$(uname -r)"
+printf "%-14s%s\n" libvirt: "$(virsh --version)"
+printf "%-14s%s\n" QEMU: "$(qemu-system-x86_64 --version | sed -n '1s/.*version //p')"
+printf "%-14s%s\n" virglrenderer: "$(dpkg-query -W -f '${Version}' 'libvirglrenderer1*' 2>/dev/null || echo unknown)"
+'''
+
+[tasks.check]
+description = "Check that the host can give the guest the GPU in GPU"
+run = "make check"
+
+[tasks.up]
+description = "Download the image, create or start the VM and wait for it"
+run = "make up"
+
+[tasks.gpu]
+description = "Show the GPU, Vulkan and OpenGL devices the guest sees"
+run = "make gpu"
+
+[tasks.hwinfo]
+description = "Print a full report of the guest's virtual hardware, GPU included"
+run = "make hwinfo"
+
+[tasks.gpu-check]
+description = "Check what the GPU needs in the guest, from the kernel to Mesa"
+run = "make gpu-check"
+
+[tasks.bench]
+description = "Build llama-bench in the guest and run it on the GPU and the CPU"
+run = "make bench"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "make ssh || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "make status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "make halt"
+
+[tasks.reload]
+description = "Restart the VM"
+run = "make reload"
+
+[tasks.destroy]
+description = "Delete the VM, keeping the downloaded image"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the downloaded image"
+run = "make purge"

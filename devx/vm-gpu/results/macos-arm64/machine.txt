@@ -1,0 +1,5 @@
+os: macOS 26.6.2
+model: MacBookPro18,4
+cpu: Apple M1 Max
+gpu: Apple M1 Max
+memory: 64 GB

@@ -1,0 +1,43 @@
+# `mise install` fetches the command-line tools that gpu-bench-all.sh needs, into mise's
+# own folder, without sudo. The system packages that gpu-bench.sh needs on the host (a
+# compiler, the Vulkan headers and glslc, the Mesa drivers) aren't mise tools, so
+# `mise run deps` installs them with the system's package manager. Each project folder
+# has its own mise.toml with a deps task for its VM tool.
+
+[tools]
+yq = "4.54.3"
+
+[tasks.deps]
+description = "Install what gpu-bench.sh needs to build llama-bench on this machine, if it's missing"
+run = '''
+case "$(uname -s)" in
+Darwin)
+  xcode-select -p >/dev/null 2>&1 || xcode-select --install
+  command -v cmake >/dev/null || brew install cmake ;;
+Linux)
+  if command -v apt-get >/dev/null; then
+    pkgs="build-essential cmake git curl python3 libvulkan-dev glslc spirv-headers mesa-vulkan-drivers vulkan-tools mesa-utils"
+    missing=$(for p in $pkgs; do dpkg -s "$p" >/dev/null 2>&1 || echo "$p"; done)
+    [ -z "$missing" ] || sudo apt-get install -y $missing
+  elif command -v dnf >/dev/null; then
+    sudo dnf install -y gcc-c++ make cmake git curl python3 vulkan-headers vulkan-loader-devel \
+      glslc spirv-headers-devel mesa-vulkan-drivers vulkan-tools egl-utils
+  else
+    echo "Install a C++ compiler, cmake, git, curl, python3, the Vulkan headers, glslc and Mesa's Vulkan drivers." >&2
+    exit 1
+  fi
+  id -nG | grep -qw render || { sudo usermod -aG render "$USER"; echo "Added you to the render group; log out and back in."; } ;;
+esac
+'''
+
+[tasks.bench-all]
+description = "Benchmark this machine, then every project for this OS, and rewrite GPU.md"
+run = "./gpu-bench-all.sh"
+
+[tasks.bench-host]
+description = "Benchmark only this machine, without a VM"
+run = "./gpu-bench-all.sh host"
+
+[tasks.report]
+description = "Rewrite GPU.md from results/ without running anything"
+run = "./gpu-bench-all.sh --report"

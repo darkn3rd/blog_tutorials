@@ -1,0 +1,66 @@
+# The Makefile builds the VM from file dependencies, so the VM tasks here run make.
+
+[tasks.deps]
+description = "Install krunkit, gvproxy (with Podman) and qemu-img if they're missing"
+run = [
+  "command -v krunkit >/dev/null || brew install krunkit",
+  "command -v gvproxy >/dev/null || test -x \"$(brew --prefix)/opt/podman/libexec/podman/gvproxy\" || brew install podman",
+  "command -v qemu-img >/dev/null || brew install qemu",
+]
+
+[tasks.versions]
+description = "Print the macOS, krunkit, libkrun, MoltenVK and gvproxy versions"
+run = '''
+gvproxy=$(command -v gvproxy || echo "$(brew --prefix)/opt/podman/libexec/podman/gvproxy")
+printf "%-14s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  krunkit: $(krunkit --version | awk '{print $NF}') \
+  libkrun: $(brew list --versions libkrun | awk '{print $NF}') \
+  MoltenVK: $(brew list --versions molten-vk | awk '{print $NF}') \
+  gvproxy: $("$gvproxy" -version | awk '{print $NF}')
+'''
+
+[tasks.up]
+description = "Download the image, create or start the VM and wait for it"
+run = "make up"
+
+[tasks.gpu]
+description = "Show the GPU, Vulkan and OpenGL devices the guest sees"
+run = "make gpu"
+
+[tasks.hwinfo]
+description = "Print a full report of the guest's virtual hardware, GPU included"
+run = "make hwinfo"
+
+[tasks.gpu-check]
+description = "Check what the GPU needs in the guest, from the kernel to Mesa"
+run = "make gpu-check"
+
+[tasks.bench]
+description = "Build llama-bench in the guest and run it on the GPU and the CPU"
+run = "make bench"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "make ssh || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "make status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "make halt"
+
+[tasks.reload]
+description = "Restart the VM"
+run = "make reload"
+
+[tasks.destroy]
+description = "Delete the VM, keeping the downloaded image"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the downloaded image"
+run = "make purge"

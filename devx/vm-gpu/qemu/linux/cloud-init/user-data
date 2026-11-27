@@ -1,0 +1,33 @@
+#cloud-config
+# The user joins render and video so that it can open the GPU at /dev/dri/renderD*.
+users:
+  - name: ubuntu
+    groups: [adm, sudo, render, video]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - @SSH_KEY@
+
+# Vulkan and OpenGL drivers and tools, and what gpu-bench.sh needs to build llama-bench.
+# Mesa covers virtio-gpu and passed-through AMD and Intel GPUs. An NVIDIA GPU needs
+# NVIDIA's driver: run `sudo ubuntu-drivers install` in the guest, then reboot it.
+package_update: true
+packages:
+  - mesa-vulkan-drivers
+  - vulkan-tools
+  - mesa-utils
+  - pciutils
+  - build-essential
+  - cmake
+  - git
+  - curl
+  - python3
+  - libvulkan-dev
+  - glslc
+  - spirv-headers
+  - rsync
+
+# `make sync` copies the project here with rsync.
+runcmd:
+  - [install, -d, -o, ubuntu, -g, ubuntu, /workspace]

@@ -1,0 +1,58 @@
+# Projects that gpu-bench-all.sh benchmarks, in order. `name` is the name in the results,
+# results/<platform>/<name>.csv. `platforms` are the machines the project runs on, as
+# <os>-<arch>: macos-arm64, macos-x86_64, ubuntu-x86_64, windows-x86_64, and so on;
+# linux-<arch> means any Linux distribution. Projects for other platforms are left out.
+# `args` are passed to every make command, and `skip: true` leaves a project out.
+
+# llama.cpp release that every system builds, so all of them run the same code. Leave it
+# empty for the newest release.
+llama_ref: "b12791"
+
+projects:
+  - name: krunkit
+    path: krunkit
+    platforms: [macos-arm64]
+  - name: libvirt-venus
+    path: libvirt
+    platforms: [linux-x86_64]
+    args: GPU=venus
+  - name: libvirt-virgl
+    path: libvirt
+    platforms: [linux-x86_64]
+    args: GPU=virgl
+  - name: libvirt-passthrough
+    path: libvirt
+    platforms: [linux-x86_64]
+    args: GPU=passthrough PCI=01:00.0,01:00.1
+    skip: true
+    reason: set PCI in args to your GPU's PCI functions, then remove skip
+  - name: qemu-virgl
+    path: qemu/linux
+    platforms: [linux-x86_64]
+    args: GPU=virgl
+  - name: qemu-venus
+    path: qemu/linux
+    platforms: [linux-x86_64]
+    args: GPU=venus
+  - name: qemu-gvtg
+    path: qemu/linux
+    platforms: [linux-x86_64]
+    args: GPU=gvtg
+    skip: true
+    reason: needs an Intel iGPU with GVT-g turned on (see qemu/linux/README.md), then remove skip
+  - name: qemu-passthrough
+    path: qemu/linux
+    platforms: [linux-x86_64]
+    args: GPU=passthrough PCI=01:00.0,01:00.1
+    skip: true
+    reason: set PCI in args to your GPU's PCI functions, then remove skip
+  - name: qemu-virtio
+    path: qemu/macos
+    platforms: [macos-arm64]
+    args: GPU=virtio
+  - name: qemu-venus-macos
+    path: qemu/macos
+    platforms: [macos-arm64]
+    args: GPU=venus QEMU=qemu-system-aarch64
+    skip: true
+    reason: needs a QEMU built with OpenGL and virglrenderer with Venus (see qemu/macos/README.md); set QEMU in args, then remove skip

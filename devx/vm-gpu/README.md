@@ -1,0 +1,144 @@
+# GPUs in virtual machines
+
+Each project here creates a Linux virtual machine with a GPU, using one VM tool, and
+benchmarks what the guest can do with it. There is no configuration tool: cloud-init
+installs the drivers and build tools on first boot, and `make bench` runs the benchmark.
+Every project stands on its own, with its own README.
+
+## What counts as a GPU
+
+Almost every VM tool gives the guest a display adapter, but most only draw a screen, and
+the guest renders everything on its CPU. A project is here if the VM tool can give the
+guest **hardware-accelerated Vulkan or OpenGL**: a virtual GPU that forwards to the host's
+GPU, or the host's real GPU passed through. QEMU on macOS is here too, because the same
+VM tool behaves so differently on a Mac and on Linux: Homebrew's build has only a 2D GPU,
+which is the baseline that the others are measured against.
+
+## Folders
+
+| Folder | Platforms | VM tool | Guest | GPU options | Guest APIs |
+| --- | --- | --- | --- | --- | --- |
+| [`krunkit`](krunkit) | macOS arm64 | krunkit (libkrun) | Fedora 45 | virtio-gpu with Venus, always on | Vulkan |
+| [`qemu/macos`](qemu/macos) | macOS arm64 | QEMU with Apple's Hypervisor framework | Fedora 45 | `GPU=virtio` (2D, Homebrew's QEMU), `virgl` or `venus` (a QEMU built with virglrenderer) | None, OpenGL or Vulkan |
+| [`libvirt`](libvirt) | Linux x86_64 | libvirt, with `virsh` | Ubuntu 26.04 | `GPU=venus`, `virgl` or `passthrough` | Vulkan, OpenGL, or the real GPU's |
+| [`qemu/linux`](qemu/linux) | Linux x86_64 | QEMU with KVM, run directly from a Makefile | Ubuntu 26.04 | `GPU=virgl`, `venus`, `gvtg` or `passthrough` | OpenGL, Vulkan, Intel's, or the real GPU's |
+
+Left out, and why:
+
+| VM tool | Host | Why not |
+| --- | --- | --- |
+| vfkit, Lima, Vagrant with AVF | macOS | Apple's Virtualization framework gives Linux guests a 2D virtio-gpu only |
+| VirtualBox, Vagrant with VirtualBox | macOS | Not yet tested. VMSVGA with `--accelerate-3d` offers OpenGL only, no Vulkan, and no passthrough since VirtualBox 6.1 |
+
+Planned: Vagrant with vagrant-libvirt on Linux, which offers the same three modes as
+libvirt; OpenGL-only tools on Intel Macs, which need an OpenGL benchmark; and WSL2 on
+Windows, which forwards Vulkan, OpenGL and CUDA to the host's GPU.
+
+## The benchmark
+
+Each project has `make gpu`, which shows the GPUs, Vulkan devices and OpenGL renderer the
+guest sees, and `make bench`, which runs `gpu-bench.sh` in the guest. That script builds
+llama.cpp's `llama-bench` and runs a small model, TinyLlama 1.1B, with every layer on the
+GPU and then on the CPU alone. It reports tokens per second for a 512-token prompt
+(`pp512`), mostly compute, and for generating 128 tokens (`tg128`), mostly memory
+bandwidth. Without a Vulkan GPU, only the CPU run happens, so every VM gets a baseline.
+
+[GPU.md](GPU.md) has the results, with one table per machine: the machine itself
+without a VM, then each project's VM on it. Numbers from different machines aren't
+comparable, so they never share a table.
+
+To measure them yourself, run:
+
+```bash
+./gpu-bench-all.sh
+```
+
+It names this machine's platform from its OS and CPU architecture, such as
+`macos-arm64`, `macos-x86_64`, `ubuntu-x86_64` or `windows-x86_64`, and describes the
+machine (model, CPU, GPU, memory, OS) in `results/<platform>/machine.txt`. Then it runs
+`gpu-bench.sh` on the machine itself and goes through the projects in `projects.yaml`
+whose `platforms` include this one (`linux-x86_64` matches any Linux distribution on
+x86_64). For each project it runs `make up`, `make gpu` and `make bench`, then
+`make destroy`. Every system builds the same llama.cpp release, the one named by
+`llama_ref` in `projects.yaml`, or the newest one if that is empty.
+
+Results go to `results/<platform>/<name>.csv`, and `GPU.md` is rewritten from every
+platform folder there. The CSVs and `machine.txt` are kept in git, so results from the
+MacBook and the Ubuntu laptop end up side by side after each machine commits its own;
+the run logs aren't.
+
+- **Choose projects** by name, with `host` for the machine itself:
+  `./gpu-bench-all.sh host krunkit`.
+- **Benchmark a real GPU** in libvirt by setting `PCI` in the `libvirt-passthrough` entry
+  of `projects.yaml` and removing its `skip`.
+- **Rewrite `GPU.md`** without running anything: `./gpu-bench-all.sh --report`.
+
+Each project keeps its own copy of `gpu-bench.sh`, `hwinfo.sh` and `gpu-check.sh`, so it stands on its
+own. `gpu-bench-all.sh` and `hwinfo-all.sh` refuse to run a project whose copy differs
+from the one here. After changing any of them, copy it into each project:
+
+```bash
+for d in krunkit libvirt qemu/linux qemu/macos; do cp gpu-bench.sh hwinfo.sh gpu-check.sh "$d/"; done
+```
+
+`gpu-bench-all.sh` and `hwinfo-all.sh` need `yq` and `python3`, and benchmarking the host needs what
+`gpu-bench.sh` lists at its top: a compiler, `cmake`, the Vulkan headers and `glslc`.
+With [mise](https://mise.jdx.dev/), `mise install` fetches `yq` without sudo, and
+`mise run deps` installs the host's packages with apt, dnf or Homebrew. Each project's
+own `mise run deps` installs its VM tool.
+
+```bash
+mise install
+mise run deps
+mise run bench-all     # or bench-host, or report
+```
+
+Building llama.cpp with Vulkan takes several minutes in a VM with 2 vCPUs, and each VM
+downloads the 640 MB model once.
+
+## Virtual hardware
+
+[HARDWARE.md](HARDWARE.md) lists what the guest sees in each project's VM, with one part
+per machine: the hypervisor and platform, how it boots, the CPU, the video and GPU
+devices with their DRM driver, render node, virtio-gpu features, Vulkan devices and
+OpenGL renderer, the OS, and the other devices.
+
+Each project's `make hwinfo` prints that report for its running VM. To collect it for
+every project on this machine, run:
+
+```bash
+./hwinfo-all.sh
+```
+
+It goes through the projects in `projects.yaml` for this platform, like
+`gpu-bench-all.sh`. For each one it creates the VM with `make up`, runs
+`make hwinfo HWINFO_ARGS=--tsv`, and deletes the VM with `make destroy`. The values are
+appended to `results/<platform>/hardware.tsv`, which is kept in git, and `HARDWARE.md`
+is rewritten from the newest run of each project on each platform.
+
+- **Choose projects** by name: `./hwinfo-all.sh krunkit qemu-virtio`.
+- **Rewrite `HARDWARE.md`** without running anything: `./hwinfo-all.sh --report`.
+- **Inspect any Linux VM** by copying `hwinfo.sh` into it and running `sudo ./hwinfo.sh`.
+
+## Checking a system
+
+`gpu-check.sh` checks that a system has what a GPU in a VM needs, in the style of
+Docker's `check-config.sh`. It works out where it runs:
+
+| Where | What it checks |
+| --- | --- |
+| Linux guest | Kernel options, the GPU and its driver, the virtio-gpu features the host and guest agreed on, the render node and whether you can open it, Mesa's Venus driver, and the Vulkan and OpenGL devices |
+| Linux host | KVM, the host GPUs and render nodes, udmabuf, virglrenderer, QEMU's OpenGL devices, the IOMMU and vfio-pci for passthrough, and GVT-g |
+| macOS host | Apple silicon, krunkit, libkrun and MoltenVK, and whether QEMU has OpenGL |
+
+Each project's `make gpu-check` runs it in that project's VM. On the host, run
+`./gpu-check.sh`. It exits 1 when something required is missing.
+
+One guest check is `blob_alignment`. When the host maps memory in larger pages than the
+guest, as on Apple silicon (16 KiB) with a 4 KiB guest, Venus needs the host to tell the
+guest how to align shared buffers. A guest kernel without the feature fails to create a
+Vulkan instance, with `ERROR_OUT_OF_HOST_MEMORY`. The script reads the feature from
+`/sys/bus/virtio/devices/*/features`, and when it's off, says whether the kernel or the
+host lacks it.
+
+The Linux host checks are not tested yet.

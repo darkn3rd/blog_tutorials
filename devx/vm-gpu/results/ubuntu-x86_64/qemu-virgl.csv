@@ -1,0 +1,5 @@
+run_at,label,host,backend,llama_ref,llama_commit,model,mode,device,threads,test,tokens_per_s,stddev
+2026-11-27 00:49,qemu-virgl,Linux 7.0.0-43-generic x86_64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,none,,gpu,,
+2026-11-27 00:49,qemu-virgl,Linux 7.0.0-43-generic x86_64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,info,virgl,,opengl,,
+2026-11-27 00:49,qemu-virgl,Linux 7.0.0-43-generic x86_64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz,2,pp512,64.52,11.28
+2026-11-27 00:49,qemu-virgl,Linux 7.0.0-43-generic x86_64,vulkan,b12791,46ba8b7,tinyllama-1.1b-chat-v1.0.Q4_0.gguf,cpu,Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz,2,tg128,26.63,0.26

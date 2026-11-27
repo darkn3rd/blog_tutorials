@@ -1,0 +1,62 @@
+# The Makefile builds the VM from file dependencies, so the VM tasks here run make.
+
+[tasks.deps]
+description = "Install QEMU, which includes the UEFI firmware, if it's missing"
+run = "command -v qemu-system-aarch64 >/dev/null || brew install qemu"
+
+[tasks.versions]
+description = "Print the macOS and QEMU versions, and whether QEMU has OpenGL"
+run = '''
+printf "%-14s%s\n" macOS: "$(sw_vers -productVersion)"
+printf "%-14s%s\n" QEMU: "$(qemu-system-aarch64 --version | sed -n '1s/.*version //p')"
+printf "%-14s%s\n" OpenGL: "$(qemu-system-aarch64 -device help | grep -q '"virtio-gpu-gl-pci"' && echo yes || echo 'no (GPU=virtio only)')"
+'''
+
+[tasks.check]
+description = "Check that this Mac and QEMU can give the guest the GPU in GPU"
+run = "make check"
+
+[tasks.up]
+description = "Download the image, create or start the VM and wait for it"
+run = "make up"
+
+[tasks.gpu]
+description = "Show the GPU, Vulkan and OpenGL devices the guest sees"
+run = "make gpu"
+
+[tasks.hwinfo]
+description = "Print a full report of the guest's virtual hardware, GPU included"
+run = "make hwinfo"
+
+[tasks.gpu-check]
+description = "Check what the GPU needs in the guest, from the kernel to Mesa"
+run = "make gpu-check"
+
+[tasks.bench]
+description = "Build llama-bench in the guest and run it on the GPU and the CPU"
+run = "make bench"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "make ssh || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "make status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "make halt"
+
+[tasks.reload]
+description = "Restart the VM"
+run = "make reload"
+
+[tasks.destroy]
+description = "Delete the VM, keeping the downloaded image"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the downloaded image"
+run = "make purge"

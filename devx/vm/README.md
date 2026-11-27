@@ -117,6 +117,34 @@ The results go to `<name>.timings.csv`, such as `vagrant_vbox_ansible.timings.cs
 Port 8080 must be free, because each tutorial serves its page there. `bench-all.sh` needs
 `yq` (`brew install yq`).
 
+## Virtual hardware
+
+[HARDWARE.md](HARDWARE.md) lists what the guest sees in each tutorial's VM: the
+hypervisor and platform, how it boots (UEFI, legacy BIOS or direct kernel boot), the
+firmware, CPU, video and GPU, OS, and the main devices, such as virtio devices and
+whether they sit on PCI or MMIO.
+
+To collect it yourself, run:
+
+```bash
+./hwinfo-all.sh
+```
+
+It goes through the tutorials in `bench.yaml`, like `bench-all.sh`. For each one it
+creates the VM with `make up`, runs `hwinfo.sh` in it as root through the tutorial's
+Ansible inventory, and deletes the VM with `make destroy`. The values are appended to
+`hardware.tsv`, and `HARDWARE.md` is rewritten from the newest run of each tutorial.
+
+- **Choose tutorials** by name: `./hwinfo-all.sh lima_ansible qemu_ansible`.
+- **Rewrite `HARDWARE.md`** without running anything: `./hwinfo-all.sh --report`.
+- **Inspect any Linux VM** by copying `hwinfo.sh` into it and running
+  `sudo ./hwinfo.sh`, which prints a Markdown report.
+
+## GPU
+
+The tutorials here are about creating and configuring a VM, so their VMs have no GPU.
+[`../vm-gpu`](../vm-gpu) gives VMs a GPU and benchmarks it.
+
 ## Planned
 
 - Other configuration tools, such as Puppet, Chef and Salt

@@ -1,0 +1,136 @@
+run_at	label	section	field	value
+2026-11-26 22:18	krunkit	Platform	Hypervisor (systemd-detect-virt)	vm-other
+2026-11-26 22:18	krunkit	Platform	System vendor	Libkrun
+2026-11-26 22:18	krunkit	Platform	System product	libkrun Virtual Machine
+2026-11-26 22:18	krunkit	Platform	System version	n/a
+2026-11-26 22:18	krunkit	Platform	Board	n/a
+2026-11-26 22:18	krunkit	Platform	Device tree model	n/a
+2026-11-26 22:18	krunkit	Platform	Device tree compatible	linux, dummy-virt
+2026-11-26 22:18	krunkit	Platform	Hardware description	device tree
+2026-11-26 22:18	krunkit	Firmware and boot	Boot mode	UEFI (64-bit)
+2026-11-26 22:18	krunkit	Firmware and boot	Firmware vendor	libkrun
+2026-11-26 22:18	krunkit	Firmware and boot	Firmware version	0 01/05/2024
+2026-11-26 22:18	krunkit	Firmware and boot	Secure Boot	not offered by firmware
+2026-11-26 22:18	krunkit	Firmware and boot	EFI variables	31 visible
+2026-11-26 22:18	krunkit	Firmware and boot	EFI boot entry	UEFI Misc Device (Boot0001)
+2026-11-26 22:18	krunkit	Firmware and boot	Bootloader	GRUB 2.12
+2026-11-26 22:18	krunkit	Firmware and boot	Kernel command line	BOOT_IMAGE=(hd0,gpt2)/boot/vmlinuz-7.2.11-300.fc45.aarch64 no_timer_check console=tty1 console=ttyAMA0,115200n8 systemd.firstboot=off root=UUID=d751d330-1a8f-4e36-a511-d727edf3dbca rootflags=subvol=root
+2026-11-26 22:18	krunkit	Firmware and boot	Init (PID 1)	systemd
+2026-11-26 22:18	krunkit	Firmware and boot	Boot time (systemd-analyze)	220ms (kernel) + 2.365s (initrd) + 2min 21.604s (userspace) = 2min 24.191s
+2026-11-26 22:18	krunkit	CPU	Architecture	aarch64
+2026-11-26 22:18	krunkit	CPU	Vendor	Apple
+2026-11-26 22:18	krunkit	CPU	Model	CPU part 0x000
+2026-11-26 22:18	krunkit	CPU	vCPUs	2
+2026-11-26 22:18	krunkit	CPU	Topology (sockets x cores x threads)	- x 2 x 1
+2026-11-26 22:18	krunkit	CPU	Notable flags	aes pmull sha1 sha2 sha3 sha512 crc32 atomics asimd paca
+2026-11-26 22:18	krunkit	CPU	Nested virtualization (/dev/kvm)	no
+2026-11-26 22:18	krunkit	CPU	Clocksource	arch_sys_counter
+2026-11-26 22:18	krunkit	CPU	Memory	3.8 GiB
+2026-11-26 22:18	krunkit	Video and GPU	DRM card0	virtio_gpu (virtio-mmio, platform/a007000.virtio_mmio)
+2026-11-26 22:18	krunkit	Video and GPU	PCI display controllers	none
+2026-11-26 22:18	krunkit	Video and GPU	Connectors	none
+2026-11-26 22:18	krunkit	Video and GPU	Render nodes	/dev/dri/renderD128
+2026-11-26 22:18	krunkit	Video and GPU	Framebuffer	none
+2026-11-26 22:18	krunkit	Video and GPU	virtio-gpu features (kernel log)	[drm] features: +virgl +edid +resource_blob +host_visible, [drm] features: +context_init +blob_alignment
+2026-11-26 22:18	krunkit	Video and GPU	Vulkan devices	Virtio-GPU Venus (Apple M1 Max) (venus), llvmpipe (LLVM 23.1.5, 128 bits) (llvmpipe)
+2026-11-26 22:18	krunkit	Video and GPU	OpenGL renderer	llvmpipe (LLVM 23.1.5, 128 bits)
+2026-11-26 22:18	krunkit	OS	Distribution	Fedora Linux 45 (Cloud Edition)
+2026-11-26 22:18	krunkit	OS	ID / version / codename	fedora 45 -
+2026-11-26 22:18	krunkit	OS	Kernel	7.2.11-300.fc45.aarch64
+2026-11-26 22:18	krunkit	OS	Kernel build	#1 SMP PREEMPT_DYNAMIC Thu Oct 15 16:01:14 UTC 2026
+2026-11-26 22:18	krunkit	OS	Hostname	dev
+2026-11-26 22:18	krunkit	OS	cloud-init datasource	nocloud
+2026-11-26 22:18	krunkit	Devices	virtio devices	balloon (MMIO, virtio_balloon), 2x block (MMIO, virtio_blk), console (MMIO, virtio_console), fs (MMIO, virtiofs), gpu (MMIO, virtio_gpu), net (MMIO, virtio_net), rng (MMIO, virtio_rng)
+2026-11-26 22:18	krunkit	Devices	Network interfaces	eth0: virtio_net
+2026-11-26 22:18	krunkit	Devices	Disks	vda 20G virtio, vdb 900K virtio
+2026-11-26 22:18	krunkit	Devices	File shares	/workspace (virtiofs, workspace)
+2026-11-26 22:19	qemu-virtio	Platform	Hypervisor (systemd-detect-virt)	qemu
+2026-11-26 22:19	qemu-virtio	Platform	System vendor	QEMU
+2026-11-26 22:19	qemu-virtio	Platform	System product	QEMU Virtual Machine
+2026-11-26 22:19	qemu-virtio	Platform	System version	virt-11.1
+2026-11-26 22:19	qemu-virtio	Platform	Board	n/a
+2026-11-26 22:19	qemu-virtio	Platform	Hardware description	ACPI
+2026-11-26 22:19	qemu-virtio	Platform	ACPI tables	APIC, BGRT, DBG, DSDT, FACP, GTDT, IORT, MCFG, PPTT, SPCR
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Boot mode	UEFI (64-bit)
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Firmware vendor	EDK II
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Firmware version	edk2-stable202408-prebuilt.qemu.org 08/13/2024
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Secure Boot	not offered by firmware
+2026-11-26 22:19	qemu-virtio	Firmware and boot	EFI variables	35 visible
+2026-11-26 22:19	qemu-virtio	Firmware and boot	EFI boot entry	UEFI Misc Device (Boot0001)
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Bootloader	GRUB 2.12
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Kernel command line	BOOT_IMAGE=(hd0,gpt2)/boot/vmlinuz-7.2.11-300.fc45.aarch64 no_timer_check console=tty1 console=ttyAMA0,115200n8 systemd.firstboot=off root=UUID=d751d330-1a8f-4e36-a511-d727edf3dbca rootflags=subvol=root
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Init (PID 1)	systemd
+2026-11-26 22:19	qemu-virtio	Firmware and boot	Boot time (systemd-analyze)	254ms (kernel) + 2.389s (initrd) + 1min 20.371s (userspace) = 1min 23.016s
+2026-11-26 22:19	qemu-virtio	CPU	Architecture	aarch64
+2026-11-26 22:19	qemu-virtio	CPU	Vendor	Apple
+2026-11-26 22:19	qemu-virtio	CPU	Model	CPU part 0x000
+2026-11-26 22:19	qemu-virtio	CPU	vCPUs	2
+2026-11-26 22:19	qemu-virtio	CPU	Topology (sockets x cores x threads)	1 x 2 x 1
+2026-11-26 22:19	qemu-virtio	CPU	Notable flags	aes pmull sha1 sha2 sha3 sha512 crc32 atomics asimd paca
+2026-11-26 22:19	qemu-virtio	CPU	Nested virtualization (/dev/kvm)	no
+2026-11-26 22:19	qemu-virtio	CPU	Clocksource	arch_sys_counter
+2026-11-26 22:19	qemu-virtio	CPU	Memory	3.8 GiB
+2026-11-26 22:19	qemu-virtio	Video and GPU	DRM card0	virtio-pci (PCI 0000:00:03.0: Display controller [0380]: Red Hat, Inc. Virtio 1.0 GPU [1af4:1050] (rev 01))
+2026-11-26 22:19	qemu-virtio	Video and GPU	PCI display controllers	Display controller [0380]: Red Hat, Inc. Virtio 1.0 GPU [1af4:1050]
+2026-11-26 22:19	qemu-virtio	Video and GPU	Connectors	Virtual-1 connected 1280x800
+2026-11-26 22:19	qemu-virtio	Video and GPU	Render nodes	/dev/dri/renderD128
+2026-11-26 22:19	qemu-virtio	Video and GPU	Framebuffer	none
+2026-11-26 22:19	qemu-virtio	Video and GPU	virtio-gpu features (kernel log)	[drm] features: -virgl +edid -resource_blob -host_visible, [drm] features: -context_init -blob_alignment
+2026-11-26 22:19	qemu-virtio	Video and GPU	Vulkan devices	llvmpipe (LLVM 23.1.5, 128 bits) (llvmpipe)
+2026-11-26 22:19	qemu-virtio	Video and GPU	OpenGL renderer	llvmpipe (LLVM 23.1.5, 128 bits)
+2026-11-26 22:19	qemu-virtio	OS	Distribution	Fedora Linux 45 (Cloud Edition)
+2026-11-26 22:19	qemu-virtio	OS	ID / version / codename	fedora 45 -
+2026-11-26 22:19	qemu-virtio	OS	Kernel	7.2.11-300.fc45.aarch64
+2026-11-26 22:19	qemu-virtio	OS	Kernel build	#1 SMP PREEMPT_DYNAMIC Thu Oct 15 16:01:14 UTC 2026
+2026-11-26 22:19	qemu-virtio	OS	Hostname	dev
+2026-11-26 22:19	qemu-virtio	OS	cloud-init datasource	nocloud
+2026-11-26 22:19	qemu-virtio	Devices	virtio devices	2x block (PCI, virtio_blk), gpu (PCI, virtio_gpu), net (PCI, virtio_net), rng (PCI, virtio_rng)
+2026-11-26 22:19	qemu-virtio	Devices	Network interfaces	enp0s1: virtio_net
+2026-11-26 22:19	qemu-virtio	Devices	Disks	vda 20G virtio, vdb 900K virtio
+2026-11-26 22:19	qemu-virtio	Devices	Storage controllers	2x SCSI storage controller [0100]: Red Hat, Inc. Virtio block device [1af4:1001]
+2026-11-26 22:19	qemu-virtio	Devices	File shares	n/a
+2026-11-26 22:21	qemu-virtio	Platform	Hypervisor (systemd-detect-virt)	qemu
+2026-11-26 22:21	qemu-virtio	Platform	System vendor	QEMU
+2026-11-26 22:21	qemu-virtio	Platform	System product	QEMU Virtual Machine
+2026-11-26 22:21	qemu-virtio	Platform	System version	virt-11.1
+2026-11-26 22:21	qemu-virtio	Platform	Board	n/a
+2026-11-26 22:21	qemu-virtio	Platform	Hardware description	ACPI
+2026-11-26 22:21	qemu-virtio	Platform	ACPI tables	APIC, BGRT, DBG, DSDT, FACP, GTDT, IORT, MCFG, PPTT, SPCR
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Boot mode	UEFI (64-bit)
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Firmware vendor	EDK II
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Firmware version	edk2-stable202408-prebuilt.qemu.org 08/13/2024
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Secure Boot	not offered by firmware
+2026-11-26 22:21	qemu-virtio	Firmware and boot	EFI variables	35 visible
+2026-11-26 22:21	qemu-virtio	Firmware and boot	EFI boot entry	UEFI Misc Device (Boot0001)
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Bootloader	GRUB 2.12
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Kernel command line	BOOT_IMAGE=(hd0,gpt2)/boot/vmlinuz-7.2.11-300.fc45.aarch64 no_timer_check console=tty1 console=ttyAMA0,115200n8 systemd.firstboot=off root=UUID=d751d330-1a8f-4e36-a511-d727edf3dbca rootflags=subvol=root
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Init (PID 1)	systemd
+2026-11-26 22:21	qemu-virtio	Firmware and boot	Boot time (systemd-analyze)	238ms (kernel) + 2.391s (initrd) + 1min 7.726s (userspace) = 1min 10.356s
+2026-11-26 22:21	qemu-virtio	CPU	Architecture	aarch64
+2026-11-26 22:21	qemu-virtio	CPU	Vendor	Apple
+2026-11-26 22:21	qemu-virtio	CPU	Model	CPU part 0x000
+2026-11-26 22:21	qemu-virtio	CPU	vCPUs	2
+2026-11-26 22:21	qemu-virtio	CPU	Topology (sockets x cores x threads)	1 x 2 x 1
+2026-11-26 22:21	qemu-virtio	CPU	Notable flags	aes pmull sha1 sha2 sha3 sha512 crc32 atomics asimd paca
+2026-11-26 22:21	qemu-virtio	CPU	Nested virtualization (/dev/kvm)	no
+2026-11-26 22:21	qemu-virtio	CPU	Clocksource	arch_sys_counter
+2026-11-26 22:21	qemu-virtio	CPU	Memory	3.8 GiB
+2026-11-26 22:21	qemu-virtio	Video and GPU	DRM card0	virtio_gpu (virtio-pci, PCI 0000:00:03.0: Display controller [0380]: Red Hat, Inc. Virtio 1.0 GPU [1af4:1050] (rev 01))
+2026-11-26 22:21	qemu-virtio	Video and GPU	PCI display controllers	Display controller [0380]: Red Hat, Inc. Virtio 1.0 GPU [1af4:1050]
+2026-11-26 22:21	qemu-virtio	Video and GPU	Connectors	Virtual-1 connected 1280x800
+2026-11-26 22:21	qemu-virtio	Video and GPU	Render nodes	/dev/dri/renderD128
+2026-11-26 22:21	qemu-virtio	Video and GPU	Framebuffer	none
+2026-11-26 22:21	qemu-virtio	Video and GPU	virtio-gpu features (kernel log)	[drm] features: -virgl +edid -resource_blob -host_visible, [drm] features: -context_init -blob_alignment
+2026-11-26 22:21	qemu-virtio	Video and GPU	Vulkan devices	llvmpipe (LLVM 23.1.5, 128 bits) (llvmpipe)
+2026-11-26 22:21	qemu-virtio	Video and GPU	OpenGL renderer	llvmpipe (LLVM 23.1.5, 128 bits)
+2026-11-26 22:21	qemu-virtio	OS	Distribution	Fedora Linux 45 (Cloud Edition)
+2026-11-26 22:21	qemu-virtio	OS	ID / version / codename	fedora 45 -
+2026-11-26 22:21	qemu-virtio	OS	Kernel	7.2.11-300.fc45.aarch64
+2026-11-26 22:21	qemu-virtio	OS	Kernel build	#1 SMP PREEMPT_DYNAMIC Thu Oct 15 16:01:14 UTC 2026
+2026-11-26 22:21	qemu-virtio	OS	Hostname	dev
+2026-11-26 22:21	qemu-virtio	OS	cloud-init datasource	nocloud
+2026-11-26 22:21	qemu-virtio	Devices	virtio devices	2x block (PCI, virtio_blk), gpu (PCI, virtio_gpu), net (PCI, virtio_net), rng (PCI, virtio_rng)
+2026-11-26 22:21	qemu-virtio	Devices	Network interfaces	enp0s1: virtio_net
+2026-11-26 22:21	qemu-virtio	Devices	Disks	vda 20G virtio, vdb 900K virtio
+2026-11-26 22:21	qemu-virtio	Devices	Storage controllers	2x SCSI storage controller [0100]: Red Hat, Inc. Virtio block device [1af4:1001]
+2026-11-26 22:21	qemu-virtio	Devices	File shares	n/a
