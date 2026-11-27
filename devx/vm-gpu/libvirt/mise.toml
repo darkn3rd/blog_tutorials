@@ -39,6 +39,10 @@ run = "make gpu"
 description = "Print a full report of the guest's virtual hardware, GPU included"
 run = "make hwinfo"
 
+[tasks.gpu-check]
+description = "Check what the GPU needs in the guest, from the kernel to Mesa"
+run = "make gpu-check"
+
 [tasks.bench]
 description = "Build llama-bench in the guest and run it on the GPU and the CPU"
 run = "make bench"

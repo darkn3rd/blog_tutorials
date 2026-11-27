@@ -73,12 +73,12 @@ the run logs aren't.
   of `projects.yaml` and removing its `skip`.
 - **Rewrite `GPU.md`** without running anything: `./gpu-bench-all.sh --report`.
 
-Each project keeps its own copy of `gpu-bench.sh` and `hwinfo.sh`, so it stands on its
+Each project keeps its own copy of `gpu-bench.sh`, `hwinfo.sh` and `gpu-check.sh`, so it stands on its
 own. `gpu-bench-all.sh` and `hwinfo-all.sh` refuse to run a project whose copy differs
-from the one here. After changing either script, copy it into each project:
+from the one here. After changing any of them, copy it into each project:
 
 ```bash
-for d in krunkit libvirt qemu/linux qemu/macos; do cp gpu-bench.sh hwinfo.sh "$d/"; done
+for d in krunkit libvirt qemu/linux qemu/macos; do cp gpu-bench.sh hwinfo.sh gpu-check.sh "$d/"; done
 ```
 
 `gpu-bench-all.sh` and `hwinfo-all.sh` need `yq` and `python3`, and benchmarking the host needs what
@@ -119,3 +119,26 @@ is rewritten from the newest run of each project on each platform.
 - **Choose projects** by name: `./hwinfo-all.sh krunkit qemu-virtio`.
 - **Rewrite `HARDWARE.md`** without running anything: `./hwinfo-all.sh --report`.
 - **Inspect any Linux VM** by copying `hwinfo.sh` into it and running `sudo ./hwinfo.sh`.
+
+## Checking a system
+
+`gpu-check.sh` checks that a system has what a GPU in a VM needs, in the style of
+Docker's `check-config.sh`. It works out where it runs:
+
+| Where | What it checks |
+| --- | --- |
+| Linux guest | Kernel options, the GPU and its driver, the virtio-gpu features the host and guest agreed on, the render node and whether you can open it, Mesa's Venus driver, and the Vulkan and OpenGL devices |
+| Linux host | KVM, the host GPUs and render nodes, udmabuf, virglrenderer, QEMU's OpenGL devices, the IOMMU and vfio-pci for passthrough, and GVT-g |
+| macOS host | Apple silicon, krunkit, libkrun and MoltenVK, and whether QEMU has OpenGL |
+
+Each project's `make gpu-check` runs it in that project's VM. On the host, run
+`./gpu-check.sh`. It exits 1 when something required is missing.
+
+One guest check is `blob_alignment`. When the host maps memory in larger pages than the
+guest, as on Apple silicon (16 KiB) with a 4 KiB guest, Venus needs the host to tell the
+guest how to align shared buffers. A guest kernel without the feature fails to create a
+Vulkan instance, with `ERROR_OUT_OF_HOST_MEMORY`. The script reads the feature from
+`/sys/bus/virtio/devices/*/features`, and when it's off, says whether the kernel or the
+host lacks it.
+
+The Linux host checks are not tested yet.

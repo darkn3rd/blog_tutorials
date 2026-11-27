@@ -53,7 +53,7 @@ SSH := ssh $(SSH_OPTS) fedora@127.0.0.1
 RUNNING := { test -f $(PID) && kill -0 "$$(cat $(PID))"; } 2>/dev/null
 
 .DELETE_ON_ERROR:
-.PHONY: up check start sync gpu hwinfo bench ssh status halt reload destroy purge
+.PHONY: up check start sync gpu hwinfo gpu-check bench ssh status halt reload destroy purge
 
 # Checks that this Mac and this QEMU can do what GPU asks for, before anything starts.
 check:
@@ -123,6 +123,11 @@ sync:
 # HWINFO_ARGS=--tsv prints raw section/field/value rows instead of Markdown.
 hwinfo: sync
 	@$(SSH) 'sudo /workspace/hwinfo.sh $(HWINFO_ARGS)'
+
+# Checks the guest for what the GPU needs: kernel options, driver, virtio-gpu features
+# such as blob_alignment, device node permissions and Mesa, from gpu-check.sh.
+gpu-check: sync
+	@$(SSH) '/workspace/gpu-check.sh'
 
 # What the guest sees: its GPUs, and the Vulkan and OpenGL devices.
 gpu:

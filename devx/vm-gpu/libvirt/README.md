@@ -65,6 +65,7 @@ mise run deps
 | `domain-passthrough.xml` | The VM's libvirt definition for `GPU=passthrough` |
 | `cloud-init/` | The guest's first-boot settings: user, SSH key, hostname, and the packages to install |
 | `gpu-bench.sh` | Builds llama.cpp's `llama-bench` with Vulkan and runs it on the GPU and on the CPU |
+| `gpu-check.sh` | Checks that the guest has what the GPU needs: kernel options, driver, virtio-gpu features, device permissions and Mesa |
 | `hwinfo.sh` | Reports the virtual hardware the guest sees, GPU included, as Markdown or raw rows |
 | `mise.toml` | `deps` and `versions`, plus mise tasks that run the Makefile |
 
@@ -79,6 +80,7 @@ project folder is copied into the VM at `/workspace`.
 | `make up` | Check, download the image, create the VM, boot it, wait for cloud-init and copy the project in |
 | `make gpu` | Show the GPUs and the Vulkan and OpenGL devices the guest sees |
 | `make hwinfo` | Print a full report of the guest's virtual hardware: platform, firmware, CPU, video and GPU, OS and devices |
+| `make gpu-check` | Check what the GPU needs in the guest, from the kernel to Mesa, and flag what's missing |
 | `make bench` | Build `llama-bench` in the guest and run it, copying the results back to `results/` |
 | `make ssh` | SSH in, starting in `/workspace` |
 | `make status` | Report running, stopped or not created |
