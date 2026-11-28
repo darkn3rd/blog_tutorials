@@ -102,6 +102,11 @@ that Ubuntu 26.04's 7.0 lacks. `make gpu` shows it among the features:
 
 `make gpu-check` checks this, along with the rest of what Venus needs in the guest.
 
+A larger guest page size doesn't get around it. Ubuntu's kernel with 64 KiB pages,
+`linux-generic-64k`, doesn't boot on Apple's CPUs, and 16 KiB pages aren't a choice Ubuntu
+offers. A kernel with `blob_alignment` is the fix, so another distribution should work
+once its kernel has the feature.
+
 ## Things to know
 
 - **`make up` takes longer than a plain boot.** It waits for cloud-init, which installs
@@ -110,6 +115,13 @@ that Ubuntu 26.04's 7.0 lacks. `make gpu` shows it among the features:
   `/dev/dri/renderD128`, belongs to that group.
 - **The guest user has your Mac's UID.** virtio-fs passes file ownership through, so
   that the guest can write `results/` in your project folder.
+- **Fedora lets only root read cloud-init's state,** so the Makefile runs
+  `sudo cloud-init status --wait`. Run as the `fedora` user, it waits forever.
+- **The hostname is set in `user-data`, with `fqdn`.** Fedora's cloud-init looks a bare
+  `hostname` up in `/etc/hosts` and gets `localhost`, and `local-hostname` in `meta-data`
+  is tried before D-Bus is up and leaves a warning, which makes `cloud-init status` exit
+  with an error. `fqdn` with `prefer_fqdn_over_hostname: false` gives the guest the name
+  `dev`.
 - **Port 2222 must be free.** `make up` stops with a message if something else listens
   there; pick another port with `SSH_PORT=...` and pass it to every later command.
 - **cloud-init runs once per VM.** Changes to `cloud-init/` apply after `make destroy up`.
