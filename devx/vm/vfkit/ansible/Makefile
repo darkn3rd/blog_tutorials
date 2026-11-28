@@ -7,7 +7,16 @@ MEMORY ?= 4096
 DISK_SIZE ?= 20G
 
 IMAGE_BASE_URL ?= https://cloud-images.ubuntu.com/releases/26.04/release
-IMAGE_NAME := ubuntu-26.04-server-cloudimg-arm64.img
+# The guest runs the same architecture as the Mac, and Ubuntu names its images for it.
+ARCH := $(shell uname -m)
+ifeq ($(ARCH),arm64)
+IMAGE_ARCH := arm64
+else ifeq ($(ARCH),x86_64)
+IMAGE_ARCH := amd64
+else
+$(error Unsupported architecture $(ARCH))
+endif
+IMAGE_NAME := ubuntu-26.04-server-cloudimg-$(IMAGE_ARCH).img
 IMAGE ?= images/$(IMAGE_NAME)
 RAW_IMAGE := $(IMAGE:.img=.raw)
 
@@ -27,10 +36,20 @@ NET_API := $(VM_DIR)/gvproxy.sock
 GUEST_MAC := 5a:94:ef:e4:0c:ee
 GUEST_IP := 192.168.127.2
 
-# Podman ships vfkit and gvproxy; use those copies if they aren't on the PATH.
-PODMAN_LIBEXEC = $(shell brew --prefix)/opt/podman/libexec/podman
-VFKIT ?= $(shell command -v vfkit || echo $(PODMAN_LIBEXEC)/vfkit)
-GVPROXY ?= $(shell command -v gvproxy || echo $(PODMAN_LIBEXEC)/gvproxy)
+# Use vfkit and gvproxy from the PATH, then the copies Podman ships, and otherwise download
+# the releases into bin/. Podman's Homebrew formula is Apple Silicon only, so on an Intel Mac
+# the download is the way to get them. Both releases are universal binaries.
+PODMAN_LIBEXEC = $(shell brew --prefix 2>/dev/null)/opt/podman/libexec/podman
+BIN_DIR := bin
+VFKIT ?= $(shell command -v vfkit || { test -x $(PODMAN_LIBEXEC)/vfkit && echo $(PODMAN_LIBEXEC)/vfkit; } || echo $(BIN_DIR)/vfkit)
+GVPROXY ?= $(shell command -v gvproxy || { test -x $(PODMAN_LIBEXEC)/gvproxy && echo $(PODMAN_LIBEXEC)/gvproxy; } || echo $(BIN_DIR)/gvproxy)
+
+VFKIT_VERSION := v0.6.4
+VFKIT_URL := https://github.com/crc-org/vfkit/releases/download/$(VFKIT_VERSION)/vfkit
+# vfkit publishes no checksums, so this is the SHA-256 of the v0.6.4 release file.
+VFKIT_SHA256 := 0ed83fc8ca7aa708598835480dba1362406aa7cd1dab3b27464eb76327d9652d
+GVPROXY_VERSION := v0.9.1
+GVPROXY_URL := https://github.com/containers/gvisor-tap-vsock/releases/download/$(GVPROXY_VERSION)
 
 SSH := ssh -i $(KEY) -p $(SSH_PORT) -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 \
 	-o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
@@ -50,7 +69,7 @@ up: start
 	@if [ "$(PROVISION)" = true ]; then $(MAKE) provision; fi
 
 # gvproxy is the VM's network: DHCP, DNS, NAT and the port forwards to 127.0.0.1.
-network:
+network: $(GVPROXY)
 	@if ! $(NET_RUNNING); then \
 		mkdir -p $(VM_DIR); \
 		rm -f $(NET_SOCK) $(NET_API); \
@@ -65,7 +84,7 @@ network:
 
 # vfkit creates the EFI variable store on the first boot and keeps it after that.
 # --cloud-init builds the seed disk from user-data and meta-data each time it starts.
-start: $(DISK) $(USER_DATA) $(META_DATA) network
+start: $(VFKIT) $(DISK) $(USER_DATA) $(META_DATA) network
 	@if $(RUNNING); then \
 		echo "VM is already running."; \
 	else \
@@ -161,5 +180,19 @@ $(META_DATA): cloud-init/meta-data
 	mkdir -p $(dir $@)
 	cp $< $@
 
+$(BIN_DIR)/vfkit:
+	mkdir -p $(BIN_DIR)
+	curl -fL --progress-bar -o $@ $(VFKIT_URL)
+	echo "$(VFKIT_SHA256)  $@" | shasum -a 256 -c
+	chmod +x $@
+
+# The release isn't signed, and Apple Silicon won't run unsigned code, so sign it ad hoc.
+$(BIN_DIR)/gvproxy:
+	mkdir -p $(BIN_DIR)
+	curl -fL --progress-bar -o $@ $(GVPROXY_URL)/gvproxy-darwin
+	curl -fsSL $(GVPROXY_URL)/sha256sums | grep ' gvproxy-darwin$$' | sed 's|gvproxy-darwin|$@|' | shasum -a 256 -c
+	chmod +x $@
+	codesign --force -s - $@
+
 purge:
-	rm -f $(IMAGE) $(RAW_IMAGE)
+	rm -f $(IMAGE) $(RAW_IMAGE) $(BIN_DIR)/vfkit $(BIN_DIR)/gvproxy
