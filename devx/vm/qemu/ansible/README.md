@@ -1,22 +1,31 @@
-# QEMU and Ansible on macOS
+# QEMU and Ansible on macOS and Linux
 
-This project runs an Ubuntu 26.04 virtual machine with `qemu-system-aarch64` directly,
-with no VM manager, and configures it with Ansible. A Makefile drives every step:
+This project runs an Ubuntu 26.04 virtual machine with QEMU directly, with no VM
+manager, and configures it with Ansible. A Makefile drives every step:
 downloading the image, creating the disk, building the cloud-init seed, booting QEMU and
 shutting it down. The playbook sets up a small web server so there is something to see
 once the VM is configured.
 
 ## Requirements
 
-- An Apple Silicon Mac. The Makefile uses an arm64 image, Apple's Hypervisor framework
-  (`-accel hvf`) and `hdiutil`.
-- [QEMU](https://www.qemu.org/), which also provides the UEFI firmware and `qemu-img`
+- One of these hosts:
+  - An Apple Silicon Mac. The Makefile uses an arm64 image, Apple's Hypervisor
+    framework (`-accel hvf`), UEFI firmware and `hdiutil`.
+  - Linux on x86_64 with KVM (`/dev/kvm` exists and you can open it). The Makefile uses
+    an amd64 image, KVM (`-accel kvm`), the default BIOS firmware and `mtools`.
+- [QEMU](https://www.qemu.org/), which also provides the firmware and `qemu-img`
 - [Ansible](https://docs.ansible.com/)
 
-Install them with Homebrew:
+On macOS, install them with Homebrew:
 
 ```bash
 brew install qemu ansible
+```
+
+On Debian or Ubuntu:
+
+```bash
+sudo apt-get install -y qemu-system-x86 qemu-utils mtools ansible
 ```
 
 Or, if you use [mise](https://mise.jdx.dev/), let it install whichever are missing:
@@ -30,6 +39,7 @@ mise run deps
 | File | Purpose |
 | --- | --- |
 | `Makefile` | Downloads the image, creates the disk and seed, starts and stops QEMU |
+| `platform/` | What differs per host: `Darwin-arm64.mk` and `Linux-x86_64.mk` |
 | `cloud-init/` | The guest's first-boot settings: user, SSH key, hostname and the `/workspace` mount |
 | `playbook.yaml` | The Ansible playbook that configures the VM |
 | `inventory.yaml` | Tells Ansible how to reach the VM, in the `web` group |
@@ -55,7 +65,8 @@ the VM at `/workspace`.
 | `make destroy` | `mise run destroy` | Stop QEMU and delete `.vm/`, keeping the downloaded image |
 | `make purge` | `mise run purge` | Delete the downloaded image |
 
-The first `make up` downloads the Ubuntu cloud image, about 1 GB, into `images/`.
+The first `make up` downloads the Ubuntu cloud image, about 1 GB, into `images/`. The
+Makefile picks the arm64 or amd64 image to match the host.
 
 Create the VM and configure it:
 
@@ -79,11 +90,27 @@ values to every later `make` command.
 | --- | --- |
 | Get the image | `curl`, then check it against Ubuntu's `SHA256SUMS` |
 | Create the disk | A `qemu-img` overlay on top of the downloaded image |
-| Set up the guest user | A generated SSH key and a cloud-init seed ISO made with `hdiutil` |
-| Boot | `qemu-system-aarch64` with UEFI firmware, port forwards and a 9p share |
+| Set up the guest user | A generated SSH key and a cloud-init seed: an ISO made with `hdiutil` on macOS, or a FAT image labelled `CIDATA` made with `mtools` on Linux |
+| Boot | `qemu-system-aarch64` with UEFI firmware on macOS, or `qemu-system-x86_64` on Linux, with port forwards and a 9p share |
 | Know when it's ready | Poll SSH, then `cloud-init status --wait` |
 | Track the VM state | QEMU's PID file |
 | Shut down | `system_powerdown` over the QEMU monitor socket |
+
+### Platform files
+
+The Makefile includes `platform/<OS>-<arch>.mk`, named after `uname -s` and `uname -m`,
+for the parts that differ per host. Each file sets:
+
+| Variable | Darwin-arm64 | Linux-x86_64 |
+| --- | --- | --- |
+| `IMAGE_ARCH` | `arm64` | `amd64` |
+| `QEMU` | `qemu-system-aarch64` | `qemu-system-x86_64` |
+| `MACHINE` | `-machine virt -accel hvf -cpu host`, plus the UEFI firmware drives | `-machine q35 -accel kvm -cpu host` |
+| `FIRMWARE` | The UEFI variables file, which the VM needs before it starts | Nothing |
+| `SEED`, `MAKE_SEED` | `seed.iso`, built with `hdiutil` | `seed.img`, built with `mformat` and `mcopy` |
+
+On any other host, `make` stops and says the platform isn't supported. To add one,
+copy the closest file and adjust it.
 
 ## Changing the configuration
 
@@ -99,7 +126,7 @@ changes and Ansible reports `changed=0`, and the handler doesn't run.
 
 ## Things to know
 
-- **The guest user has your Mac's UID.** The 9p share passes file ownership through, so a
+- **The guest user has your UID on the host.** The 9p share passes file ownership through, so a
   guest user with a different UID couldn't write to your files in `/workspace`.
   cloud-init creates the user with your UID instead.
 - **Don't quote the UID in `user-data`.** A quoted UID makes `cloud-init status --wait`
@@ -110,6 +137,9 @@ changes and Ansible reports `changed=0`, and the handler doesn't run.
 - **`.vm/` holds the VM's private SSH key.** The project folder, including that key, is
   shared with the guest. The key only opens this VM, and its SSH port listens on
   `127.0.0.1` only.
+- **On Linux, your user needs access to `/dev/kvm`.** Desktop sessions usually grant it
+  to the logged-in user. If QEMU fails with `Could not access KVM kernel module`, add
+  yourself to the `kvm` group, then log out and back in.
 
 ## Cleaning up
 
@@ -125,10 +155,16 @@ next `make up` downloads it again.
 
 ### Port 2222 or 8080 in use
 
-Check which process is using the port:
+Check which process is using the port. On macOS:
 
 ```bash
 lsof -nP -iTCP:8080 -sTCP:LISTEN
+```
+
+On Linux:
+
+```bash
+ss -ltnp 'sport = :8080'
 ```
 
 Stop that process, or create the VM on other ports, for example

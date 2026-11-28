@@ -1,21 +1,39 @@
-# mise has no Vagrant or VirtualBox tools, so deps installs everything with Homebrew.
+# mise has no Vagrant or VirtualBox tools, so deps installs them with Homebrew on
+# macOS. On Linux, it points to HashiCorp's and Oracle's packages instead, since
+# distributions often ship older versions.
 
 [tasks.deps]
 description = "Install Vagrant, VirtualBox and Ansible if they're missing"
-run = [
-  "command -v vagrant >/dev/null || brew install --cask vagrant",
-  "command -v VBoxManage >/dev/null || brew install --cask virtualbox",
-  "command -v ansible-playbook >/dev/null || brew install ansible",
-]
+run = '''
+case "$(uname -s)" in
+Darwin)
+  command -v vagrant >/dev/null || brew install --cask vagrant
+  command -v VBoxManage >/dev/null || brew install --cask virtualbox
+  command -v ansible-playbook >/dev/null || brew install ansible
+  ;;
+Linux)
+  command -v vagrant >/dev/null || {
+    echo 'Install Vagrant from https://developer.hashicorp.com/vagrant/install' >&2
+    exit 1; }
+  command -v VBoxManage >/dev/null || {
+    echo 'Install VirtualBox 7.1 or later from https://www.virtualbox.org/wiki/Linux_Downloads' >&2; exit 1; }
+  command -v ansible-playbook >/dev/null || sudo apt-get install -y ansible
+  ;;
+esac
+'''
 
 [tasks.versions]
-description = "Print the macOS, Vagrant, VirtualBox and Ansible versions"
+description = "Print the OS, Vagrant, VirtualBox and Ansible versions"
 run = '''
-printf "%-14s%s\n" \
-  macOS: $(sw_vers --productVersion) \
-  Vagrant: $(vagrant --version | cut -d' ' -f2) \
-  VirtualBox: $(VBoxManage --version | cut -d'r' -f1) \
-  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+if command -v sw_vers >/dev/null; then
+  os="macOS $(sw_vers --productVersion)"
+else
+  os="$(. /etc/os-release && echo "$PRETTY_NAME")"
+fi
+printf "%-14s%s\n" OS: "$os"
+printf "%-14s%s\n" Vagrant: "$(vagrant --version | cut -d' ' -f2)"
+printf "%-14s%s\n" VirtualBox: "$(VBoxManage --version | cut -d'r' -f1)"
+printf "%-14s%s\n" ansible-core: "$(ansible --version | sed -n '1s/.* //; 1s/]//p')"
 '''
 
 [tasks.up]

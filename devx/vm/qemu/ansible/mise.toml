@@ -1,19 +1,35 @@
 # The Makefile builds the VM from file dependencies, so the VM tasks here run make.
 
+# deps uses Homebrew on macOS and apt on Linux.
 [tasks.deps]
-description = "Install QEMU and Ansible if they're missing"
-run = [
-  "command -v qemu-system-aarch64 >/dev/null || brew install qemu",
-  "command -v ansible-playbook >/dev/null || brew install ansible",
-]
+description = "Install QEMU and Ansible if they're missing, plus mtools on Linux"
+run = '''
+case "$(uname -s)" in
+Darwin)
+  command -v qemu-system-aarch64 >/dev/null || brew install qemu
+  command -v ansible-playbook >/dev/null || brew install ansible
+  ;;
+Linux)
+  command -v qemu-system-x86_64 >/dev/null ||
+    sudo apt-get install -y qemu-system-x86 qemu-utils
+  command -v mformat >/dev/null || sudo apt-get install -y mtools
+  command -v ansible-playbook >/dev/null || sudo apt-get install -y ansible
+  ;;
+esac
+'''
 
 [tasks.versions]
-description = "Print the macOS, QEMU and Ansible versions"
+description = "Print the OS, QEMU and Ansible versions"
 run = '''
-printf "%-14s%s\n" \
-  macOS: $(sw_vers --productVersion) \
-  QEMU: $(qemu-system-aarch64 --version | sed -n '1s/.*version \([^ ]*\).*/\1/p') \
-  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+if command -v sw_vers >/dev/null; then
+  os="macOS $(sw_vers --productVersion)"
+else
+  os="$(. /etc/os-release && echo "$PRETTY_NAME")"
+fi
+qemu="qemu-system-$(uname -m | sed 's/^arm64$/aarch64/')"
+printf "%-14s%s\n" OS: "$os"
+printf "%-14s%s\n" QEMU: "$($qemu --version | sed -n '1s/.*version \([^ ]*\).*/\1/p')"
+printf "%-14s%s\n" ansible-core: "$(ansible --version | sed -n '1s/.* //; 1s/]//p')"
 '''
 
 [tasks.up]

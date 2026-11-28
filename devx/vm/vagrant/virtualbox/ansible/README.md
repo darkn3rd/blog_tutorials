@@ -1,4 +1,4 @@
-# Vagrant and Ansible on macOS
+# Vagrant and Ansible on macOS, Windows and Linux
 
 This project uses Vagrant to create an Ubuntu virtual machine and Ansible to configure it.
 Vagrant runs with its default provider, VirtualBox. The playbook sets up a small web
@@ -9,6 +9,7 @@ server so there is something to see once the VM is configured.
 - Platform:
   - macOS on Apple Silicon or Intel
   - Windows 11 (see [Windows](#windows))
+  - Linux (see [Linux](#linux); not tested yet)
 - [Vagrant](https://developer.hashicorp.com/vagrant)
 - [VirtualBox](https://www.virtualbox.org/) 7.1 or later, for Apple Silicon support
 - [Ansible](https://docs.ansible.com/)
@@ -133,6 +134,25 @@ This deletes the VM. The downloaded box stays cached; to remove it as well:
 make purge
 ```
 
+## Linux
+
+This hasn't been tested yet, but the `Vagrantfile` and `Makefile` have nothing
+macOS-specific, so they should work wherever Vagrant and VirtualBox run.
+
+Install Vagrant from [HashiCorp's packages](https://developer.hashicorp.com/vagrant/install)
+and VirtualBox 7.1 or later from
+[Oracle's packages](https://www.virtualbox.org/wiki/Linux_Downloads), since
+distributions often ship older versions. On Debian or Ubuntu, install Ansible with:
+
+```bash
+sudo apt-get install -y ansible
+```
+
+`mise run deps` installs Ansible with apt, and says where to get Vagrant and
+VirtualBox if they're missing.
+
+If you also use KVM, read [VirtualBox and KVM on Linux](#virtualbox-and-kvm-on-linux).
+
 ## Windows
 
 First, you need to have both Vagrant and VirtualBox installed. If you have [Chocolatey](https://chocolatey.org/install) installed, you can install these with the following:
@@ -188,5 +208,28 @@ if ($c) {
 
 To resolve the conflict, you can either terminate the conflicting process or change your Vagrant configuration:
 
-* **Option 1**: Stop the conflicting process. Use the PID from the command above to kill the program (e.g., `kill -9 <PID>` for macOS/Linuix, or `Stop-Process -Id <PID>` on Windows).
+* **Option 1**: Stop the conflicting process. Use the PID from the command above to kill the program (e.g., `kill -9 <PID>` for macOS/Linux, or `Stop-Process -Id <PID>` on Windows).
 * **Option 2:** Change the Vagrant port. Open your `Vagrantfile` and update the `host` value on the `forwarded_port` line to an open port, such as `8081`.
+
+### VirtualBox and KVM on Linux
+
+VirtualBox can't start a VM while KVM holds the CPU's virtualization extensions.
+`VBoxManage startvm` then fails with `VERR_VMX_IN_VMX_ROOT_MODE` on Intel, or
+`VERR_SVM_IN_USE` on AMD. Since Linux 6.12, KVM takes them as soon as its module
+loads, not only while a KVM VM runs, so this can happen even with no other VM running.
+
+Check whether the KVM modules are loaded:
+
+```bash
+lsmod | grep kvm
+```
+
+Either unload them while you use VirtualBox (use `kvm_amd` on AMD):
+
+```bash
+sudo modprobe -r kvm_intel kvm
+```
+
+Or boot with the kernel parameter `kvm.enable_virt_at_load=0`, so that KVM takes the
+extensions only while a KVM VM runs. Whether you need either depends on your kernel
+and VirtualBox versions.
