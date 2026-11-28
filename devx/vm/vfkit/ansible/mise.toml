@@ -1,9 +1,10 @@
 # The Makefile builds the VM from file dependencies, so the VM tasks here run make.
 
 [tasks.deps]
-description = "Install vfkit and gvproxy (with Podman), qemu-img and Ansible if they're missing"
+description = "Install vfkit and gvproxy (with Podman, on Apple Silicon), qemu-img and Ansible if they're missing"
 run = [
-  "{ command -v vfkit && command -v gvproxy; } >/dev/null || test -x \"$(brew --prefix)/opt/podman/libexec/podman/vfkit\" || brew install podman",
+  # Podman's formula is Apple Silicon only; on an Intel Mac the Makefile downloads vfkit and gvproxy.
+  "[ \"$(uname -m)\" = x86_64 ] || { command -v vfkit && command -v gvproxy; } >/dev/null || test -x \"$(brew --prefix)/opt/podman/libexec/podman/vfkit\" || brew install podman",
   "command -v qemu-img >/dev/null || brew install qemu",
   "command -v ansible-playbook >/dev/null || brew install ansible",
 ]
@@ -12,12 +13,14 @@ run = [
 description = "Print the macOS, vfkit, gvproxy and Ansible versions"
 run = '''
 libexec="$(brew --prefix)/opt/podman/libexec/podman"
-vfkit=$(command -v vfkit || echo "$libexec/vfkit")
-gvproxy=$(command -v gvproxy || echo "$libexec/gvproxy")
+# The same order the Makefile uses: PATH, then Podman's copy, then bin/.
+locate() { command -v "$1" || { test -x "$libexec/$1" && echo "$libexec/$1"; } || echo "bin/$1"; }
+vfkit=$(locate vfkit)
+gvproxy=$(locate gvproxy)
 printf "%-14s%s\n" \
   macOS: $(sw_vers --productVersion) \
-  vfkit: $("$vfkit" --version | awk '{print $NF}') \
-  gvproxy: $("$gvproxy" -version | awk '{print $NF}') \
+  vfkit: $("$vfkit" --version 2>/dev/null | awk '{print $NF}' | grep . || echo none) \
+  gvproxy: $("$gvproxy" -version 2>/dev/null | awk '{print $NF}' | grep . || echo none) \
   ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
 '''
 

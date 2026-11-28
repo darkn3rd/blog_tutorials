@@ -13,33 +13,47 @@ and CRC use to run their VMs on a Mac.
 
 ## Requirements
 
-- An Apple Silicon Mac. The Makefile uses an arm64 image.
+- A Mac with Apple Silicon or an Intel processor. The VM runs the same architecture as the
+  Mac, and the Makefile picks Ubuntu's arm64 or amd64 image to match.
 - [vfkit](https://github.com/crc-org/vfkit), tested with 0.6.4
 - [gvproxy](https://github.com/containers/gvisor-tap-vsock), for the VM's network.
-  Homebrew doesn't package it on its own; it comes with Podman, along with vfkit.
+  Homebrew doesn't package it on its own; it comes with Podman, along with vfkit. Podman's
+  Homebrew formula is Apple Silicon only, so on an Intel Mac there's nothing to install:
+  the Makefile downloads both.
 - `qemu-img`, from QEMU, to convert Ubuntu's qcow2 image to a raw disk
 - [Ansible](https://docs.ansible.com/)
 
-Install them with Homebrew:
+On Apple Silicon, install them with Homebrew:
 
 ```bash
 brew install podman qemu ansible
 ```
 
-Or, if you use [mise](https://mise.jdx.dev/), let it install whichever are missing:
+On an Intel Mac, install the other two:
+
+```bash
+brew install qemu ansible
+```
+
+Or, if you use [mise](https://mise.jdx.dev/), let it install whichever are missing. It knows
+which kind of Mac it's on:
 
 ```bash
 mise run deps
 ```
 
-The Makefile uses `vfkit` and `gvproxy` from your `PATH` if they're there, and Podman's
-copies otherwise. To use others, set `VFKIT=/path/to/vfkit` or `GVPROXY=/path/to/gvproxy`.
+The Makefile uses `vfkit` and `gvproxy` from your `PATH` if they're there, then Podman's
+copies, and otherwise downloads vfkit v0.6.4 and gvproxy v0.9.1 into `bin/`. Both releases
+are universal binaries, so the download works on either kind of Mac. The Makefile checks
+gvproxy against the `sha256sums` file published with the release. vfkit publishes no
+checksums, so it checks a SHA-256 recorded in the Makefile. To use others, set
+`VFKIT=/path/to/vfkit` or `GVPROXY=/path/to/gvproxy`.
 
 ## Files
 
 | File | Purpose |
 | --- | --- |
-| `Makefile` | Downloads the image, creates the disk, starts and stops gvproxy and vfkit |
+| `Makefile` | Downloads the image, and vfkit and gvproxy when you don't have them, creates the disk, starts and stops gvproxy and vfkit |
 | `cloud-init/` | The guest's first-boot settings: user, SSH key, hostname and the `/workspace` mount |
 | `playbook.yaml` | The Ansible playbook that configures the VM |
 | `inventory.yaml` | Tells Ansible how to reach the VM, in the `web` group |
@@ -63,10 +77,11 @@ the VM at `/workspace`.
 | `make halt` | `mise run halt` | Shut the guest down, stopping vfkit if it ignores the request for 60s, then stop gvproxy |
 | `make reload` | `mise run reload` | `make halt`, then `make up` |
 | `make destroy` | `mise run destroy` | Stop vfkit and gvproxy and delete `.vm/`, keeping the downloaded image |
-| `make purge` | `mise run purge` | Delete the downloaded image and its raw copy |
+| `make purge` | `mise run purge` | Delete the downloaded image and its raw copy, and the vfkit and gvproxy downloaded into `bin/` |
 
 The first `make up` downloads the Ubuntu cloud image, about 1 GB, into `images/`, and
-converts it to a raw image next to it.
+converts it to a raw image next to it. If you don't have vfkit and gvproxy, it also
+downloads them, about 95 MB together, into `bin/`.
 
 Create the VM and configure it:
 
@@ -88,7 +103,8 @@ ports, pass the same values to every later `make` command.
 
 | Job | How |
 | --- | --- |
-| Get the image | `curl`, then check it against Ubuntu's `SHA256SUMS` |
+| Get vfkit and gvproxy | From your `PATH` or Podman if they're there, otherwise `curl` the releases into `bin/` and check their checksums |
+| Get the image | `curl` Ubuntu's arm64 or amd64 image to match the Mac, then check it against `SHA256SUMS` |
 | Create the disk | `qemu-img convert` to raw once, then an APFS clone (`cp -c`) grown with `truncate` |
 | Set up the guest user | A generated SSH key in `user-data`; vfkit's `--cloud-init` flag turns `user-data` and `meta-data` into a seed disk |
 | Firmware | `--bootloader efi`, with the EFI variable store in `.vm/efi-vars.fd`, created on the first boot |
@@ -141,7 +157,8 @@ make purge
 ```
 
 `make destroy` deletes the VM. `make purge` also deletes the downloaded image and its raw
-copy, so the next `make up` downloads it again.
+copy, and the vfkit and gvproxy in `bin/` if the Makefile downloaded them, so the next
+`make up` downloads them again.
 
 ## Troubleshooting
 
@@ -171,3 +188,46 @@ Stop that process, or create the VM on other ports, for example
 macOS limits Unix socket paths to 104 characters, and the Makefile puts gvproxy's and
 vfkit's sockets in `.vm/` inside the project folder. If the project lives in a deeply
 nested folder, move it somewhere shorter.
+
+## Apple Silicon and Intel
+
+The same Makefile runs on both. What differs is the guest and where the tools come from:
+
+| | Apple Silicon | Intel |
+| --- | --- | --- |
+| Guest image | Ubuntu arm64 | Ubuntu amd64 |
+| vfkit and gvproxy | Podman's copies, or your `PATH` | Your `PATH`, or downloaded into `bin/` |
+| Needs `sudo` | No | No |
+
+The guest runs the same architecture as the Mac, because the Virtualization framework
+doesn't emulate another one. The Makefile reads the architecture from `uname -m`, which
+reports `x86_64` in a terminal running under Rosetta on an Apple Silicon Mac, so there it
+would pick the amd64 image. That case wasn't tested; run `make` from a native terminal.
+
+### Tested
+
+**On an Intel Mac** (macOS 26.6.2, an Intel Core i5-1038NG7, vfkit 0.6.4 and gvproxy 0.9.1
+downloaded by the Makefile, Ubuntu 26.04.1 amd64, Ansible core 2.21):
+
+- A fresh `make up PROVISION=true` booted the VM, Ansible reported `failed=0`, and
+  `make verify` returned `200 OK` from `localhost:8080`
+- The guest reported `x86_64` and the `apple` virtualization type, and its root disk grew to
+  19 GB
+- The virtio-fs share was mounted at `/workspace` and writable
+- `make provision` a second time reported `changed=0`
+- The guest stayed up through 3 minutes idle, with the page still served
+- `make halt` took 3 seconds, `make up` from a stopped VM 12 seconds, `make reload`
+  16 seconds and `make destroy` 4 seconds, which left no vfkit or gvproxy process behind
+- `make purge`, which removed the image, its raw copy and the downloaded tools
+- `mise run deps` and `mise run versions`
+
+The timings are from single runs.
+
+**On Apple Silicon** the tutorial was tested before these changes, and none of the
+changes were run on one. The Makefile's architecture switch picks the arm64 image name when
+told it's on `arm64`, which was checked by overriding `ARCH`. Not tested on Apple Silicon:
+the download of vfkit and gvproxy, and the ad-hoc signature the Makefile gives gvproxy
+as a precaution, because Apple Silicon refuses unsigned code.
+
+**Not tested on either:** the image download, because the amd64 image was copied into
+`images/` instead; and `make ssh`.
