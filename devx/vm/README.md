@@ -18,6 +18,7 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 | [`krunkit/ansible`](krunkit/ansible) | krunkit (libkrun), from a Makefile, with gvproxy for the network | Apple's Hypervisor framework | Ansible |
 | [`vfkit/ansible`](vfkit/ansible) | vfkit, from a Makefile, with gvproxy for the network | Apple's Virtualization framework | Ansible |
 | [`virtualbox/ansible`](virtualbox/ansible) | VirtualBox, with `VBoxManage` from a Makefile | VirtualBox | Ansible |
+| [`hyperkit/ansible`](hyperkit/ansible) | HyperKit, from a Makefile, **on Intel Macs** | Apple's Hypervisor framework | Ansible |
 | [`libvirt/ansible`](libvirt/ansible) | libvirt, with `virsh` from a Makefile, **on Linux** | QEMU with KVM | Ansible |
 | [`vagrant/virtualbox/ansible`](vagrant/virtualbox/ansible) | Vagrant | VirtualBox, Vagrant's default provider | Ansible |
 | [`vagrant/qemu/ansible`](vagrant/qemu/ansible) | Vagrant with the vagrant-qemu plugin | QEMU | Ansible |
@@ -36,7 +37,7 @@ Apple provides two frameworks for running VMs:
   complete VMs: boot loaders, virtio disks and networking, and shared folders. Programs
   that use it, like Lima and vfkit, configure a VM rather than emulate its hardware.
 
-The `qemu`, `krunkit`, `vfkit` and `virtualbox` tutorials run the VM without a VM
+The `qemu`, `krunkit`, `vfkit`, `hyperkit` and `virtualbox` tutorials run the VM without a VM
 manager, so their Makefiles do the work one would otherwise do: download the image, create
 the disk, set up the user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
 same hypervisors through Vagrant, for comparison.
@@ -55,11 +56,15 @@ libvirt build of the box as `vagrant/qemu/ansible`.
 | `krunkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vfkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `virtualbox/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
+| `hyperkit/ansible` | `ansible-playbook` from the Mac | The VM's own address, from `make url` |
 | `libvirt/ansible` | `ansible-playbook` from the Linux host | The VM's own address, from `make url` |
 | `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/qemu/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vagrant/avf/ansible` | `ansible-playbook` from the Mac; the provider can't provision | The VM's own address, from `make url` |
 | `vagrant/libvirt/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Linux host | <http://localhost:8080> |
+
+`hyperkit/ansible` is for Intel Macs only. It needs `sudo`, and the VM gets its own address
+instead of a `localhost` port. Its README has the details.
 
 `vagrant/avf/ansible` isn't fully tested: SSH to the VM failed in testing. Its README has the
 details.
