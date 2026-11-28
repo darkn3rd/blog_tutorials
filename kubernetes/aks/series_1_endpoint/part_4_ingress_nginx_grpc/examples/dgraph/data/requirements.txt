@@ -1,4 +1,4 @@
-certifi==2024.7.4
+certifi==2026.10.18
 grpcio==1.38.1
 protobuf==3.18.3
 pydgraph==21.3.0
