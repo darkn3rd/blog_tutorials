@@ -1,0 +1,60 @@
+# The Makefile builds the VM from file dependencies, so the VM tasks here run make.
+
+[tasks.deps]
+description = "Install qemu-img and Ansible if they're missing, and check for the Command Line Tools"
+run = [
+  "xcode-select -p >/dev/null 2>&1 || { echo 'Install the Command Line Tools first: xcode-select --install' >&2; exit 1; }",
+  "command -v qemu-img >/dev/null || brew install qemu",
+  "command -v ansible-playbook >/dev/null || brew install ansible",
+]
+
+[tasks.versions]
+description = "Print the macOS, xhyve, qemu-img and Ansible versions"
+run = '''
+printf "%-14s%s\n" \
+  macOS: $(sw_vers --productVersion) \
+  xhyve: $(git -C build/xhyve-src rev-parse --short HEAD 2>/dev/null || echo "not built yet") \
+  qemu-img: $(qemu-img --version | sed -n '1s/.*version \([^ ]*\).*/\1/p') \
+  ansible-core: $(ansible --version | sed -n '1s/.* //; 1s/]//p')
+'''
+
+[tasks.up]
+description = "Build xhyve, download the image, create or start the VM and wait for it"
+run = "make up"
+
+[tasks.provision]
+description = "Run the Ansible playbook on the guest"
+run = "make provision"
+
+[tasks.verify]
+description = "Check the web page with curl"
+run = "make verify"
+
+[tasks.url]
+description = "Print the web page's address"
+run = "make url"
+
+[tasks.ssh]
+description = "Log into the guest"
+run = "make ssh || true"
+raw = true
+
+[tasks.status]
+description = "Show the VM status"
+run = "make status"
+
+[tasks.halt]
+description = "Shut down the guest"
+run = "make halt"
+
+[tasks.reload]
+description = "Restart the VM, without provisioning unless PROVISION=true"
+run = "make reload"
+
+[tasks.destroy]
+description = "Delete the VM, keeping the downloaded image and the xhyve build"
+run = "make destroy"
+
+[tasks.purge]
+description = "Delete the downloaded image and the xhyve build"
+run = "make purge"
