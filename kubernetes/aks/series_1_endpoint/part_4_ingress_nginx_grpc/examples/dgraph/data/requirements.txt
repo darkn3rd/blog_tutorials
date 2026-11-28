@@ -1,5 +1,5 @@
-certifi==2026.10.18
-grpcio==1.38.1
-protobuf==5.29.6
-pydgraph==21.3.0
-six==1.16.0
+certifi==2026.11.20
+grpcio==1.80.1
+protobuf==6.33.6
+pydgraph==25.2.0
+six==1.17.0
