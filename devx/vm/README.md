@@ -1,7 +1,8 @@
 # Virtual machines on macOS
 
 Each tutorial here creates an Ubuntu virtual machine on a Mac, or on Linux for the two
-libvirt tutorials, with one VM tool, then configures it with one configuration tool.
+libvirt tutorials, with one VM tool, then configures it with one configuration tool. The
+`xhyve` tutorial is for Intel Macs only; the others run on Apple Silicon.
 Folders are named by VM tool first, then by configuration tool, such as
 `vagrant/virtualbox/ansible`. Every tutorial stands on its own, with its own README.
 
@@ -17,6 +18,7 @@ tools, such as Puppet, Chef or Salt, go in folders next to `ansible`.
 | [`qemu/ansible`](qemu/ansible) | QEMU, from a Makefile | Apple's Hypervisor framework | Ansible |
 | [`krunkit/ansible`](krunkit/ansible) | krunkit (libkrun), from a Makefile, with gvproxy for the network | Apple's Hypervisor framework | Ansible |
 | [`vfkit/ansible`](vfkit/ansible) | vfkit, from a Makefile, with gvproxy for the network | Apple's Virtualization framework | Ansible |
+| [`xhyve/ansible`](xhyve/ansible) | xhyve, from a Makefile, **on Intel Macs** | Apple's Hypervisor framework | Ansible |
 | [`virtualbox/ansible`](virtualbox/ansible) | VirtualBox, with `VBoxManage` from a Makefile | VirtualBox | Ansible |
 | [`libvirt/ansible`](libvirt/ansible) | libvirt, with `virsh` from a Makefile, **on Linux** | QEMU with KVM | Ansible |
 | [`vagrant/virtualbox/ansible`](vagrant/virtualbox/ansible) | Vagrant | VirtualBox, Vagrant's default provider | Ansible |
@@ -36,7 +38,7 @@ Apple provides two frameworks for running VMs:
   complete VMs: boot loaders, virtio disks and networking, and shared folders. Programs
   that use it, like Lima and vfkit, configure a VM rather than emulate its hardware.
 
-The `qemu`, `krunkit`, `vfkit` and `virtualbox` tutorials run the VM without a VM
+The `qemu`, `krunkit`, `vfkit`, `xhyve` and `virtualbox` tutorials run the VM without a VM
 manager, so their Makefiles do the work one would otherwise do: download the image, create
 the disk, set up the user with cloud-init, boot and shut down. `vagrant/qemu` and `vagrant/virtualbox` run the
 same hypervisors through Vagrant, for comparison.
@@ -54,6 +56,7 @@ libvirt build of the box as `vagrant/qemu/ansible`.
 | `qemu/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `krunkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `vfkit/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
+| `xhyve/ansible` | `ansible-playbook` from the Mac | The VM's own address, from `make url` |
 | `virtualbox/ansible` | `ansible-playbook` from the Mac | <http://localhost:8080> |
 | `libvirt/ansible` | `ansible-playbook` from the Linux host | The VM's own address, from `make url` |
 | `vagrant/virtualbox/ansible` | Vagrant's Ansible provisioner, or `ansible-playbook` from the Mac | <http://localhost:8080> |
@@ -63,6 +66,9 @@ libvirt build of the box as `vagrant/qemu/ansible`.
 
 `vagrant/avf/ansible` isn't fully tested: SSH to the VM failed in testing. Its README has the
 details.
+
+`xhyve/ansible` needs `sudo`, boots a pinned older xhyve commit because the newest one freezes
+the guest, and has no `localhost` port or shared folder. Its README has the details.
 
 ## What every tutorial has
 
